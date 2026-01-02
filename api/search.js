@@ -8,8 +8,7 @@ export default function handler(req, res) {
         price: 99.99,
         store: "Demo Store",
         url: "https://example.com",
-        image: "https://via.placeholder.com/300x200?text=Running+Shoe"
-      }
+image: "https://placehold.co/600x400?text=Running+Shoe"
     ]
   });
 }
