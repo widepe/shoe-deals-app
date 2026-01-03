@@ -1,0 +1,38 @@
+[
+  {
+    "brand": "Nike",
+    "model": "Pegasus",
+    "title": "Nike Air Zoom Pegasus (Example Listing)",
+    "price": 89.99,
+    "store": "Demo Retailer A",
+    "url": "https://example.com/nike-pegasus",
+    "image": ""
+  },
+  {
+    "brand": "Nike",
+    "model": "Vaporfly",
+    "title": "Nike ZoomX Vaporfly (Example Listing)",
+    "price": 179.99,
+    "store": "Demo Retailer B",
+    "url": "https://example.com/nike-vaporfly",
+    "image": ""
+  },
+  {
+    "brand": "Asics",
+    "model": "Gel-Nimbus",
+    "title": "ASICS Gel-Nimbus (Example Listing)",
+    "price": 119.99,
+    "store": "Demo Retailer A",
+    "url": "https://example.com/asics-nimbus",
+    "image": ""
+  },
+  {
+    "brand": "Brooks",
+    "model": "Ghost",
+    "title": "Brooks Ghost (Example Listing)",
+    "price": 99.95,
+    "store": "Demo Retailer C",
+    "url": "https://example.com/brooks-ghost",
+    "image": ""
+  }
+]
