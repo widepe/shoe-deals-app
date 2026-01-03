@@ -339,11 +339,23 @@
 
     const brands = Object.keys(brandModels).sort();
 
-    function resolveBrand() { return brandInput.value.trim(); }
-    function resolveModel() { return modelInput.value.trim(); }
-
     function normalize(s) {
       return String(s || "").trim().toLowerCase();
+    }
+
+    // ✅ NEW: Convert any casing ("nike", "NIKE") to canonical key ("Nike")
+    function resolveBrandKey(input) {
+      const normalized = normalize(input);
+      return brands.find(b => normalize(b) === normalized) || "";
+    }
+
+    // ✅ Uses canonical brand key when possible
+    function resolveBrand() {
+      return resolveBrandKey(brandInput.value.trim());
+    }
+
+    function resolveModel() {
+      return modelInput.value.trim();
     }
 
     function filterStartsWith(list, text) {
@@ -390,16 +402,18 @@
     // Initial state
     resetModelState();
 
-    // BRAND input: suggestions + model activation
+    // BRAND input: suggestions + model activation (case-insensitive activation)
     brandInput.addEventListener("input", () => {
-      const brand = brandInput.value.trim();
+      const typed = brandInput.value.trim();
+      const canonicalBrand = resolveBrandKey(typed);
 
-      if (brand) enableModel();
+      // Enable model if user has typed anything (even before exact match)
+      if (typed) enableModel();
       else resetModelState();
 
-      const matches = filterStartsWith(brands, brand);
+      const matches = filterStartsWith(brands, typed);
       showSuggestions(brandSuggestions, matches, (value) => {
-        brandInput.value = value;
+        brandInput.value = value;           // set canonical casing from list
         brandInput.focus();
         brandSuggestions.style.display = "none";
         brandInput.dispatchEvent(new Event("input"));
@@ -407,7 +421,6 @@
       });
     });
 
-    // BRAND: hide placeholder on focus, restore on blur if empty
     brandInput.addEventListener("focus", () => {
       brandInput.dataset.placeholder = brandInput.placeholder;
       brandInput.placeholder = "";
@@ -423,8 +436,8 @@
     // BRAND: Enter confirms brand + moves to model (does NOT submit)
     brandInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
-        const brand = brandInput.value.trim();
-        if (brand) {
+        const typed = brandInput.value.trim();
+        if (typed) {
           e.preventDefault();
           enableModel();
           confirmBrandSelection();
@@ -433,17 +446,17 @@
       }
     });
 
-    // MODEL input: suggestions based on selected brand
+    // MODEL input: suggestions based on selected brand (case-insensitive brand key)
     modelInput.addEventListener("input", () => {
-      const brand = resolveBrand();
+      const brandKey = resolveBrand();  // ✅ canonical key like "Nike"
       const text = modelInput.value.trim();
 
-      if (!brand || !brandModels[brand]) {
+      if (!brandKey || !brandModels[brandKey]) {
         modelSuggestions.style.display = "none";
         return;
       }
 
-      const models = brandModels[brand];
+      const models = brandModels[brandKey];
       const matches = filterStartsWith(models, text);
       showSuggestions(modelSuggestions, matches, (value) => {
         modelInput.value = value;
@@ -452,7 +465,6 @@
       });
     });
 
-    // MODEL: hide/restore placeholder on focus/blur
     modelInput.addEventListener("focus", () => {
       if (!modelInput.disabled) {
         modelInput.dataset.placeholder = modelInput.placeholder;
@@ -470,18 +482,18 @@
     // Submit = real search (requires brand + model)
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const brand = resolveBrand();
+      const brandKey = resolveBrand(); // ✅ canonical brand
       const model = resolveModel();
 
-      if (!brand || !model) {
+      if (!brandKey || !model) {
         statusEl.textContent = "Please provide a brand & model.";
         return;
       }
 
-      statusEl.textContent = "Fetching deals…";
+      statusEl.textContent = "Searching deals…";
       resultsEl.innerHTML = "";
 
-      const query = `${brand} ${model}`;
+      const query = `${brandKey} ${model}`;
       let data;
 
       try {
@@ -560,9 +572,9 @@
 
     // Alerts (unchanged)
     saveAlertBtn.addEventListener("click", async () => {
-      const brand = resolveBrand();
+      const brandKey = resolveBrand();
       const model = resolveModel();
-      const product = `${brand} ${model}`;
+      const product = `${brandKey} ${model}`;
       const alertPrice = document.getElementById("alertPrice").value.trim();
       const email = document.getElementById("alertEmail").value.trim();
       const phone = document.getElementById("alertPhone").value.trim();
