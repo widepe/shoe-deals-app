@@ -236,21 +236,58 @@
 
     .price { font-weight: 700; color: #3b5b26; }
 
-    .alert-section {
+    /* Alert section styles */
+    .alert-wrapper {
       width: 100%;
       max-width: 600px;
       margin-top: 1.25rem;
-      padding: 1rem;
-      border-radius: 0.75rem;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 0.7rem;
-      background: #eef4e7c0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
     }
 
-    .alert-section input {
+    .alert-prompt-btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      background: #7fa26a;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      border: 1px solid #8fa178;
+      transition: background 0.2s ease;
+    }
+
+    .alert-prompt-btn:hover {
+      background: #6b8f57;
+    }
+
+    .alert-form {
       width: 100%;
-      padding: 0.45rem 0.65rem;
+      padding: 1.25rem;
+      border-radius: 0.75rem;
+      background: #eef4e7c0;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .alert-form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .alert-form-row label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #2d3c22;
+      text-align: left;
+    }
+
+    .alert-form-row input {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
       border-radius: 0.5rem;
       border: 1px solid #8fa178;
       background: #fafdf4;
@@ -259,13 +296,51 @@
       color: #444;
     }
 
-    .alert-section input::placeholder { color: #666; }
-
-    .fine-print {
-      grid-column: 1 / -1;
+    .alert-privacy-note {
       font-size: 0.8rem;
       color: #34452a;
-      margin-top: 0.2rem;
+      text-align: center;
+      padding: 0.5rem;
+      background: #f4ede3;
+      border-radius: 0.5rem;
+    }
+
+    .alert-submit-btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      background: #9db88b;
+      color: white;
+      font-size: 1rem;
+      cursor: not-allowed;
+      border: 1px solid #8fa178;
+      transition: background 0.2s ease;
+      opacity: 0.6;
+    }
+
+    .alert-submit-btn.ready {
+      background: #7fa26a;
+      cursor: pointer;
+      opacity: 1;
+      animation: readyPulse 1.2s ease-in-out infinite;
+    }
+
+    .alert-submit-btn.ready:hover {
+      background: #6b8f57;
+    }
+
+    .alert-confirmation {
+      width: 100%;
+      padding: 1.25rem;
+      border-radius: 0.75rem;
+      background: #d4e7c5;
+      color: #2d3c22;
+      text-align: center;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .alert-confirmation strong {
+      color: #3b5b26;
     }
   </style>
 </head>
@@ -304,7 +379,6 @@
           data-placeholder="Enter Shoe Model"
           disabled
         />
-        <!-- Model paw hidden until model is active -->
         <span class="paw rock hidden" id="modelPaw">🐾</span>
         <div id="modelSuggestions" class="suggestions"></div>
       </div>
@@ -321,24 +395,31 @@
       Prices may change. Links may become affiliate links in the future.
     </p>
 
-    <div id="alertWrapper" style="display:none;">
-      <div class="alert-section">
-        <div>
-          <label for="alertPrice">Alert me when ≤</label>
-          <input id="alertPrice" type="number" step="0.01" placeholder="120.00">
+    <div class="alert-wrapper" id="alertWrapper" style="display:none;">
+      <!-- Initial prompt button -->
+      <button class="alert-prompt-btn" id="alertPromptBtn">🔔 Set Price Alert?</button>
+
+      <!-- Alert form (hidden initially) -->
+      <div class="alert-form" id="alertForm" style="display:none;">
+        <div class="alert-form-row">
+          <label for="alertPrice">Alert me when price is ≤</label>
+          <input id="alertPrice" type="number" step="0.01" placeholder="$120.00" min="0">
         </div>
-        <div>
-          <label for="alertEmail">Email (optional)</label>
-          <input id="alertEmail" type="email" placeholder="you@example.com">
+
+        <div class="alert-form-row">
+          <label for="alertContact">Email or Phone Number</label>
+          <input id="alertContact" type="text" placeholder="you@example.com or +1-555-0123">
         </div>
-        <div>
-          <label for="alertPhone">Phone (optional)</label>
-          <input id="alertPhone" type="tel" placeholder="+1...">
+
+        <div class="alert-privacy-note">
+          🔒 Your information is never shared. Used only for price alerts.
         </div>
-        <div class="fine-print">💡 Alerts continue until canceled.</div>
-        <button id="saveAlertBtn">📩 Save Alert</button>
+
+        <button class="alert-submit-btn" id="alertSubmitBtn" disabled>📩 Submit Price Alert</button>
       </div>
-      <div class="status" id="alertStatus"></div>
+
+      <!-- Confirmation message (hidden initially) -->
+      <div class="alert-confirmation" id="alertConfirmation" style="display:none;"></div>
     </div>
   </div>
 
@@ -346,9 +427,15 @@
     const form = document.getElementById("search-form");
     const statusEl = document.getElementById("status");
     const resultsEl = document.getElementById("results");
+    
     const alertWrapper = document.getElementById("alertWrapper");
-    const saveAlertBtn = document.getElementById("saveAlertBtn");
-    const alertStatusEl = document.getElementById("alertStatus");
+    const alertPromptBtn = document.getElementById("alertPromptBtn");
+    const alertForm = document.getElementById("alertForm");
+    const alertSubmitBtn = document.getElementById("alertSubmitBtn");
+    const alertConfirmation = document.getElementById("alertConfirmation");
+    
+    const alertPriceInput = document.getElementById("alertPrice");
+    const alertContactInput = document.getElementById("alertContact");
 
     const fetchBtn = document.getElementById("fetchBtn");
 
@@ -359,6 +446,9 @@
 
     const brandPaw = document.getElementById("brandPaw");
     const modelPaw = document.getElementById("modelPaw");
+
+    // Store current search for alert
+    let currentSearch = { brand: "", model: "" };
 
     const brandModels = {
       "Asics": ["Novablast","Gel-Kayano","Gel-Nimbus","Gel-Cumulus","Metaspeed Sky"],
@@ -432,7 +522,7 @@
       modelInput.disabled = false;
       modelInput.classList.remove("model-inactive");
       modelInput.classList.add("model-active", "input-glow");
-      modelPaw.classList.remove("hidden"); // show paw only when active
+      modelPaw.classList.remove("hidden");
     }
 
     function resetModelState() {
@@ -442,7 +532,7 @@
       modelInput.classList.remove("model-active", "input-glow");
       modelInput.classList.add("model-inactive");
       modelSuggestions.style.display = "none";
-      modelPaw.classList.add("hidden"); // hide paw until active
+      modelPaw.classList.add("hidden");
     }
 
     function confirmBrandSelection() {
@@ -457,11 +547,9 @@
     }
 
     function updatePaws() {
-      // Brand paw rocks until brand has content
       if (brandInput.value.trim()) brandPaw.classList.remove("rock");
       else brandPaw.classList.add("rock");
 
-      // Model paw only exists when model enabled; then rocks until model has content
       if (modelInput.disabled) {
         modelPaw.classList.add("hidden");
       } else {
@@ -481,8 +569,33 @@
       resetModelState();
       updatePaws();
       
-      // Focus back on brand input for next search
       setTimeout(() => brandInput.focus(), 100);
+    }
+
+    function resetAlertSection() {
+      alertPromptBtn.style.display = "block";
+      alertForm.style.display = "none";
+      alertConfirmation.style.display = "none";
+      alertPriceInput.value = "";
+      alertContactInput.value = "";
+      updateAlertSubmitButton();
+    }
+
+    function updateAlertSubmitButton() {
+      const price = alertPriceInput.value.trim();
+      const contact = alertContactInput.value.trim();
+      
+      // Check if price is valid and contact is provided
+      const priceValid = price && parseFloat(price) > 0;
+      const contactValid = contact && (
+        contact.includes('@') || // email
+        /[\d\-\+\(\)]{7,}/.test(contact) // phone-like
+      );
+      
+      const isReady = priceValid && contactValid;
+      
+      alertSubmitBtn.disabled = !isReady;
+      alertSubmitBtn.classList.toggle("ready", isReady);
     }
 
     // Initial state
@@ -505,7 +618,6 @@
         enableModel();
         confirmBrandSelection();
 
-        // jump to model
         setTimeout(() => modelInput.focus(), 0);
 
         updatePaws();
@@ -518,7 +630,6 @@
       setTimeout(() => { brandSuggestions.style.display = "none"; }, 120);
     });
 
-    // BRAND Enter: move to model, do not submit
     brandInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         const typed = brandInput.value.trim();
@@ -532,7 +643,7 @@
       }
     });
 
-    // MODEL input suggestions (case-insensitive)
+    // MODEL input
     modelInput.addEventListener("input", () => {
       const brandKey = resolveBrand();
       const text = modelInput.value.trim();
@@ -547,11 +658,9 @@
       const matches = filterStartsWith(models, text);
 
       showSuggestions(modelSuggestions, matches, (value) => {
-        // Set model canonical casing
         modelInput.value = value;
         modelSuggestions.style.display = "none";
 
-        // Move cursor to Fetch button (not auto-submit)
         setTimeout(() => fetchBtn.focus(), 0);
 
         updatePaws();
@@ -564,7 +673,7 @@
       setTimeout(() => { modelSuggestions.style.display = "none"; }, 120);
     });
 
-    // Submit
+    // Submit search
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -580,8 +689,12 @@
         return;
       }
 
+      // Store current search
+      currentSearch = { brand: brandKey, model: modelCanonical };
+
       statusEl.textContent = "Searching deals…";
       resultsEl.innerHTML = "";
+      alertWrapper.style.display = "none";
 
       const query = `${brandKey} ${modelCanonical}`;
       let data;
@@ -589,7 +702,6 @@
       try {
         const res = await fetch("/api/search?" + new URLSearchParams({ query }));
         
-        // Always try to parse JSON, even if status isn't 200
         try {
           data = await res.json();
         } catch (parseErr) {
@@ -598,7 +710,6 @@
           return;
         }
 
-        // Check if we got results
         if (!data || !data.results) {
           statusEl.textContent = "No results found.";
           return;
@@ -650,29 +761,66 @@
         resultsEl.appendChild(card);
       });
 
-      alertWrapper.style.display = "block";
+      // Show alert section
+      resetAlertSection();
+      alertWrapper.style.display = "flex";
       
-      // Clear the search form for next search
+      // Clear search form
       clearSearchForm();
     });
 
-    // Alerts (unchanged)
-    saveAlertBtn.addEventListener("click", async () => {
-      const brandKey = resolveBrand();
-      const modelCanonical = resolveModelKey(brandKey, modelInput.value);
-      const product = `${brandKey} ${modelCanonical}`;
-      const alertPrice = document.getElementById("alertPrice").value.trim();
-      const email = document.getElementById("alertEmail").value.trim();
-      const phone = document.getElementById("alertPhone").value.trim();
+    // Alert prompt button
+    alertPromptBtn.addEventListener("click", () => {
+      alertPromptBtn.style.display = "none";
+      alertForm.style.display = "flex";
+    });
 
-      const res = await fetch("/api/alerts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product, targetPrice: alertPrice, email, phone })
-      });
+    // Alert form inputs
+    alertPriceInput.addEventListener("input", updateAlertSubmitButton);
+    alertContactInput.addEventListener("input", updateAlertSubmitButton);
 
-      const data = await res.json().catch(() => ({}));
-      alertStatusEl.textContent = res.ok ? "Alert saved!" : (data.error || "Could not save.");
+    // Alert submit
+    alertSubmitBtn.addEventListener("click", async () => {
+      if (alertSubmitBtn.disabled) return;
+
+      const price = alertPriceInput.value.trim();
+      const contact = alertContactInput.value.trim();
+      const product = `${currentSearch.brand} ${currentSearch.model}`;
+
+      // Determine if email or phone
+      const isEmail = contact.includes('@');
+      const payload = {
+        product: product,
+        targetPrice: price,
+        email: isEmail ? contact : "",
+        phone: isEmail ? "" : contact
+      };
+
+      try {
+        const res = await fetch("/api/alerts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok) {
+          // Show confirmation
+          alertForm.style.display = "none";
+          alertConfirmation.innerHTML = `
+            <strong>✓ Price Alert Set!</strong><br><br>
+            You'll be notified immediately when <strong>${product}</strong> is found at or below <strong>$${parseFloat(price).toFixed(2)}</strong>.<br><br>
+            This alert will continue for <strong>30 days</strong> or until you cancel it.
+          `;
+          alertConfirmation.style.display = "block";
+        } else {
+          alert(data.error || "Could not save alert. Please try again.");
+        }
+      } catch (err) {
+        console.error("Alert submission error:", err);
+        alert("Could not save alert. Please try again.");
+      }
     });
   </script>
 </body>
