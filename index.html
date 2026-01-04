@@ -299,7 +299,6 @@
     </form>
 
     <div class="status" id="status">Let's find your <b>running shoes</b>...cheap!</div>
-
     <div class="results" id="results"></div>
 
     <p style="font-size:0.8rem; color:#555; max-width: 850px; margin: 0.25rem auto 0;">
@@ -380,7 +379,7 @@
       return resolveBrandKey(brandInput.value.trim());
     }
 
-    // Smart model normalization: if user typed "pegasus", return "Pegasus" if exists.
+    // Model canonicalization by exact match ignoring case
     function resolveModelKey(brandKey, modelTyped) {
       const typed = String(modelTyped || "").trim();
       if (!typed) return "";
@@ -433,11 +432,9 @@
     }
 
     function updatePaws() {
-      // Brand paw rocks until brand has content
       if (brandInput.value.trim()) brandPaw.classList.remove("rock");
       else brandPaw.classList.add("rock");
 
-      // Model paw rocks until model has content
       if (modelInput.value.trim()) modelPaw.classList.remove("rock");
       else modelPaw.classList.add("rock");
     }
@@ -454,21 +451,23 @@
       else resetModelState();
 
       const matches = filterStartsWith(brands, typed);
-showSuggestions(brandSuggestions, matches, (value) => {
-  // Set canonical brand + hide dropdown
-  brandInput.value = value;
-  brandSuggestions.style.display = "none";
 
-  // Enable model input + show its placeholder
-  enableModel();
-  confirmBrandSelection();
+      showSuggestions(brandSuggestions, matches, (value) => {
+        brandInput.value = value;
+        brandSuggestions.style.display = "none";
 
-  // Move cursor to model immediately
-  setTimeout(() => modelInput.focus(), 0);
+        enableModel();
+        confirmBrandSelection();
 
-  updatePaws();
-});
-      
+        // Jump to model
+        setTimeout(() => modelInput.focus(), 0);
+
+        updatePaws();
+      });
+
+      updatePaws();
+    }); // ✅ THIS CLOSING WAS MISSING IN YOUR FILE
+
     brandInput.addEventListener("focus", () => {
       brandInput.dataset.placeholder = brandInput.placeholder;
       brandInput.placeholder = "";
@@ -490,6 +489,7 @@ showSuggestions(brandSuggestions, matches, (value) => {
           enableModel();
           confirmBrandSelection();
           modelInput.focus();
+          updatePaws();
         }
       }
     });
@@ -507,8 +507,9 @@ showSuggestions(brandSuggestions, matches, (value) => {
 
       const models = brandModels[brandKey];
       const matches = filterStartsWith(models, text);
+
       showSuggestions(modelSuggestions, matches, (value) => {
-        modelInput.value = value; // canonical casing
+        modelInput.value = value;
         modelSuggestions.style.display = "none";
         modelInput.focus();
         updatePaws();
@@ -538,7 +539,6 @@ showSuggestions(brandSuggestions, matches, (value) => {
       const brandKey = resolveBrand();
       const modelCanonical = resolveModelKey(brandKey, modelInput.value);
 
-      // Optional polish: normalize what the user typed to canonical casing
       if (brandKey) brandInput.value = brandKey;
       if (modelCanonical) modelInput.value = modelCanonical;
 
@@ -600,26 +600,6 @@ showSuggestions(brandSuggestions, matches, (value) => {
         link.rel = "noopener noreferrer";
         link.href = item.url;
 
-        link.addEventListener("click", () => {
-          link.textContent = "Opening…";
-
-          const payload = JSON.stringify({
-            title: item.title,
-            store: item.store,
-            url: item.url
-          });
-
-          if (navigator.sendBeacon) {
-            navigator.sendBeacon("/api/click", new Blob([payload], { type: "application/json" }));
-          } else {
-            fetch("/api/click", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: payload
-            }).catch(() => {});
-          }
-        });
-
         card.appendChild(link);
         resultsEl.appendChild(card);
       });
@@ -646,6 +626,10 @@ showSuggestions(brandSuggestions, matches, (value) => {
       const data = await res.json().catch(() => ({}));
       alertStatusEl.textContent = res.ok ? "Alert saved!" : (data.error || "Could not save.");
     });
+  </script>
+</body>
+</html>
+
   </script>
 </body>
 </html>
