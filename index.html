@@ -271,7 +271,9 @@
 </head>
 
 <body>
-  <div style="display:none;">Impact-Site-Verification: 484b0fd5-0544-4654-b916-4e921a2e5077</div>  <div class="app">
+  <div style="display:none;">Impact-Site-Verification: 484b0fd5-0544-4654-b916-4e921a2e5077</div>
+  
+  <div class="app">
     <div class="brand">
       <img src="http://storage.proboards.com/7187966/images/mFtuiMfMGFAdfeEpHsnX.png" class="brand-logo" alt="Logo">
     </div>
@@ -471,6 +473,18 @@
       updateFetchReady();
     }
 
+    function clearSearchForm() {
+      brandInput.value = "";
+      brandInput.placeholder = "Type in Shoe Brand";
+      brandInput.classList.add("input-glow");
+      
+      resetModelState();
+      updatePaws();
+      
+      // Focus back on brand input for next search
+      setTimeout(() => brandInput.focus(), 100);
+    }
+
     // Initial state
     resetModelState();
     updatePaws();
@@ -655,7 +669,9 @@
       });
 
       alertWrapper.style.display = "block";
-      updatePaws();
+      
+      // Clear the search form for next search
+      clearSearchForm();
     });
 
     // Alerts (unchanged)
