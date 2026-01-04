@@ -1,151 +1,11 @@
-const https = require('https');
-const http = require('http');
+const fs = require("fs");
+const path = require("path");
 
 function normalize(s) {
   return String(s || "")
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, "")
     .trim();
-}
-
-// Simple HTTP GET request helper with timeout
-function fetch(url, timeout = 8000) {
-  return new Promise((resolve, reject) => {
-    const client = url.startsWith('https') ? https : http;
-    const req = client.get(url, { 
-      headers: { 
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      },
-      timeout: timeout
-    }, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => resolve({ status: res.statusCode, body: data }));
-    });
-    
-    req.on('error', reject);
-    req.on('timeout', () => {
-      req.destroy();
-      reject(new Error('Request timeout'));
-    });
-  });
-}
-
-// Fallback: Use dummy data if scraping fails
-function getDummyData(brand, model) {
-  const dummyDeals = [
-    {
-      brand: "Nike",
-      model: "Pegasus",
-      title: "Nike Air Zoom Pegasus 40",
-      price: 129.99,
-      store: "Running Warehouse",
-      url: "https://www.runningwarehouse.com",
-      image: "https://placehold.co/600x400?text=Nike+Pegasus"
-    },
-    {
-      brand: "Brooks",
-      model: "Ghost",
-      title: "Brooks Ghost 15",
-      price: 139.95,
-      store: "Road Runner Sports",
-      url: "https://www.roadrunnersports.com",
-      image: "https://placehold.co/600x400?text=Brooks+Ghost"
-    },
-    {
-      brand: "Asics",
-      model: "Gel-Nimbus",
-      title: "Asics Gel-Nimbus 25",
-      price: 159.99,
-      store: "Running Warehouse",
-      url: "https://www.runningwarehouse.com",
-      image: "https://placehold.co/600x400?text=Asics+Nimbus"
-    },
-    {
-      brand: "Hoka",
-      model: "Clifton",
-      title: "Hoka Clifton 9",
-      price: 144.95,
-      store: "Road Runner Sports",
-      url: "https://www.roadrunnersports.com",
-      image: "https://placehold.co/600x400?text=Hoka+Clifton"
-    }
-  ];
-
-  const normalizedBrand = normalize(brand);
-  const normalizedModel = normalize(model);
-
-  return dummyDeals
-    .filter(deal => {
-      const dealBrand = normalize(deal.brand);
-      const dealModel = normalize(deal.model);
-      return dealBrand.includes(normalizedBrand) && dealModel.includes(normalizedModel);
-    })
-    .map(deal => ({
-      title: deal.title,
-      price: deal.price,
-      store: deal.store,
-      url: deal.url,
-      image: deal.image
-    }));
-}
-
-// Scrape Running Warehouse
-async function scrapeRunningWarehouse(brand, model) {
-  try {
-    const searchQuery = `${brand} ${model}`.replace(/\s+/g, '+');
-    const url = `https://www.runningwarehouse.com/searchresults.html?search=${searchQuery}`;
-    
-    console.log('[Running Warehouse] Attempting fetch:', url);
-    const response = await fetch(url);
-    
-    console.log('[Running Warehouse] Response status:', response.status);
-    console.log('[Running Warehouse] Response body length:', response.body?.length || 0);
-    
-    if (response.status !== 200) {
-      console.log('[Running Warehouse] Non-200 status, skipping');
-      return [];
-    }
-
-    const html = response.body;
-    const results = [];
-
-    // Look for product data in HTML
-    const titleMatches = [...html.matchAll(/class="[^"]*product[^"]*title[^"]*"[^>]*>([^<]+)</gi)];
-    const priceMatches = [...html.matchAll(/\$(\d+\.?\d{0,2})/g)];
-    const urlMatches = [...html.matchAll(/href="(\/[^"]*\.html)"/g)];
-
-    console.log('[Running Warehouse] Found matches:', {
-      titles: titleMatches.length,
-      prices: priceMatches.length,
-      urls: urlMatches.length
-    });
-
-    const minLength = Math.min(titleMatches.length, priceMatches.length, urlMatches.length);
-    
-    for (let i = 0; i < Math.min(minLength, 5); i++) {
-      const title = titleMatches[i]?.[1]?.trim();
-      const price = priceMatches[i]?.[1] ? parseFloat(priceMatches[i][1]) : null;
-      const productUrl = urlMatches[i]?.[1] ? `https://www.runningwarehouse.com${urlMatches[i][1]}` : null;
-
-      if (title && price && productUrl && price > 10 && price < 500) {
-        results.push({
-          title: title,
-          price: price,
-          store: 'Running Warehouse',
-          url: productUrl,
-          image: 'https://placehold.co/600x400?text=Running+Shoe'
-        });
-      }
-    }
-
-    console.log('[Running Warehouse] Parsed results:', results.length);
-    return results;
-
-  } catch (err) {
-    console.error('[Running Warehouse] Error:', err.message);
-    return [];
-  }
 }
 
 // In-memory cache
@@ -196,6 +56,10 @@ module.exports = async (req, res) => {
       return;
     }
 
+    // Load deals from JSON file
+    const dealsPath = path.join(process.cwd(), "data", "deals.json");
+    const deals = JSON.parse(fs.readFileSync(dealsPath, "utf8"));
+
     // Parse query
     const parts = rawQuery.trim().split(/\s+/);
     const brand = parts[0] || "";
@@ -203,24 +67,30 @@ module.exports = async (req, res) => {
 
     console.log("[/api/search] Parsed:", { brand, model });
 
-    // Try scraping
-    let results = [];
-    
-    try {
-      const scraped = await scrapeRunningWarehouse(brand, model);
-      results.push(...scraped);
-    } catch (err) {
-      console.error("[/api/search] Scraping failed:", err.message);
-    }
-
-    // If no results from scraping, use dummy data
-    if (results.length === 0) {
-      console.log("[/api/search] No scraped results, using dummy data");
-      results = getDummyData(brand, model);
-    }
-
-    // Sort and limit
-    results = results
+    // Filter deals
+    const results = deals
+      .filter((deal) => {
+        const dealBrand = normalize(deal.brand);
+        const dealModel = normalize(deal.model);
+        const normalizedBrand = normalize(brand);
+        const normalizedModel = normalize(model);
+        
+        // Require brand match
+        if (!dealBrand.includes(normalizedBrand)) return false;
+        
+        // Model match: allow partial match either direction
+        return (
+          dealModel.includes(normalizedModel) ||
+          normalizedModel.includes(dealModel)
+        );
+      })
+      .map((deal) => ({
+        title: deal.title,
+        price: Number(deal.price),
+        store: deal.store,
+        url: deal.url,
+        image: deal.image || "https://placehold.co/600x400?text=Running+Shoe"
+      }))
       .sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity))
       .slice(0, 12);
 
@@ -242,16 +112,9 @@ module.exports = async (req, res) => {
       stack: err?.stack
     });
     
-    // Return dummy data even on error
-    const parts = (req.query?.query || "").trim().split(/\s+/);
-    const brand = parts[0] || "";
-    const model = parts.slice(1).join(" ") || "";
-    const fallbackResults = getDummyData(brand, model);
-    
-    res.status(200).json({ 
-      results: fallbackResults, 
-      requestId,
-      note: "Using fallback data due to scraping issues"
+    res.status(500).json({ 
+      error: "Internal server error",
+      requestId
     });
   }
 };
