@@ -247,7 +247,7 @@
     .status {
       font-size: 0.95rem;
       color: #2d3c22;
-      margin-top: 0.5rem;
+      margin-top: 0.25rem;
       text-align: center;
       width: 100%;
     }
@@ -272,19 +272,20 @@
       flex-wrap: wrap;
       gap: 1rem;
       justify-content: center;
-      max-width: 650px;
-      margin: 0 auto;
     }
 
     .daily-deal-card {
       background: #ffffffc9;
+      border: 2px solid #214478ff;
       border-radius: 0.75rem;
       padding: 0.75rem;
       display: flex;
       flex-direction: column;
       gap: 0.4rem;
       text-align: center;
-      width: 190px;
+      width: calc(33.333% - 0.75rem);
+      min-width: 180px;
+      max-width: 200px;
       flex-shrink: 0;
     }
 
@@ -344,6 +345,14 @@
     }
 
     .price { font-weight: 700; color: #214478ff; }
+
+    .disclaimer {
+      font-size: 0.8rem;
+      color: #555;
+      max-width: 850px;
+      margin: 0.25rem auto 0;
+      text-align: center;
+    }
 
     /* About Section */
     .about-section {
@@ -588,10 +597,10 @@
       </div>
     </form>
 
+    <div class="status">Let's find your <b>running shoes</b>...cheap!</div>
+
     <!-- Main Content (Results) -->
     <div id="mainContent">
-      <div class="status" id="status">Let's find your <b>running shoes</b>...cheap!</div>
-
       <!-- Marty's Daily Deals -->
       <div class="daily-deals" id="dailyDeals">
         <div class="daily-deals-header">Marty's Top 5 Daily Deals</div>
@@ -626,9 +635,7 @@
 
       <div class="results" id="results"></div>
 
-      <p style="font-size:0.8rem; color:#555; max-width: 850px; margin: 0.25rem auto 0;">
-        Prices may change. Links may become affiliate links in the future.
-      </p>
+      <p class="disclaimer">Prices are subject to change.</p>
 
       <div class="alert-wrapper" id="alertWrapper" style="display:none;">
         <button class="alert-prompt-btn" id="alertPromptBtn"><span class="bell-icon">🔔</span> Set Price Alert?</button>
@@ -686,7 +693,7 @@
 
   <script>
     const form = document.getElementById("search-form");
-    const statusEl = document.getElementById("status");
+    const statusEl = document.querySelector(".status");
     const resultsEl = document.getElementById("results");
     const dailyDeals = document.getElementById("dailyDeals");
     
