@@ -83,6 +83,23 @@
       animation: pawRock 1.1s ease-in-out infinite;
     }
 
+    /* Magnifying glass rock animation */
+    @keyframes magnifyRock {
+      0%   { transform: rotate(-10deg); }
+      50%  { transform: rotate(10deg); }
+      100% { transform: rotate(-10deg); }
+    }
+
+    .search-btn.ready {
+      box-shadow: 0 0 0 3px rgba(33, 68, 120, 0.3);
+    }
+
+    .search-btn.ready .magnify-icon {
+      display: inline-block;
+      animation: magnifyRock 1.1s ease-in-out infinite;
+      transform-origin: center center;
+    }
+
     input[type="text"],
     input[type="search"],
     input[type="number"],
@@ -175,11 +192,6 @@
 
     .search-btn:hover {
       background: #1a3661;
-    }
-
-    /* Active state - glow instead of pulse */
-    .search-btn.ready {
-      box-shadow: 0 0 0 3px rgba(33, 68, 120, 0.3);
     }
 
     .status {
@@ -367,12 +379,12 @@
           data-placeholder="Enter Shoe Model"
           disabled
         />
-        <span class="paw rock hidden" id="modelPaw">🐾</span>
+        <span class="paw hidden" id="modelPaw">🐾</span>
         <div id="modelSuggestions" class="suggestions"></div>
       </div>
 
       <div class="button-wrapper">
-        <button id="fetchBtn" type="submit" class="search-btn">🔍 Fetch!</button>
+        <button id="fetchBtn" type="submit" class="search-btn"><span class="magnify-icon">🔍</span> Fetch!</button>
       </div>
     </form>
 
@@ -437,6 +449,9 @@
 
     // Store current search for alert
     let currentSearch = { brand: "", model: "" };
+    
+    // Track if brand has been selected (not just typed)
+    let brandSelected = false;
 
     const brandModels = {
       "Asics": ["Novablast","Gel-Kayano","Gel-Nimbus","Gel-Cumulus","Metaspeed Sky"],
@@ -510,7 +525,6 @@
       modelInput.disabled = false;
       modelInput.classList.remove("model-inactive");
       modelInput.classList.add("model-active");
-      modelPaw.classList.remove("hidden");
     }
 
     function resetModelState() {
@@ -521,10 +535,18 @@
       modelInput.classList.add("model-inactive");
       modelSuggestions.style.display = "none";
       modelPaw.classList.add("hidden");
+      modelPaw.classList.remove("rock");
+      brandSelected = false;
     }
 
     function confirmBrandSelection() {
-      if (!modelInput.disabled) modelInput.placeholder = "Enter Shoe Model";
+      if (!modelInput.disabled) {
+        modelInput.placeholder = "Enter Shoe Model";
+        brandSelected = true;
+        // Show model paw and make it rock
+        modelPaw.classList.remove("hidden");
+        modelPaw.classList.add("rock");
+      }
     }
 
     function updateFetchReady() {
@@ -535,15 +557,25 @@
     }
 
     function updatePaws() {
-      if (brandInput.value.trim()) brandPaw.classList.remove("rock");
-      else brandPaw.classList.add("rock");
-
-      if (modelInput.disabled) {
-        modelPaw.classList.add("hidden");
+      // Brand paw rocks until brand has content
+      if (brandInput.value.trim()) {
+        brandPaw.classList.remove("rock");
       } else {
+        brandPaw.classList.add("rock");
+      }
+
+      // Model paw only appears after brand is selected
+      if (brandSelected && !modelInput.disabled) {
         modelPaw.classList.remove("hidden");
-        if (modelInput.value.trim()) modelPaw.classList.remove("rock");
-        else modelPaw.classList.add("rock");
+        // Model paw rocks until model has content
+        if (modelInput.value.trim()) {
+          modelPaw.classList.remove("rock");
+        } else {
+          modelPaw.classList.add("rock");
+        }
+      } else {
+        modelPaw.classList.add("hidden");
+        modelPaw.classList.remove("rock");
       }
 
       updateFetchReady();
@@ -592,8 +624,11 @@
     brandInput.addEventListener("input", () => {
       const typed = brandInput.value.trim();
 
-      if (typed) enableModel();
-      else resetModelState();
+      if (typed) {
+        enableModel();
+      } else {
+        resetModelState();
+      }
 
       const matches = filterStartsWith(brands, typed);
 
