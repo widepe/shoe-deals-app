@@ -272,7 +272,7 @@
       flex-wrap: wrap;
       gap: 1rem;
       justify-content: center;
-      max-width: 520px;
+      max-width: 650px;
       margin: 0 auto;
     }
 
@@ -284,7 +284,7 @@
       flex-direction: column;
       gap: 0.4rem;
       text-align: center;
-      width: 150px;
+      width: 190px;
       flex-shrink: 0;
     }
 
@@ -371,8 +371,8 @@
     }
 
     .about-section .signature {
-      margin-top: 2rem;
-      text-align: right;
+      margin-top: 1rem;
+      text-align: center;
       font-style: italic;
       color: #214478ff;
       font-size: 1.1rem;
@@ -545,7 +545,7 @@
   
   <!-- Top Navigation -->
   <div class="top-nav">
-    <a id="aboutLink">About</a>
+    <a id="aboutLink">About Us</a>
   </div>
 
   <div class="app">
@@ -553,42 +553,43 @@
       <img src="/images/logo.svg" class="brand-logo" alt="Shoe Beagle Logo" id="logoLink">
     </div>
 
-    <!-- Main Content (Search + Results) -->
+    <!-- Search Form (Always Visible) -->
+    <form id="search-form">
+      <div class="input-wrapper">
+        <input
+          id="brand"
+          type="text"
+          placeholder="Enter Shoe Brand"
+          autocomplete="off"
+          required
+          data-placeholder="Enter Shoe Brand"
+        />
+        <span class="paw rock" id="brandPaw">🐾</span>
+        <div id="brandSuggestions" class="suggestions"></div>
+      </div>
+
+      <div class="input-wrapper">
+        <input
+          id="model"
+          type="text"
+          placeholder=""
+          autocomplete="off"
+          required
+          class="model-inactive"
+          data-placeholder="Enter Shoe Model"
+          disabled
+        />
+        <span class="paw hidden" id="modelPaw">🐾</span>
+        <div id="modelSuggestions" class="suggestions"></div>
+      </div>
+
+      <div class="button-wrapper">
+        <button id="fetchBtn" type="submit" class="search-btn"><span class="magnify-icon">🔍</span> Fetch!</button>
+      </div>
+    </form>
+
+    <!-- Main Content (Results) -->
     <div id="mainContent">
-      <form id="search-form">
-        <div class="input-wrapper">
-          <input
-            id="brand"
-            type="text"
-            placeholder="Enter Shoe Brand"
-            autocomplete="off"
-            required
-            data-placeholder="Enter Shoe Brand"
-          />
-          <span class="paw rock" id="brandPaw">🐾</span>
-          <div id="brandSuggestions" class="suggestions"></div>
-        </div>
-
-        <div class="input-wrapper">
-          <input
-            id="model"
-            type="text"
-            placeholder=""
-            autocomplete="off"
-            required
-            class="model-inactive"
-            data-placeholder="Enter Shoe Model"
-            disabled
-          />
-          <span class="paw hidden" id="modelPaw">🐾</span>
-          <div id="modelSuggestions" class="suggestions"></div>
-        </div>
-
-        <div class="button-wrapper">
-          <button id="fetchBtn" type="submit" class="search-btn"><span class="magnify-icon">🔍</span> Fetch!</button>
-        </div>
-      </form>
-
       <div class="status" id="status">Let's find your <b>running shoes</b>...cheap!</div>
 
       <!-- Marty's Daily Deals -->
@@ -665,7 +666,7 @@
 
     <!-- About Section (Hidden by default) -->
     <div id="aboutContent" class="about-section hidden">
-      <h2>About Shoe Beagle</h2>
+      <h2>About Us</h2>
       
       <p>Shoe Beagle is a price comparison website dedicated to helping runners find the best deals on running shoes. We provide side-by-side price comparisons across multiple retailers, allowing users to search by brand and model to find the lowest prices.</p>
       
@@ -678,7 +679,6 @@
       </div>
       
       <div class="signature">
-        Good luck,<br>
         Marty 🐾
       </div>
     </div>
@@ -1004,6 +1004,11 @@
       resultsEl.innerHTML = "";
       dailyDeals.style.display = "none";
       alertWrapper.style.display = "none";
+
+      // Show main content if on about page
+      if (mainContent.classList.contains("hidden")) {
+        showHome();
+      }
 
       const query = `${brandKey} ${modelCanonical}`;
       let data;
