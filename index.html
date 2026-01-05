@@ -266,9 +266,10 @@
     }
 
     .daily-deals-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      display: flex;
+      flex-wrap: wrap;
       gap: 1rem;
+      justify-content: center;
     }
 
     .daily-deal-card {
@@ -279,6 +280,8 @@
       flex-direction: column;
       gap: 0.4rem;
       text-align: center;
+      width: 150px;
+      flex-shrink: 0;
     }
 
     .daily-deal-card img {
@@ -585,7 +588,7 @@
 
       <!-- Marty's Daily Deals -->
       <div class="daily-deals" id="dailyDeals">
-        <div class="daily-deals-header">🐾 Marty's Top 5 Daily Deals</div>
+        <div class="daily-deals-header">Marty's Top 5 Daily Deals</div>
         <div class="daily-deals-grid">
           <div class="daily-deal-card">
             <img src="https://placehold.co/300x200?text=Brooks+Ghost" alt="Brooks Ghost 15">
@@ -664,6 +667,10 @@
       <p>Our platform features price alerts, real-time deal updates, and direct links to merchant sites where users can complete their purchases.</p>
       
       <p>Meet Marty, our beagle mascot who sniffs out the best running shoe deals every day!</p>
+      
+      <div style="text-align: center; margin: 1.5rem 0;">
+        <img src="/images/marty.svg" alt="Marty the Beagle" style="width: 200px; height: auto;">
+      </div>
       
       <div class="signature">
         Good luck,<br>
