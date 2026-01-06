@@ -22,7 +22,7 @@
       max-width: 900px;
       display: flex;
       flex-direction: column;
-      gap: 1.3rem;
+      gap: 0.65rem; /* reduced spacing overall */
       align-items: center;
       padding-top: 2rem;
     }
@@ -32,7 +32,11 @@
       position: absolute;
       top: 1rem;
       left: 1rem;
+      right: 1rem;
       z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .top-nav a {
@@ -42,6 +46,7 @@
       font-weight: 600;
       cursor: pointer;
       transition: color 0.2s ease;
+      user-select: none;
     }
 
     .top-nav a:hover {
@@ -65,16 +70,14 @@
       transition: opacity 0.2s ease;
     }
 
-    .brand-logo:hover {
-      opacity: 0.9;
-    }
+    .brand-logo:hover { opacity: 0.9; }
 
     form {
       display: flex;
       justify-content: center;
       align-items: stretch;
       flex-wrap: wrap;
-      gap: 1rem;
+      gap: 0.75rem; /* slightly tighter */
       width: 100%;
       max-width: 650px;
       margin: 0 auto;
@@ -107,9 +110,7 @@
       100% { transform: translateY(-50%) rotate(-10deg); }
     }
 
-    .paw.rock {
-      animation: pawRock 1.1s ease-in-out infinite;
-    }
+    .paw.rock { animation: pawRock 1.1s ease-in-out infinite; }
 
     /* Icon rock animations */
     @keyframes iconRock {
@@ -118,9 +119,7 @@
       100% { transform: rotate(-10deg); }
     }
 
-    .search-btn.ready {
-      box-shadow: 0 0 0 3px rgba(33, 68, 120, 0.3);
-    }
+    .search-btn.ready { box-shadow: 0 0 0 3px rgba(33, 68, 120, 0.3); }
 
     .search-btn.ready .magnify-icon {
       display: inline-block;
@@ -163,24 +162,12 @@
       -webkit-appearance: none;
       margin: 0;
     }
-    input[type="number"] {
-      -moz-appearance: textfield;
-    }
+    input[type="number"] { -moz-appearance: textfield; }
 
-    input::placeholder {
-      color: #999;
-      opacity: 1;
-    }
+    input::placeholder { color: #999; opacity: 1; }
 
-    .model-inactive {
-      background: #faf5f2ff;
-      cursor: not-allowed;
-    }
-
-    .model-active {
-      background: #ffffff;
-      cursor: text;
-    }
+    .model-inactive { background: #faf5f2ff; cursor: not-allowed; }
+    .model-active { background: #ffffff; cursor: text; }
 
     .suggestions {
       position: absolute;
@@ -205,10 +192,7 @@
       font-size: 0.9rem;
       cursor: pointer;
     }
-
-    .suggestion-item:hover {
-      background: #e8f0ff;
-    }
+    .suggestion-item:hover { background: #e8f0ff; }
 
     button {
       border: none;
@@ -239,15 +223,12 @@
       white-space: nowrap;
       outline: none;
     }
-
-    .search-btn:hover {
-      background: #1a3661;
-    }
+    .search-btn:hover { background: #1a3661; }
 
     .status {
       font-size: 0.95rem;
       color: #2d3c22;
-      margin-top: 0.25rem;
+      margin-top: 0.05rem; /* tighter: closer to inputs */
       text-align: center;
       width: 100%;
     }
@@ -256,7 +237,7 @@
     .daily-deals {
       width: 100%;
       max-width: 850px;
-      margin-top: 1.5rem;
+      margin-top: 1.0rem; /* slightly tighter */
     }
 
     .daily-deals-header {
@@ -297,20 +278,11 @@
       background: #fafafa;
     }
 
-    .daily-deal-title {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #2d2d2d;
-    }
-
-    .daily-deal-price {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #214478ff;
-    }
+    .daily-deal-title { font-size: 0.85rem; font-weight: 600; color: #2d2d2d; }
+    .daily-deal-price { font-size: 1rem; font-weight: 700; color: #214478ff; }
 
     .results {
-      margin-top: 1.25rem;
+      margin-top: 1.0rem;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 1.25rem;
@@ -350,7 +322,7 @@
       font-size: 0.8rem;
       color: #555;
       max-width: 850px;
-      margin: 0.25rem auto 0;
+      margin: 0.15rem auto 0;
       text-align: center;
     }
 
@@ -361,15 +333,15 @@
       background: #ffffffc9;
       border: 2px solid #214478ff;
       border-radius: 0.75rem;
-      padding: 2rem;
-      margin-top: 1.5rem;
+      padding: 1.25rem 2rem 1.75rem; /* reduced top padding */
+      margin-top: 1.0rem;
       line-height: 1.7;
     }
 
     .about-section h2 {
       color: #214478ff;
       font-size: 1.8rem;
-      margin-bottom: 1.5rem;
+      margin: 0 0 0.85rem; /* remove top margin + tighten */
       text-align: center;
     }
 
@@ -379,19 +351,11 @@
       color: #2d2d2d;
     }
 
-    .about-section .signature {
-      margin-top: 1rem;
-      text-align: center;
-      font-style: italic;
-      color: #214478ff;
-      font-size: 1.1rem;
-    }
-
     /* Alert section styles */
     .alert-wrapper {
       width: 100%;
       max-width: 600px;
-      margin-top: 1.25rem;
+      margin-top: 1.0rem;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -408,10 +372,7 @@
       border: 1px solid #214478ff;
       transition: background 0.2s ease;
     }
-
-    .alert-prompt-btn:hover {
-      background: #1a3661;
-    }
+    .alert-prompt-btn:hover { background: #1a3661; }
 
     .alert-form {
       width: 100%;
@@ -431,11 +392,7 @@
       font-weight: 500;
       width: 100%;
     }
-
-    .alert-product-message strong {
-      color: #214478ff;
-      font-weight: 700;
-    }
+    .alert-product-message strong { color: #214478ff; font-weight: 700; }
 
     .alert-form-row {
       display: flex;
@@ -463,11 +420,7 @@
       color: #444;
     }
 
-    .price-input-wrapper {
-      position: relative;
-      width: 100%;
-    }
-
+    .price-input-wrapper { position: relative; width: 100%; }
     .price-input-wrapper::before {
       content: '$';
       position: absolute;
@@ -479,10 +432,7 @@
       pointer-events: none;
       font-weight: 500;
     }
-
-    .price-input-wrapper input {
-      padding-left: 1.75rem;
-    }
+    .price-input-wrapper input { padding-left: 1.75rem; }
 
     .alert-privacy-note {
       font-size: 0.8rem;
@@ -523,10 +473,7 @@
       opacity: 1;
       box-shadow: 0 0 0 3px rgba(33, 68, 120, 0.3);
     }
-
-    .alert-submit-btn.ready:hover {
-      background: #1a3661;
-    }
+    .alert-submit-btn.ready:hover { background: #1a3661; }
 
     .alert-confirmation {
       width: 100%;
@@ -538,23 +485,109 @@
       font-size: 0.95rem;
       line-height: 1.6;
     }
+    .alert-confirmation strong { color: #214478ff; }
 
-    .alert-confirmation strong {
+    /* My Alerts dashboard */
+    .alerts-dashboard {
+      width: 100%;
+      max-width: 850px;
+      background: #ffffffc9;
+      border: 2px solid #214478ff;
+      border-radius: 0.75rem;
+      padding: 1.25rem 1.25rem 1.5rem;
+      margin-top: 1.0rem;
+    }
+
+    .alerts-title {
+      color: #214478ff;
+      font-size: 1.6rem;
+      font-weight: 800;
+      text-align: center;
+      margin: 0.25rem 0 1rem;
+    }
+
+    .alerts-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      overflow: hidden;
+      border-radius: 0.6rem;
+    }
+
+    .alerts-table thead th {
+      text-align: left;
+      font-size: 0.78rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: #214478ff;
+      padding: 0.75rem 0.65rem;
+      border-bottom: 2px solid rgba(33, 68, 120, 0.35);
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    .alerts-table tbody td {
+      padding: 0.75rem 0.65rem;
+      border-bottom: 1px solid rgba(33, 68, 120, 0.18);
+      vertical-align: middle;
+      font-size: 0.92rem;
+      color: #2d2d2d;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .alerts-muted {
+      text-align: center;
+      padding: 1.25rem 0.5rem;
+      color: #49543a;
+      font-size: 0.95rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.25rem 0.55rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.82rem;
+      border: 1px solid rgba(33, 68, 120, 0.25);
+      background: rgba(255, 255, 255, 0.6);
       color: #214478ff;
     }
 
-    .hidden {
-      display: none !important;
+    .action-btn {
+      border-radius: 0.6rem;
+      border: 1px solid #214478ff;
+      background: #214478ff;
+      color: white;
+      font-size: 0.85rem;
+      padding: 0.35rem 0.6rem;
+      cursor: pointer;
+      margin-left: 0.45rem;
+      white-space: nowrap;
     }
+    .action-btn:hover { background: #1a3661; }
+
+    .action-btn.secondary {
+      background: transparent;
+      color: #214478ff;
+    }
+    .action-btn.secondary:hover {
+      background: rgba(33, 68, 120, 0.10);
+    }
+
+    .hidden { display: none !important; }
   </style>
 </head>
 
 <body>
   <div style="display:none;">Impact-Site-Verification: 484b0fd5-0544-4654-b916-4e921a2e5077</div>
-  
+
   <!-- Top Navigation -->
   <div class="top-nav">
     <a id="aboutLink">About Us</a>
+    <a id="myAlertsLink">My Alerts</a>
   </div>
 
   <div class="app">
@@ -599,11 +632,11 @@
 
     <div class="status">Let's find your <b>running shoes</b>...cheap!</div>
 
-    <!-- Main Content (Results) -->
+    <!-- MAIN CONTENT (Results/Home) -->
     <div id="mainContent">
-      <!-- Marty's Daily Deals -->
+      <!-- Daily Deals -->
       <div class="daily-deals" id="dailyDeals">
-        <div class="daily-deals-header">Marty's Top 5 Daily Deals</div>
+        <div class="daily-deals-header">Top 5 Daily Deals</div>
         <div class="daily-deals-grid">
           <div class="daily-deal-card">
             <img src="https://placehold.co/300x200?text=Brooks+Ghost" alt="Brooks Ghost 15">
@@ -671,23 +704,46 @@
       </div>
     </div>
 
-    <!-- About Section (Hidden by default) -->
+    <!-- ABOUT SECTION (Hidden by default) -->
     <div id="aboutContent" class="about-section hidden">
       <h2>About Us</h2>
-      
+
       <p>Shoe Beagle is a price comparison website dedicated to helping runners find the best deals on running shoes. We provide side-by-side price comparisons across multiple retailers, allowing users to search by brand and model to find the lowest prices.</p>
-      
-      <p>Our platform features price alerts, real-time deal updates, and direct links to merchant sites where users can complete their purchases.</p>
-      
-      <p>I will do my best to sniff out the best running shoe deals every day!</p>
-      
-      <div style="text-align: center; margin: 1.5rem 0;">
-        <img src="/images/marty.svg" alt="Marty the Beagle" style="width: 200px; height: auto;">
-      </div>
-      
-      <div class="signature">
-        Marty 🐾
-      </div>
+
+      <p>Our platform features price alerts, deal updates, and direct links to merchant sites where users can complete their purchases.</p>
+
+      <p>We do our best to find the best running shoe deals every day.</p>
+    </div>
+
+    <!-- MY ALERTS DASHBOARD (Hidden by default) -->
+    <div id="alertsDashboard" class="alerts-dashboard hidden">
+      <div class="alerts-title">My Alerts</div>
+
+      <table class="alerts-table" aria-label="My Alerts Table">
+        <colgroup>
+          <col style="width: 12%;">
+          <col style="width: 14%;">
+          <col style="width: 28%;"> <!-- model gets most width -->
+          <col style="width: 12%;">
+          <col style="width: 16%;">
+          <col style="width: 18%;">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>DATE/SET</th>
+            <th>SHOE/BRAND</th>
+            <th>SHOE/MODEL</th>
+            <th>DAYS/LEFT</th>
+            <th>TARGET/PRICE</th>
+            <th>STATUS</th>
+          </tr>
+        </thead>
+        <tbody id="alertsTbody">
+          <!-- Rows injected by JS -->
+        </tbody>
+      </table>
+
+      <div id="alertsEmpty" class="alerts-muted hidden">No alerts have been set.</div>
     </div>
   </div>
 
@@ -696,14 +752,14 @@
     const statusEl = document.querySelector(".status");
     const resultsEl = document.getElementById("results");
     const dailyDeals = document.getElementById("dailyDeals");
-    
+
     const alertWrapper = document.getElementById("alertWrapper");
     const alertPromptBtn = document.getElementById("alertPromptBtn");
     const alertForm = document.getElementById("alertForm");
     const alertSubmitBtn = document.getElementById("alertSubmitBtn");
     const alertConfirmation = document.getElementById("alertConfirmation");
     const alertProductName = document.getElementById("alertProductName");
-    
+
     const alertPriceInput = document.getElementById("alertPrice");
     const alertContactInput = document.getElementById("alertContact");
 
@@ -719,15 +775,226 @@
 
     const mainContent = document.getElementById("mainContent");
     const aboutContent = document.getElementById("aboutContent");
+    const alertsDashboard = document.getElementById("alertsDashboard");
+
     const aboutLink = document.getElementById("aboutLink");
+    const myAlertsLink = document.getElementById("myAlertsLink");
     const logoLink = document.getElementById("logoLink");
+
+    const alertsTbody = document.getElementById("alertsTbody");
+    const alertsEmpty = document.getElementById("alertsEmpty");
 
     // Store current search for alert
     let currentSearch = { brand: "", model: "" };
-    
+
     // Track if brand has been selected (not just typed)
     let brandSelected = false;
 
+    // ---------- Alerts storage (localStorage with safe fallback) ----------
+    const ALERTS_KEY = "shoeBeagleAlerts";
+    let alertsMemoryFallback = [];
+
+    function canUseLocalStorage() {
+      try {
+        const k = "__sb_test__";
+        localStorage.setItem(k, "1");
+        localStorage.removeItem(k);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function loadAlerts() {
+      if (canUseLocalStorage()) {
+        try {
+          const raw = localStorage.getItem(ALERTS_KEY);
+          const parsed = raw ? JSON.parse(raw) : [];
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          return [];
+        }
+      }
+      return alertsMemoryFallback;
+    }
+
+    function saveAlerts(list) {
+      if (canUseLocalStorage()) {
+        try {
+          localStorage.setItem(ALERTS_KEY, JSON.stringify(list));
+        } catch (e) {
+          // ignore
+        }
+      } else {
+        alertsMemoryFallback = list;
+      }
+    }
+
+    function normalize(s) {
+      return String(s || "").trim().toLowerCase();
+    }
+
+    function nowMs() {
+      return Date.now();
+    }
+
+    function daysBetween(msA, msB) {
+      const diff = Math.abs(msA - msB);
+      return Math.floor(diff / (1000 * 60 * 60 * 24));
+    }
+
+    function formatDateShort(ms) {
+      const d = new Date(ms);
+      const day = d.getDate();
+      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      const mon = months[d.getMonth()];
+      const yy = String(d.getFullYear()).slice(-2);
+      return `${day}-${mon}-${yy}`;
+    }
+
+    function computeAlertStatus(alert) {
+      if (alert.cancelledAt) return "Cancelled";
+      const ageDays = daysBetween(alert.setAt, nowMs());
+      if (ageDays >= 30) return "Expired";
+      return "Active";
+    }
+
+    function computeDaysLeft(alert) {
+      if (alert.cancelledAt) return 0;
+      const ageDays = daysBetween(alert.setAt, nowMs());
+      const left = 30 - ageDays;
+      return left > 0 ? left : 0;
+    }
+
+    function alertKey(brand, model) {
+      return `${normalize(brand)}::${normalize(model)}`;
+    }
+
+    function findActiveAlertFor(brand, model) {
+      const key = alertKey(brand, model);
+      const list = loadAlerts();
+      return list.find(a => a.key === key && computeAlertStatus(a) === "Active");
+    }
+
+    function upsertAlert(newAlert) {
+      const list = loadAlerts();
+      const idx = list.findIndex(a => a.id === newAlert.id);
+      if (idx >= 0) list[idx] = newAlert;
+      else list.push(newAlert);
+      saveAlerts(list);
+    }
+
+    function renderAlertsDashboard() {
+      const list = loadAlerts();
+
+      // Update statuses on render (expired if over 30 days)
+      // (We compute status dynamically, but we still want UI correct.)
+      alertsTbody.innerHTML = "";
+
+      if (!list.length) {
+        alertsEmpty.classList.remove("hidden");
+        document.querySelector(".alerts-table").classList.add("hidden");
+        return;
+      }
+
+      alertsEmpty.classList.add("hidden");
+      document.querySelector(".alerts-table").classList.remove("hidden");
+
+      // Sort: Active first, then Expired, then Cancelled; within group newest first
+      const order = { "Active": 0, "Expired": 1, "Cancelled": 2 };
+      const sorted = [...list].sort((a, b) => {
+        const sa = computeAlertStatus(a);
+        const sb = computeAlertStatus(b);
+        if (order[sa] !== order[sb]) return order[sa] - order[sb];
+        return (b.setAt || 0) - (a.setAt || 0);
+      });
+
+      sorted.forEach(a => {
+        const status = computeAlertStatus(a);
+        const daysLeft = computeDaysLeft(a);
+
+        const tr = document.createElement("tr");
+
+        const tdDate = document.createElement("td");
+        tdDate.textContent = formatDateShort(a.setAt);
+        tr.appendChild(tdDate);
+
+        const tdBrand = document.createElement("td");
+        tdBrand.textContent = a.brand;
+        tr.appendChild(tdBrand);
+
+        const tdModel = document.createElement("td");
+        tdModel.textContent = a.model;
+        tr.appendChild(tdModel);
+
+        const tdDays = document.createElement("td");
+        tdDays.textContent = status === "Active" ? String(daysLeft) : "—";
+        // Renew button after days for ACTIVE
+        if (status === "Active") {
+          const renewBtn = document.createElement("button");
+          renewBtn.className = "action-btn secondary";
+          renewBtn.textContent = "Renew";
+          renewBtn.addEventListener("click", () => {
+            a.setAt = nowMs();           // reset timer
+            a.cancelledAt = null;        // ensure active
+            upsertAlert(a);
+            renderAlertsDashboard();
+          });
+          tdDays.appendChild(renewBtn);
+        }
+        tr.appendChild(tdDays);
+
+        const tdPrice = document.createElement("td");
+        tdPrice.textContent = `$${Number(a.targetPrice).toFixed(2)}`;
+        // Edit button after price for ACTIVE
+        if (status === "Active") {
+          const editBtn = document.createElement("button");
+          editBtn.className = "action-btn secondary";
+          editBtn.textContent = "Edit";
+          editBtn.addEventListener("click", () => {
+            const raw = prompt("Enter a new target price:", String(a.targetPrice));
+            if (raw === null) return;
+            const val = Number(raw);
+            if (!isFinite(val) || val <= 0) {
+              alert("Please enter a valid price greater than 0.");
+              return;
+            }
+            a.targetPrice = Number(val).toFixed(2);
+            a.setAt = nowMs();           // start over at 30 days
+            a.cancelledAt = null;
+            upsertAlert(a);
+            renderAlertsDashboard();
+          });
+          tdPrice.appendChild(editBtn);
+        }
+        tr.appendChild(tdPrice);
+
+        const tdStatus = document.createElement("td");
+        const pill = document.createElement("span");
+        pill.className = "pill";
+        pill.textContent = status;
+        tdStatus.appendChild(pill);
+
+        // Cancel button after any ACTIVE alert
+        if (status === "Active") {
+          const cancelBtn = document.createElement("button");
+          cancelBtn.className = "action-btn";
+          cancelBtn.textContent = "Cancel";
+          cancelBtn.addEventListener("click", () => {
+            a.cancelledAt = nowMs();
+            upsertAlert(a);
+            renderAlertsDashboard();
+          });
+          tdStatus.appendChild(cancelBtn);
+        }
+
+        tr.appendChild(tdStatus);
+
+        alertsTbody.appendChild(tr);
+      });
+    }
+
+    // ---------- Brand models ----------
     const brandModels = {
       "Asics": ["Novablast","Gel-Kayano","Gel-Nimbus","Gel-Cumulus","Metaspeed Sky"],
       "Nike": ["Pegasus","ZoomX Vaporfly","Alphafly","Infinity Run","Structure"],
@@ -750,24 +1017,6 @@
     };
 
     const brands = Object.keys(brandModels).sort();
-
-    // Navigation Functions
-    function showAbout() {
-      mainContent.classList.add("hidden");
-      aboutContent.classList.remove("hidden");
-    }
-
-    function showHome() {
-      aboutContent.classList.add("hidden");
-      mainContent.classList.remove("hidden");
-    }
-
-    aboutLink.addEventListener("click", showAbout);
-    logoLink.addEventListener("click", showHome);
-
-    function normalize(s) {
-      return String(s || "").trim().toLowerCase();
-    }
 
     function resolveBrandKey(input) {
       const normalized = normalize(input);
@@ -832,10 +1081,10 @@
       if (!modelInput.disabled) {
         modelInput.placeholder = "Enter Shoe Model";
         brandSelected = true;
-        
+
         brandPaw.classList.add("hidden");
         brandPaw.classList.remove("rock");
-        
+
         modelPaw.classList.remove("hidden");
         modelPaw.classList.add("rock");
       }
@@ -879,10 +1128,10 @@
     function clearSearchForm() {
       brandInput.value = "";
       brandInput.placeholder = "Enter Shoe Brand";
-      
+
       resetModelState();
       updatePaws();
-      
+
       setTimeout(() => brandInput.focus(), 100);
     }
 
@@ -898,18 +1147,58 @@
     function updateAlertSubmitButton() {
       const price = alertPriceInput.value.trim();
       const contact = alertContactInput.value.trim();
-      
+
       const priceValid = price && parseFloat(price) > 0;
       const contactValid = contact.length > 0 && (
         contact.includes('@') ||
         /[\d\-\+\(\)\s]{7,}/.test(contact)
       );
-      
+
       const isReady = priceValid && contactValid;
-      
+
       alertSubmitBtn.disabled = !isReady;
       alertSubmitBtn.classList.toggle("ready", isReady);
     }
+
+    // Navigation Functions
+    function hideAllContentBelowStatus() {
+      mainContent.classList.add("hidden");
+      aboutContent.classList.add("hidden");
+      alertsDashboard.classList.add("hidden");
+
+      // Clear search results/alert UI so "My Alerts" is clean
+      resultsEl.innerHTML = "";
+      dailyDeals.style.display = "none";
+      alertWrapper.style.display = "none";
+      resetAlertSection();
+    }
+
+    function showHome() {
+      aboutContent.classList.add("hidden");
+      alertsDashboard.classList.add("hidden");
+      mainContent.classList.remove("hidden");
+
+      // If nothing is showing, restore daily deals
+      if (!resultsEl.innerHTML.trim()) {
+        dailyDeals.style.display = "block";
+      }
+    }
+
+    function showAbout() {
+      mainContent.classList.add("hidden");
+      alertsDashboard.classList.add("hidden");
+      aboutContent.classList.remove("hidden");
+    }
+
+    function showMyAlerts() {
+      hideAllContentBelowStatus();
+      alertsDashboard.classList.remove("hidden");
+      renderAlertsDashboard();
+    }
+
+    aboutLink.addEventListener("click", showAbout);
+    myAlertsLink.addEventListener("click", showMyAlerts);
+    logoLink.addEventListener("click", showHome);
 
     // Initial state
     resetModelState();
@@ -919,11 +1208,8 @@
     brandInput.addEventListener("input", () => {
       const typed = brandInput.value.trim();
 
-      if (typed) {
-        enableModel();
-      } else {
-        resetModelState();
-      }
+      if (typed) enableModel();
+      else resetModelState();
 
       const matches = filterStartsWith(brands, typed);
 
@@ -935,7 +1221,6 @@
         confirmBrandSelection();
 
         setTimeout(() => modelInput.focus(), 0);
-
         updatePaws();
       });
 
@@ -978,7 +1263,6 @@
         modelSuggestions.style.display = "none";
 
         setTimeout(() => fetchBtn.focus(), 0);
-
         updatePaws();
       });
 
@@ -1005,6 +1289,11 @@
         return;
       }
 
+      // Only show home content on search
+      if (aboutContent.classList.contains("hidden") === false || alertsDashboard.classList.contains("hidden") === false) {
+        showHome();
+      }
+
       currentSearch = { brand: brandKey, model: modelCanonical };
 
       statusEl.textContent = "Searching deals…";
@@ -1012,17 +1301,12 @@
       dailyDeals.style.display = "none";
       alertWrapper.style.display = "none";
 
-      // Show main content if on about page
-      if (mainContent.classList.contains("hidden")) {
-        showHome();
-      }
-
       const query = `${brandKey} ${modelCanonical}`;
       let data;
 
       try {
         const res = await fetch("/api/search?" + new URLSearchParams({ query }));
-        
+
         try {
           data = await res.json();
         } catch (parseErr) {
@@ -1084,7 +1368,7 @@
 
       resetAlertSection();
       alertWrapper.style.display = "flex";
-      
+
       clearSearchForm();
     });
 
@@ -1092,7 +1376,7 @@
     alertPromptBtn.addEventListener("click", () => {
       alertPromptBtn.style.display = "none";
       alertForm.style.display = "flex";
-      
+
       const product = `${currentSearch.brand} ${currentSearch.model}`;
       alertProductName.textContent = product;
     });
@@ -1105,58 +1389,80 @@
     alertSubmitBtn.addEventListener("click", async () => {
       if (alertSubmitBtn.disabled) return;
 
-      const price = alertPriceInput.value.trim();
+      const priceRaw = alertPriceInput.value.trim();
+      const priceNum = Number(priceRaw);
       const contact = alertContactInput.value.trim();
-      const product = `${currentSearch.brand} ${currentSearch.model}`;
+
+      const brand = currentSearch.brand;
+      const model = currentSearch.model;
+
+      if (!brand || !model) {
+        alert("Please search for a shoe first, then set an alert.");
+        return;
+      }
+
+      if (!isFinite(priceNum) || priceNum <= 0) {
+        alert("Please enter a valid target price greater than 0.");
+        return;
+      }
+
+      // Duplicate active alert prevention
+      const existingActive = findActiveAlertFor(brand, model);
+      if (existingActive) {
+        alertForm.style.display = "none";
+        alertConfirmation.innerHTML = `
+          <strong>You already have an active alert for this shoe.</strong><br><br>
+          Please go to <strong>My Alerts</strong> to edit or renew it.
+        `;
+        alertConfirmation.style.display = "block";
+        return;
+      }
 
       const isEmail = contact.includes('@');
       const payload = {
-        product: product,
-        targetPrice: price,
+        product: `${brand} ${model}`,
+        targetPrice: Number(priceNum).toFixed(2),
         email: isEmail ? contact : "",
         phone: isEmail ? "" : contact
       };
 
+      // Store alert locally (date set + brand + model + price)
+      const newAlert = {
+        id: `a_${Math.random().toString(36).slice(2)}_${Date.now()}`,
+        key: alertKey(brand, model),
+        setAt: nowMs(),
+        brand,
+        model,
+        targetPrice: Number(priceNum).toFixed(2),
+        cancelledAt: null,
+        contact: contact
+      };
+      upsertAlert(newAlert);
+
+      // Optional: still hit the API endpoint (keeps your backend path alive)
       try {
-        const res = await fetch("/api/alerts", {
+        await fetch("/api/alerts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
-
-        if (!res.ok) {
-          console.error("Alert API error:", res.status);
-          alertForm.style.display = "none";
-          alertConfirmation.innerHTML = `
-            <strong>✓ Price Alert Set!</strong><br><br>
-            You'll be notified immediately when <strong>${product}</strong> is found at or below <strong>$${parseFloat(price).toFixed(2)}</strong>.<br><br>
-            This alert will continue for <strong>30 days</strong> or until you cancel it.
-          `;
-          alertConfirmation.style.display = "block";
-          return;
-        }
-
-        const data = await res.json().catch(() => ({}));
-
-        alertForm.style.display = "none";
-        alertConfirmation.innerHTML = `
-          <strong>✓ Price Alert Set!</strong><br><br>
-          You'll be notified immediately when <strong>${product}</strong> is found at or below <strong>$${parseFloat(price).toFixed(2)}</strong>.<br><br>
-          This alert will continue for <strong>30 days</strong> or until you cancel it.
-        `;
-        alertConfirmation.style.display = "block";
-
       } catch (err) {
         console.error("Alert submission error:", err);
-        alertForm.style.display = "none";
-        alertConfirmation.innerHTML = `
-          <strong>✓ Price Alert Set!</strong><br><br>
-          You'll be notified immediately when <strong>${product}</strong> is found at or below <strong>$${parseFloat(price).toFixed(2)}</strong>.<br><br>
-          This alert will continue for <strong>30 days</strong> or until you cancel it.
-        `;
-        alertConfirmation.style.display = "block";
       }
+
+      // Confirmation UI
+      const product = `${brand} ${model}`;
+      alertForm.style.display = "none";
+      alertConfirmation.innerHTML = `
+        <strong>✓ Price Alert Set!</strong><br><br>
+        Alert created for <strong>${product}</strong> at <strong>$${Number(priceNum).toFixed(2)}</strong>.<br><br>
+        Manage it anytime in <strong>My Alerts</strong> (edit, renew, cancel).
+      `;
+      alertConfirmation.style.display = "block";
     });
+
+    // On first load, keep daily deals visible on home
+    dailyDeals.style.display = "block";
   </script>
 </body>
 </html>
