@@ -603,37 +603,94 @@
       color: #8a1f2c;
     }
 
+    /* Action buttons */
     .action-btn {
-      border-radius: 0.6rem;
-      border: 1px solid #214478ff;
-      background: #214478ff;
+      border-radius: 0.4rem;
+      border: none;
       color: white;
       font-size: 0.85rem;
-      padding: 0.35rem 0.6rem;
+      font-weight: 700;
+      padding: 0.35rem 0.5rem;
       cursor: pointer;
-      margin-left: 0.45rem;
+      margin-left: 0.35rem;
       white-space: nowrap;
-    }
-    .action-btn:hover { background: #1a3661; }
-
-    /* Target price editor - inline spinner */
-    .target-price-display {
+      position: relative;
+      min-width: 28px;
+      height: 28px;
       display: inline-flex;
       align-items: center;
-      gap: 0.25rem;
+      justify-content: center;
+    }
+
+    .action-btn.renew-btn {
+      background: #ff8c42;
+      border: 1px solid #e67a30;
+    }
+    .action-btn.renew-btn:hover { 
+      background: #e67a30; 
+    }
+
+    .action-btn.cancel-btn {
+      background: #dc3545;
+      border: 1px solid #c82333;
+    }
+    .action-btn.cancel-btn:hover { 
+      background: #c82333; 
+    }
+
+    /* Tooltip */
+    .action-btn::before {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 0.35rem 0.6rem;
+      background: #2d2d2d;
+      color: white;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      border-radius: 0.3rem;
+      opacity: 0;
+      pointer-events: none;
+      margin-bottom: 0.3rem;
+      transition: opacity 0.2s ease;
+      z-index: 1000;
+    }
+
+    .action-btn:hover::before {
+      opacity: 1;
+    }
+
+    /* Target price editor with spinner inside */
+    .target-price-wrapper {
+      position: relative;
+      display: inline-block;
     }
 
     .target-price-spinner {
-      width: 70px;
+      width: 75px;
       height: 28px;
       font-size: 0.9rem;
-      padding: 0 0.4rem;
+      padding: 0 0.3rem 0 1.3rem;
       border-radius: 0.5rem;
       border: 1px solid #214478ff;
       background: #fafdf4;
       color: #444;
       box-sizing: border-box;
-      appearance: auto;
+      text-align: left;
+    }
+
+    .target-price-wrapper::before {
+      content: '$';
+      position: absolute;
+      left: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.9rem;
+      color: #444;
+      pointer-events: none;
+      font-weight: 500;
     }
 
     .target-price-spinner:disabled {
@@ -953,13 +1010,9 @@
         tr.appendChild(tdDays);
 
         const tdTarget = document.createElement("td");
-        const priceDisplay = document.createElement("span");
-        priceDisplay.className = "target-price-display";
+        const priceWrapper = document.createElement("span");
+        priceWrapper.className = "target-price-wrapper";
         
-        const dollarSign = document.createElement("span");
-        dollarSign.textContent = "$";
-        priceDisplay.appendChild(dollarSign);
-
         const targetSpinner = document.createElement("input");
         targetSpinner.type = "number";
         targetSpinner.step = "1";
@@ -984,8 +1037,8 @@
           });
         }
         
-        priceDisplay.appendChild(targetSpinner);
-        tdTarget.appendChild(priceDisplay);
+        priceWrapper.appendChild(targetSpinner);
+        tdTarget.appendChild(priceWrapper);
         tr.appendChild(tdTarget);
 
         const tdStatus = document.createElement("td");
@@ -997,9 +1050,22 @@
         tdStatus.appendChild(pill);
 
         if (status === "Active") {
+          const renewBtn = document.createElement("button");
+          renewBtn.className = "action-btn renew-btn";
+          renewBtn.textContent = "R";
+          renewBtn.setAttribute("data-tooltip", "Reset to 30 days");
+          renewBtn.addEventListener("click", () => {
+            a.setAt = nowMs();
+            a.cancelledAt = null;
+            upsertAlert(a);
+            renderAlertsDashboard();
+          });
+          tdStatus.appendChild(renewBtn);
+
           const cancelBtn = document.createElement("button");
-          cancelBtn.className = "action-btn";
-          cancelBtn.textContent = "Cancel";
+          cancelBtn.className = "action-btn cancel-btn";
+          cancelBtn.textContent = "✕";
+          cancelBtn.setAttribute("data-tooltip", "End alert");
           cancelBtn.addEventListener("click", () => {
             a.cancelledAt = nowMs();
             upsertAlert(a);
