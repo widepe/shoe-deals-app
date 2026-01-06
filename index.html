@@ -364,13 +364,16 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       gap: 1rem;
     }
 
-    /* FORCE horizontal centering (button + boxes) */
-    .alert-wrapper > * {
-      margin-left: auto !important;
-      margin-right: auto !important;
+    /* Make sure the button and the boxes are truly centered */
+    .alert-prompt-btn,
+    .alert-form,
+    .alert-confirmation {
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .alert-prompt-btn {
@@ -480,6 +483,8 @@
       width: auto;
       align-self: center;
       display: block;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .alert-submit-btn.ready {
@@ -529,7 +534,7 @@
       width: 100%;
       border-collapse: collapse;
       table-layout: fixed;
-      overflow: hidden;
+      overflow: visible; /* allow content to show */
       border-radius: 0.6rem;
     }
 
@@ -544,23 +549,22 @@
       background: rgba(255, 255, 255, 0.55);
     }
 
+    /* Default: no ellipses anywhere in the table */
     .alerts-table tbody td {
       padding: 0.75rem 0.65rem;
       border-bottom: 1px solid rgba(33, 68, 120, 0.18);
       vertical-align: middle;
       font-size: 0.92rem;
       color: #2d2d2d;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    /* Stop ellipses in Model column: allow wrapping */
-    .alerts-table td.model-cell {
-      white-space: normal;
       overflow: visible;
       text-overflow: clip;
+      white-space: normal; /* allow wrapping so nothing truncates */
       line-height: 1.2;
+    }
+
+    /* Keep action buttons on one line in Status */
+    .alerts-table td.status-cell {
+      white-space: nowrap;
     }
 
     .alerts-muted {
@@ -711,8 +715,10 @@
       <p class="disclaimer">Prices are subject to change.</p>
 
       <div class="alert-wrapper" id="alertWrapper" style="display:none;">
+        <!-- Centered -->
         <button class="alert-prompt-btn" id="alertPromptBtn"><span class="bell-icon">🔔</span> Set Price Alert?</button>
 
+        <!-- Centered box -->
         <div class="alert-form" id="alertForm" style="display:none;">
           <div class="alert-product-message">
             Alert me when <strong id="alertProductName"></strong> is less than:
@@ -757,19 +763,17 @@
 
       <table class="alerts-table" aria-label="My Alerts Table" id="alertsTable">
         <colgroup>
-          <col style="width: 9%;">
-          <col style="width: 10%;">
-          <!-- SHORTEN model column width -->
-          <col style="width: 24%;">
-          <col style="width: 18%;">
-          <col style="width: 18%;">
-          <col style="width: 21%;">
+          <!-- Adjusted widths to avoid truncation AND keep buttons visible -->
+          <col style="width: 10%;">  <!-- Date Set -->
+          <col style="width: 34%;">  <!-- Shoe -->
+          <col style="width: 16%;">  <!-- Days Left -->
+          <col style="width: 18%;">  <!-- Target -->
+          <col style="width: 22%;">  <!-- Status (pill + cancel) -->
         </colgroup>
         <thead>
           <tr>
             <th>Date Set</th>
-            <th>Brand</th>
-            <th>Model</th>
+            <th>Shoe</th>
             <th>Days Left</th>
             <th>Target</th>
             <th>Status</th>
@@ -941,14 +945,10 @@
         tdDate.textContent = formatDateShort(a.setAt);
         tr.appendChild(tdDate);
 
-        const tdBrand = document.createElement("td");
-        tdBrand.textContent = a.brand;
-        tr.appendChild(tdBrand);
-
-        const tdModel = document.createElement("td");
-        tdModel.textContent = a.model;
-        tdModel.className = "model-cell";
-        tr.appendChild(tdModel);
+        // COMBINED Shoe column
+        const tdShoe = document.createElement("td");
+        tdShoe.textContent = `${a.brand} ${a.model}`;
+        tr.appendChild(tdShoe);
 
         const tdDays = document.createElement("td");
         tdDays.textContent = status === "Active" ? String(daysLeft) : "—";
@@ -1002,6 +1002,8 @@
         tr.appendChild(tdTarget);
 
         const tdStatus = document.createElement("td");
+        tdStatus.className = "status-cell";
+
         const pill = document.createElement("span");
         pill.className = pillClassFor(status);
         pill.textContent = status;
@@ -1212,12 +1214,10 @@
     myAlertsLink.addEventListener("click", showMyAlerts);
     logoLink.addEventListener("click", showHome);
 
-    // Initial state
     resetModelState();
     updatePaws();
     dailyDeals.style.display = "block";
 
-    // BRAND input
     brandInput.addEventListener("input", () => {
       const typed = brandInput.value.trim();
       if (typed) enableModel();
@@ -1252,7 +1252,6 @@
       }
     });
 
-    // MODEL input
     modelInput.addEventListener("input", () => {
       const brandKey = resolveBrand();
       const text = modelInput.value.trim();
@@ -1278,15 +1277,11 @@
 
     modelInput.addEventListener("blur", () => setTimeout(() => { modelSuggestions.style.display = "none"; }, 120));
 
-    // Submit search
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const brandKey = resolveBrand();
       const modelCanonical = resolveModelKey(brandKey, modelInput.value);
-
-      if (brandKey) brandInput.value = brandKey;
-      if (modelCanonical) modelInput.value = modelCanonical;
 
       if (!brandKey || !modelCanonical) {
         statusMessageEl.textContent = "Please provide a brand & model.";
@@ -1304,7 +1299,7 @@
       resultsEl.innerHTML = "";
       dailyDeals.style.display = "none";
 
-      // ALWAYS show price alert section even if no results
+      // Always show alert section centered for the searched shoe
       resetAlertSection();
       alertWrapper.style.display = "flex";
       alertProductName.textContent = `${brandKey} ${modelCanonical}`;
@@ -1318,7 +1313,6 @@
       } catch (err) {
         console.error("Search error:", err);
         statusMessageEl.textContent = "Search failed. Please try again.";
-        // Keep alert section visible
         clearSearchForm();
         return;
       }
@@ -1327,7 +1321,6 @@
 
       if (!results.length) {
         statusMessageEl.textContent = "No results found — set a price alert and we’ll keep sniffing.";
-        // keep alert section visible
         clearSearchForm();
         return;
       }
@@ -1370,7 +1363,6 @@
       clearSearchForm();
     });
 
-    // Alert prompt button
     alertPromptBtn.addEventListener("click", () => {
       alertPromptBtn.style.display = "none";
       alertForm.style.display = "flex";
@@ -1383,22 +1375,13 @@
     alertSubmitBtn.addEventListener("click", async () => {
       if (alertSubmitBtn.disabled) return;
 
-      const priceRaw = alertPriceInput.value.trim();
-      const priceNum = Number(priceRaw);
+      const priceNum = Number(alertPriceInput.value.trim());
       const contact = alertContactInput.value.trim();
-
       const brand = currentSearch.brand;
       const model = currentSearch.model;
 
-      if (!brand || !model) {
-        alert("Please search for a shoe first, then set an alert.");
-        return;
-      }
-
-      if (!isFinite(priceNum) || priceNum <= 0) {
-        alert("Please enter a valid target price greater than 0.");
-        return;
-      }
+      if (!brand || !model) { alert("Please search for a shoe first, then set an alert."); return; }
+      if (!isFinite(priceNum) || priceNum <= 0) { alert("Please enter a valid target price greater than 0."); return; }
 
       const existingActive = findActiveAlertFor(brand, model);
       if (existingActive) {
@@ -1412,12 +1395,7 @@
       }
 
       const isEmail = contact.includes('@');
-      const payload = {
-        product: `${brand} ${model}`,
-        targetPrice: Number(priceNum).toFixed(2),
-        email: isEmail ? contact : "",
-        phone: isEmail ? "" : contact
-      };
+      const payload = { product: `${brand} ${model}`, targetPrice: Number(priceNum).toFixed(2), email: isEmail ? contact : "", phone: isEmail ? "" : contact };
 
       const newAlert = {
         id: `a_${Math.random().toString(36).slice(2)}_${Date.now()}`,
@@ -1427,25 +1405,18 @@
         model,
         targetPrice: Number(priceNum).toFixed(2),
         cancelledAt: null,
-        contact: contact
+        contact
       };
       upsertAlert(newAlert);
 
       try {
-        await fetch("/api/alerts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-      } catch (err) {
-        console.error("Alert submission error:", err);
-      }
+        await fetch("/api/alerts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      } catch (err) { console.error("Alert submission error:", err); }
 
-      const product = `${brand} ${model}`;
       alertForm.style.display = "none";
       alertConfirmation.innerHTML = `
         <strong>✓ Price Alert Set!</strong><br><br>
-        Alert created for <strong>${product}</strong> at <strong>$${Number(priceNum).toFixed(2)}</strong>.<br><br>
+        Alert created for <strong>${brand} ${model}</strong> at <strong>$${Number(priceNum).toFixed(2)}</strong>.<br><br>
         Manage it anytime in <strong>My Alerts</strong> (renew, update, cancel).
       `;
       alertConfirmation.style.display = "block";
