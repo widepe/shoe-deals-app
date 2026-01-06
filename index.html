@@ -156,6 +156,16 @@
       color: #444;
     }
 
+    /* Remove number input arrows */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
     input::placeholder { color: #999; opacity: 1; }
 
     .model-inactive { background: #faf5f2ff; cursor: not-allowed; }
@@ -438,7 +448,10 @@
       color: #444;
     }
 
-    .price-input-wrapper { position: relative; width: 100%; }
+    .price-input-wrapper { 
+      position: relative; 
+      width: 100%; 
+    }
     .price-input-wrapper::before {
       content: '$';
       position: absolute;
@@ -450,7 +463,10 @@
       pointer-events: none;
       font-weight: 500;
     }
-    .price-input-wrapper input { padding-left: 1.75rem; }
+    .price-input-wrapper input { 
+      padding-left: 1.75rem; 
+      padding-right: 2.1rem;
+    }
 
     .alert-privacy-note {
       font-size: 0.8rem;
@@ -473,24 +489,21 @@
     .alert-submit-btn {
       padding: 0.75rem 1.5rem;
       border-radius: 0.75rem;
-      background: #8fa3b8;
+      background: #214478ff;
       color: white;
       font-size: 1rem;
-      cursor: not-allowed;
+      cursor: pointer;
       border: 1px solid #214478ff;
       transition: background 0.2s ease, box-shadow 0.2s ease;
-      opacity: 0.6;
       width: auto;
       align-self: center;
-      display: block;
+      display: none;
       margin-left: auto;
       margin-right: auto;
     }
 
     .alert-submit-btn.ready {
-      background: #214478ff;
-      cursor: pointer;
-      opacity: 1;
+      display: block;
       box-shadow: 0 0 0 3px rgba(33, 68, 120, 0.3);
     }
     .alert-submit-btn.ready:hover { background: #1a3661; }
@@ -861,7 +874,8 @@
 
           <div class="alert-form-row">
             <div class="price-input-wrapper">
-              <input id="alertPrice" type="number" step="0.01" placeholder="120.00" min="0">
+              <input id="alertPrice" type="number" step="1" placeholder="Enter Dollar Amount" min="1">
+              <span class="paw rock" id="alertPricePaw">🐾</span>
             </div>
           </div>
 
@@ -872,7 +886,7 @@
 
           <div class="alert-privacy-note">🔒 Your information is never shared. Used only for price alerts.</div>
 
-          <button class="alert-submit-btn" id="alertSubmitBtn" disabled>
+          <button class="alert-submit-btn" id="alertSubmitBtn">
             <span class="envelope-icon">📩</span> Set Price Alert
           </button>
 
@@ -940,6 +954,7 @@
     const alertProductName = document.getElementById("alertProductName");
 
     const alertPriceInput = document.getElementById("alertPrice");
+    const alertPricePaw = document.getElementById("alertPricePaw");
     const alertContactInput = document.getElementById("alertContact");
 
     const fetchBtn = document.getElementById("fetchBtn");
@@ -1278,7 +1293,7 @@
             priceWrapper.appendChild(saveBtn);
             actionsDiv.appendChild(priceWrapper);
 
-            // Add 10 Days - FIX: subtract 10 days from setAt to extend the alert
+            // Add 10 Days - keep date same, just extend days
             const add10Btn = document.createElement("button");
             add10Btn.textContent = "Add 10 Days";
             add10Btn.className = "secondary";
@@ -1286,7 +1301,7 @@
               e.stopPropagation();
               showConfirmation(actionsDiv, "Add 10 days to alert?", () => {
                 const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
-                // Subtract 10 days from setAt makes it "older", increasing days left
+                // Move setAt back 10 days to increase days remaining
                 a.setAt = a.setAt - TEN_DAYS_MS;
                 upsertAlert(a);
                 renderAlertsDashboard();
@@ -1442,17 +1457,15 @@
     }
 
     function updatePaws() {
-      if (!brandSelected && !brandInput.value.trim()) {
+      // Brand paw - hide when typing
+      if (brandInput.value.trim()) {
+        brandPaw.classList.add("hidden");
+      } else if (!brandSelected) {
         brandPaw.classList.remove("hidden");
         brandPaw.classList.add("rock");
-      } else if (brandInput.value.trim() && !brandSelected) {
-        brandPaw.classList.remove("rock");
-        brandPaw.classList.remove("hidden");
-      } else {
-        brandPaw.classList.add("hidden");
-        brandPaw.classList.remove("rock");
       }
 
+      // Model paw
       if (brandSelected && !modelInput.disabled) {
         if (!modelInput.value.trim()) {
           modelPaw.classList.remove("hidden");
@@ -1469,11 +1482,15 @@
       updateFetchReady();
     }
 
-    function clearSearchForm() {
-      brandInput.value = "";
-      resetModelState();
-      updatePaws();
-      setTimeout(() => brandInput.focus(), 100);
+    function updateAlertSubmitButton() {
+      const price = alertPriceInput.value.trim();
+      const contact = alertContactInput.value.trim();
+      const priceValid = price && parseFloat(price) > 0;
+      const contactValid = contact.length > 0 && (
+        contact.includes('@') || /[\d\-\+\(\)\s]{7,}/.test(contact)
+      );
+      const isReady = priceValid && contactValid;
+      alertSubmitBtn.classList.toggle("ready", isReady);
     }
 
     function resetAlertSection() {
@@ -1483,19 +1500,9 @@
       alertExistingInfo.style.display = "none";
       alertPriceInput.value = "";
       alertContactInput.value = "";
+      alertPricePaw.classList.remove("hidden");
+      alertPricePaw.classList.add("rock");
       updateAlertSubmitButton();
-    }
-
-    function updateAlertSubmitButton() {
-      const price = alertPriceInput.value.trim();
-      const contact = alertContactInput.value.trim();
-      const priceValid = price && parseFloat(price) > 0;
-      const contactValid = contact.length > 0 && (
-        contact.includes('@') || /[\d\-\+\(\)\s]{7,}/.test(contact)
-      );
-      const isReady = priceValid && contactValid;
-      alertSubmitBtn.disabled = !isReady;
-      alertSubmitBtn.classList.toggle("ready", isReady);
     }
 
     function hideAllContentBelowStatus() {
@@ -1596,6 +1603,19 @@
 
     modelInput.addEventListener("blur", () => setTimeout(() => { modelSuggestions.style.display = "none"; }, 120));
 
+    // Alert price paw
+    alertPriceInput.addEventListener("input", () => {
+      if (alertPriceInput.value.trim()) {
+        alertPricePaw.classList.add("hidden");
+      } else {
+        alertPricePaw.classList.remove("hidden");
+        alertPricePaw.classList.add("rock");
+      }
+      updateAlertSubmitButton();
+    });
+
+    alertContactInput.addEventListener("input", updateAlertSubmitButton);
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -1649,7 +1669,6 @@
       } catch (err) {
         console.error("Search error:", err);
         statusMessageEl.textContent = "Search failed. Please try again.";
-        clearSearchForm();
         return;
       }
 
@@ -1657,7 +1676,6 @@
 
       if (!results.length) {
         statusMessageEl.textContent = "No results found — set a price alert and we'll keep sniffing.";
-        clearSearchForm();
         return;
       }
 
@@ -1696,7 +1714,7 @@
         resultsEl.appendChild(card);
       });
 
-      clearSearchForm();
+      // DO NOT clear inputs - keep brand and model
     });
 
     alertPromptBtn.addEventListener("click", () => {
@@ -1705,12 +1723,7 @@
       alertProductName.textContent = `${currentSearch.brand} ${currentSearch.model}`;
     });
 
-    alertPriceInput.addEventListener("input", updateAlertSubmitButton);
-    alertContactInput.addEventListener("input", updateAlertSubmitButton);
-
     alertSubmitBtn.addEventListener("click", async () => {
-      if (alertSubmitBtn.disabled) return;
-
       const priceNum = Number(alertPriceInput.value.trim());
       const contact = alertContactInput.value.trim();
       const brand = currentSearch.brand;
