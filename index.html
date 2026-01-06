@@ -572,6 +572,10 @@
       background: rgba(33, 68, 120, 0.15);
     }
 
+    .alerts-table tbody tr.inactive {
+      opacity: 0.5;
+    }
+
     .alerts-table tbody td {
       padding: 0.5rem 0.65rem;
       border-bottom: 1px solid rgba(33, 68, 120, 0.18);
@@ -1058,12 +1062,16 @@
       const yesBtn = document.createElement("button");
       yesBtn.textContent = "Yes";
       yesBtn.className = "success";
-      yesBtn.addEventListener("click", onYes);
+      yesBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        onYes();
+      });
       
       const noBtn = document.createElement("button");
       noBtn.textContent = "No";
       noBtn.className = "secondary";
-      noBtn.addEventListener("click", () => {
+      noBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
         renderAlertsDashboard();
       });
       
@@ -1112,6 +1120,10 @@
 
         const tr = document.createElement("tr");
         tr.dataset.alertId = a.id;
+        
+        if (status !== "Active") {
+          tr.classList.add("inactive");
+        }
 
         const tdDate = document.createElement("td");
         tdDate.textContent = formatDateShort(a.setAt);
@@ -1188,7 +1200,8 @@
             
             const saveBtn = document.createElement("button");
             saveBtn.textContent = "Save";
-            saveBtn.addEventListener("click", () => {
+            saveBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
               const val = Number(priceInput.value);
               if (!isFinite(val) || val <= 0) {
                 alert("Please enter a valid target price greater than 0.");
@@ -1209,10 +1222,11 @@
             const add10Btn = document.createElement("button");
             add10Btn.textContent = "Add 10 Days";
             add10Btn.className = "secondary";
-            add10Btn.addEventListener("click", () => {
+            add10Btn.addEventListener("click", (e) => {
+              e.stopPropagation();
               showConfirmation(actionsDiv, "Add 10 days to alert?", () => {
                 const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
-                a.setAt = a.setAt + TEN_DAYS_MS;
+                a.setAt = a.setAt - TEN_DAYS_MS;
                 upsertAlert(a);
                 renderAlertsDashboard();
               });
@@ -1223,7 +1237,8 @@
             const cancelBtn = document.createElement("button");
             cancelBtn.textContent = "Cancel Alert";
             cancelBtn.className = "danger";
-            cancelBtn.addEventListener("click", () => {
+            cancelBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
               showConfirmation(actionsDiv, "Cancel this alert?", () => {
                 a.cancelledAt = nowMs();
                 upsertAlert(a);
@@ -1237,7 +1252,8 @@
             const refreshBtn = document.createElement("button");
             refreshBtn.textContent = "Refresh";
             refreshBtn.className = "success";
-            refreshBtn.addEventListener("click", () => {
+            refreshBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
               showConfirmation(actionsDiv, "Reactivate this alert?", () => {
                 a.setAt = nowMs();
                 a.cancelledAt = null;
@@ -1251,7 +1267,8 @@
             const deleteBtn = document.createElement("button");
             deleteBtn.textContent = "Delete";
             deleteBtn.className = "danger";
-            deleteBtn.addEventListener("click", () => {
+            deleteBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
               showConfirmation(actionsDiv, "Delete this alert?", () => {
                 deleteAlert(a.id);
                 renderAlertsDashboard();
