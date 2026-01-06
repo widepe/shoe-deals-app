@@ -368,7 +368,6 @@
       gap: 1rem;
     }
 
-    /* Make sure the button and the boxes are truly centered */
     .alert-prompt-btn,
     .alert-form,
     .alert-confirmation {
@@ -534,7 +533,7 @@
       width: 100%;
       border-collapse: collapse;
       table-layout: fixed;
-      overflow: visible; /* allow content to show */
+      overflow: visible;
       border-radius: 0.6rem;
     }
 
@@ -544,25 +543,23 @@
       letter-spacing: 0.02em;
       text-transform: uppercase;
       color: #214478ff;
-      padding: 0.75rem 0.65rem;
+      padding: 0.5rem 0.65rem;
       border-bottom: 2px solid rgba(33, 68, 120, 0.35);
       background: rgba(255, 255, 255, 0.55);
     }
 
-    /* Default: no ellipses anywhere in the table */
     .alerts-table tbody td {
-      padding: 0.75rem 0.65rem;
+      padding: 0.45rem 0.65rem;
       border-bottom: 1px solid rgba(33, 68, 120, 0.18);
       vertical-align: middle;
       font-size: 0.92rem;
       color: #2d2d2d;
       overflow: visible;
       text-overflow: clip;
-      white-space: normal; /* allow wrapping so nothing truncates */
-      line-height: 1.2;
+      white-space: nowrap;
+      line-height: 1.3;
     }
 
-    /* Keep action buttons on one line in Status */
     .alerts-table td.status-cell {
       white-space: nowrap;
     }
@@ -619,17 +616,16 @@
     }
     .action-btn:hover { background: #1a3661; }
 
-    .action-btn.secondary {
-      background: transparent;
-      color: #214478ff;
-    }
-    .action-btn.secondary:hover {
-      background: rgba(33, 68, 120, 0.10);
+    /* Target price editor - inline spinner */
+    .target-price-display {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
     }
 
-    .target-editor {
-      width: 92px;
-      height: 32px;
+    .target-price-spinner {
+      width: 70px;
+      height: 28px;
       font-size: 0.9rem;
       padding: 0 0.4rem;
       border-radius: 0.5rem;
@@ -637,8 +633,14 @@
       background: #fafdf4;
       color: #444;
       box-sizing: border-box;
-      margin-left: 0.35rem;
-      vertical-align: middle;
+      appearance: auto;
+    }
+
+    .target-price-spinner:disabled {
+      background: #f0f0f0;
+      color: #999;
+      border-color: #ccc;
+      cursor: not-allowed;
     }
 
     .hidden { display: none !important; }
@@ -715,10 +717,8 @@
       <p class="disclaimer">Prices are subject to change.</p>
 
       <div class="alert-wrapper" id="alertWrapper" style="display:none;">
-        <!-- Centered -->
         <button class="alert-prompt-btn" id="alertPromptBtn"><span class="bell-icon">🔔</span> Set Price Alert?</button>
 
-        <!-- Centered box -->
         <div class="alert-form" id="alertForm" style="display:none;">
           <div class="alert-product-message">
             Alert me when <strong id="alertProductName"></strong> is less than:
@@ -763,12 +763,11 @@
 
       <table class="alerts-table" aria-label="My Alerts Table" id="alertsTable">
         <colgroup>
-          <!-- Adjusted widths to avoid truncation AND keep buttons visible -->
-          <col style="width: 10%;">  <!-- Date Set -->
-          <col style="width: 34%;">  <!-- Shoe -->
-          <col style="width: 16%;">  <!-- Days Left -->
+          <col style="width: 12%;">  <!-- Date Set -->
+          <col style="width: 35%;">  <!-- Shoe -->
+          <col style="width: 13%;">  <!-- Days Left -->
           <col style="width: 18%;">  <!-- Target -->
-          <col style="width: 22%;">  <!-- Status (pill + cancel) -->
+          <col style="width: 22%;">  <!-- Status -->
         </colgroup>
         <thead>
           <tr>
@@ -945,50 +944,36 @@
         tdDate.textContent = formatDateShort(a.setAt);
         tr.appendChild(tdDate);
 
-        // COMBINED Shoe column
         const tdShoe = document.createElement("td");
         tdShoe.textContent = `${a.brand} ${a.model}`;
         tr.appendChild(tdShoe);
 
         const tdDays = document.createElement("td");
         tdDays.textContent = status === "Active" ? String(daysLeft) : "—";
-        if (status === "Active") {
-          const renewBtn = document.createElement("button");
-          renewBtn.className = "action-btn secondary";
-          renewBtn.textContent = "Renew";
-          renewBtn.addEventListener("click", () => {
-            a.setAt = nowMs();
-            a.cancelledAt = null;
-            upsertAlert(a);
-            renderAlertsDashboard();
-          });
-          tdDays.appendChild(renewBtn);
-        }
         tr.appendChild(tdDays);
 
         const tdTarget = document.createElement("td");
-        const dollar = document.createElement("span");
-        dollar.textContent = "$";
-        tdTarget.appendChild(dollar);
+        const priceDisplay = document.createElement("span");
+        priceDisplay.className = "target-price-display";
+        
+        const dollarSign = document.createElement("span");
+        dollarSign.textContent = "$";
+        priceDisplay.appendChild(dollarSign);
 
-        const targetInput = document.createElement("input");
-        targetInput.type = "number";
-        targetInput.step = "1";
-        targetInput.min = "1";
-        targetInput.value = Number(a.targetPrice).toFixed(0);
-        targetInput.className = "target-editor";
-        targetInput.disabled = (status !== "Active");
-        tdTarget.appendChild(targetInput);
-
+        const targetSpinner = document.createElement("input");
+        targetSpinner.type = "number";
+        targetSpinner.step = "1";
+        targetSpinner.min = "1";
+        targetSpinner.value = Number(a.targetPrice).toFixed(0);
+        targetSpinner.className = "target-price-spinner";
+        targetSpinner.disabled = (status !== "Active");
+        
         if (status === "Active") {
-          const updateBtn = document.createElement("button");
-          updateBtn.className = "action-btn secondary";
-          updateBtn.textContent = "Update";
-          updateBtn.addEventListener("click", () => {
-            const val = Number(targetInput.value);
+          targetSpinner.addEventListener("change", () => {
+            const val = Number(targetSpinner.value);
             if (!isFinite(val) || val <= 0) {
               alert("Please enter a valid target price greater than 0.");
-              targetInput.value = Number(a.targetPrice).toFixed(0);
+              targetSpinner.value = Number(a.targetPrice).toFixed(0);
               return;
             }
             a.targetPrice = Number(val).toFixed(2);
@@ -997,8 +982,10 @@
             upsertAlert(a);
             renderAlertsDashboard();
           });
-          tdTarget.appendChild(updateBtn);
         }
+        
+        priceDisplay.appendChild(targetSpinner);
+        tdTarget.appendChild(priceDisplay);
         tr.appendChild(tdTarget);
 
         const tdStatus = document.createElement("td");
@@ -1299,7 +1286,6 @@
       resultsEl.innerHTML = "";
       dailyDeals.style.display = "none";
 
-      // Always show alert section centered for the searched shoe
       resetAlertSection();
       alertWrapper.style.display = "flex";
       alertProductName.textContent = `${brandKey} ${modelCanonical}`;
@@ -1320,7 +1306,7 @@
       const results = (data && data.results) ? data.results : [];
 
       if (!results.length) {
-        statusMessageEl.textContent = "No results found — set a price alert and we’ll keep sniffing.";
+        statusMessageEl.textContent = "No results found — set a price alert and we'll keep sniffing.";
         clearSearchForm();
         return;
       }
@@ -1388,7 +1374,7 @@
         alertForm.style.display = "none";
         alertConfirmation.innerHTML = `
           <strong>You already have an active alert for this shoe.</strong><br><br>
-          Please go to <strong>My Alerts</strong> to renew or update your target.
+          Please go to <strong>My Alerts</strong> to update your target.
         `;
         alertConfirmation.style.display = "block";
         return;
@@ -1417,7 +1403,7 @@
       alertConfirmation.innerHTML = `
         <strong>✓ Price Alert Set!</strong><br><br>
         Alert created for <strong>${brand} ${model}</strong> at <strong>$${Number(priceNum).toFixed(2)}</strong>.<br><br>
-        Manage it anytime in <strong>My Alerts</strong> (renew, update, cancel).
+        Manage it anytime in <strong>My Alerts</strong> (update or cancel).
       `;
       alertConfirmation.style.display = "block";
     });
