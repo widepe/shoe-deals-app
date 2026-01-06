@@ -564,6 +564,10 @@
       white-space: nowrap;
     }
 
+    .alerts-table td.target-cell {
+      text-align: right;
+    }
+
     .alerts-muted {
       text-align: center;
       padding: 1.25rem 0.5rem;
@@ -623,11 +627,11 @@
     }
 
     .action-btn.renew-btn {
-      background: #ff8c42;
-      border: 1px solid #e67a30;
+      background: #ff6600;
+      border: 1px solid #e65c00;
     }
     .action-btn.renew-btn:hover { 
-      background: #e67a30; 
+      background: #e65c00; 
     }
 
     .action-btn.cancel-btn {
@@ -636,6 +640,22 @@
     }
     .action-btn.cancel-btn:hover { 
       background: #c82333; 
+    }
+
+    .action-btn.edit-btn {
+      background: #214478ff;
+      border: 1px solid #1a3661;
+    }
+    .action-btn.edit-btn:hover { 
+      background: #1a3661; 
+    }
+
+    .action-btn.save-btn {
+      background: #214478ff;
+      border: 1px solid #1a3661;
+    }
+    .action-btn.save-btn:hover { 
+      background: #1a3661; 
     }
 
     /* Tooltip */
@@ -662,7 +682,18 @@
       opacity: 1;
     }
 
-    /* Target price editor with spinner inside */
+    /* Target price display/editor */
+    .target-price-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .target-price-static {
+      font-size: 0.92rem;
+      color: #2d2d2d;
+    }
+
     .target-price-wrapper {
       position: relative;
       display: inline-block;
@@ -672,7 +703,7 @@
       width: 75px;
       height: 28px;
       font-size: 0.9rem;
-      padding: 0 0.3rem 0 1.3rem;
+      padding: 0 0.3rem 0 1.5rem;
       border-radius: 0.5rem;
       border: 1px solid #214478ff;
       background: #fafdf4;
@@ -820,11 +851,11 @@
 
       <table class="alerts-table" aria-label="My Alerts Table" id="alertsTable">
         <colgroup>
-          <col style="width: 12%;">  <!-- Date Set -->
-          <col style="width: 35%;">  <!-- Shoe -->
-          <col style="width: 13%;">  <!-- Days Left -->
-          <col style="width: 18%;">  <!-- Target -->
-          <col style="width: 22%;">  <!-- Status -->
+          <col style="width: 11%;">  <!-- Date Set -->
+          <col style="width: 38%;">  <!-- Shoe -->
+          <col style="width: 12%;">  <!-- Days Left -->
+          <col style="width: 16%;">  <!-- Target -->
+          <col style="width: 23%;">  <!-- Status -->
         </colgroup>
         <thead>
           <tr>
@@ -1010,8 +1041,17 @@
         tr.appendChild(tdDays);
 
         const tdTarget = document.createElement("td");
+        tdTarget.className = "target-cell";
+        
+        const container = document.createElement("span");
+        container.className = "target-price-container";
+        
+        const priceStatic = document.createElement("span");
+        priceStatic.className = "target-price-static";
+        priceStatic.textContent = `$${Number(a.targetPrice).toFixed(0)}`;
+        
         const priceWrapper = document.createElement("span");
-        priceWrapper.className = "target-price-wrapper";
+        priceWrapper.className = "target-price-wrapper hidden";
         
         const targetSpinner = document.createElement("input");
         targetSpinner.type = "number";
@@ -1019,10 +1059,30 @@
         targetSpinner.min = "1";
         targetSpinner.value = Number(a.targetPrice).toFixed(0);
         targetSpinner.className = "target-price-spinner";
-        targetSpinner.disabled = (status !== "Active");
+        
+        priceWrapper.appendChild(targetSpinner);
+        container.appendChild(priceStatic);
+        container.appendChild(priceWrapper);
         
         if (status === "Active") {
-          targetSpinner.addEventListener("change", () => {
+          const editBtn = document.createElement("button");
+          editBtn.className = "action-btn edit-btn";
+          editBtn.textContent = "E";
+          editBtn.setAttribute("data-tooltip", "Edit price");
+          
+          const saveBtn = document.createElement("button");
+          saveBtn.className = "action-btn save-btn hidden";
+          saveBtn.textContent = "S";
+          saveBtn.setAttribute("data-tooltip", "Set new price");
+          
+          editBtn.addEventListener("click", () => {
+            priceStatic.classList.add("hidden");
+            priceWrapper.classList.remove("hidden");
+            editBtn.classList.add("hidden");
+            saveBtn.classList.remove("hidden");
+          });
+          
+          saveBtn.addEventListener("click", () => {
             const val = Number(targetSpinner.value);
             if (!isFinite(val) || val <= 0) {
               alert("Please enter a valid target price greater than 0.");
@@ -1035,10 +1095,12 @@
             upsertAlert(a);
             renderAlertsDashboard();
           });
+          
+          container.appendChild(editBtn);
+          container.appendChild(saveBtn);
         }
         
-        priceWrapper.appendChild(targetSpinner);
-        tdTarget.appendChild(priceWrapper);
+        tdTarget.appendChild(container);
         tr.appendChild(tdTarget);
 
         const tdStatus = document.createElement("td");
