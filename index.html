@@ -233,7 +233,7 @@
       margin-top: 0.15rem;
       text-align: center;
       width: 100%;
-      min-height: 1.1rem; /* keeps layout stable even when empty */
+      min-height: 1.1rem;
     }
 
     /* Daily Deals Section */
@@ -293,7 +293,6 @@
       max-width: 850px;
     }
 
-    /* Deals that pop up should have the same border as daily deals */
     .card {
       background: #ffffffc9;
       border: 2px solid #214478ff;
@@ -338,7 +337,7 @@
       background: #ffffffc9;
       border: 2px solid #214478ff;
       border-radius: 0.75rem;
-      padding: 1.25rem 2rem 0.9rem; /* reduced bottom padding to remove extra space */
+      padding: 1.25rem 2rem 0.9rem;
       margin-top: 1.0rem;
       line-height: 1.7;
       box-sizing: border-box;
@@ -368,10 +367,14 @@
       gap: 1rem;
     }
 
-    /* Center this horizontally */
+    /* FORCE horizontal centering (button + boxes) */
+    .alert-wrapper > * {
+      margin-left: auto !important;
+      margin-right: auto !important;
+    }
+
     .alert-prompt-btn {
       display: block;
-      margin: 0 auto;
       padding: 0.75rem 1.5rem;
       border-radius: 0.75rem;
       background: #214478ff;
@@ -464,7 +467,6 @@
       width: 100%;
     }
 
-    /* Center this horizontally */
     .alert-submit-btn {
       padding: 0.75rem 1.5rem;
       border-radius: 0.75rem;
@@ -477,7 +479,6 @@
       opacity: 0.6;
       width: auto;
       align-self: center;
-      margin: 0.5rem auto 0;
       display: block;
     }
 
@@ -489,7 +490,6 @@
     }
     .alert-submit-btn.ready:hover { background: #1a3661; }
 
-    /* Price Alert Set box centered on screen */
     .alert-confirmation {
       width: 100%;
       max-width: 600px;
@@ -502,8 +502,6 @@
       font-size: 0.95rem;
       line-height: 1.6;
       box-sizing: border-box;
-      margin: 0 auto;
-      display: block;
     }
     .alert-confirmation strong { color: #214478ff; }
 
@@ -555,6 +553,14 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    /* Stop ellipses in Model column: allow wrapping */
+    .alerts-table td.model-cell {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      line-height: 1.2;
     }
 
     .alerts-muted {
@@ -617,7 +623,6 @@
       background: rgba(33, 68, 120, 0.10);
     }
 
-    /* Inline target editor (shows up/down arrows) */
     .target-editor {
       width: 92px;
       height: 32px;
@@ -651,29 +656,13 @@
 
     <form id="search-form">
       <div class="input-wrapper">
-        <input
-          id="brand"
-          type="text"
-          placeholder="Enter Shoe Brand"
-          autocomplete="off"
-          required
-          data-placeholder="Enter Shoe Brand"
-        />
+        <input id="brand" type="text" placeholder="Enter Shoe Brand" autocomplete="off" required />
         <span class="paw rock" id="brandPaw">🐾</span>
         <div id="brandSuggestions" class="suggestions"></div>
       </div>
 
       <div class="input-wrapper">
-        <input
-          id="model"
-          type="text"
-          placeholder=""
-          autocomplete="off"
-          required
-          class="model-inactive"
-          data-placeholder="Enter Shoe Model"
-          disabled
-        />
+        <input id="model" type="text" placeholder="" autocomplete="off" required class="model-inactive" disabled />
         <span class="paw hidden" id="modelPaw">🐾</span>
         <div id="modelSuggestions" class="suggestions"></div>
       </div>
@@ -683,7 +672,6 @@
       </div>
     </form>
 
-    <!-- Always visible -->
     <div class="tagline">Let's find your <b>running shoes</b>...cheap!</div>
     <div class="status-message" id="statusMessage"></div>
 
@@ -720,14 +708,13 @@
       </div>
 
       <div class="results" id="results"></div>
-
       <p class="disclaimer">Prices are subject to change.</p>
 
       <div class="alert-wrapper" id="alertWrapper" style="display:none;">
         <button class="alert-prompt-btn" id="alertPromptBtn"><span class="bell-icon">🔔</span> Set Price Alert?</button>
 
         <div class="alert-form" id="alertForm" style="display:none;">
-          <div class="alert-product-message" id="alertProductMessage">
+          <div class="alert-product-message">
             Alert me when <strong id="alertProductName"></strong> is less than:
           </div>
 
@@ -742,17 +729,13 @@
             <input id="alertContact" type="text" placeholder="you@example.com or +1-555-0123">
           </div>
 
-          <div class="alert-privacy-note">
-            🔒 Your information is never shared. Used only for price alerts.
-          </div>
+          <div class="alert-privacy-note">🔒 Your information is never shared. Used only for price alerts.</div>
 
           <button class="alert-submit-btn" id="alertSubmitBtn" disabled>
             <span class="envelope-icon">📩</span> Set Price Alert
           </button>
 
-          <div class="alert-duration-note">
-            Your price alert will remain active for 30 days, or until you cancel.
-          </div>
+          <div class="alert-duration-note">Your price alert will remain active for 30 days, or until you cancel.</div>
         </div>
 
         <div class="alert-confirmation" id="alertConfirmation" style="display:none;"></div>
@@ -761,14 +744,9 @@
 
     <div id="aboutContent" class="about-section hidden">
       <h2>About Us</h2>
-
       <p>Shoe Beagle is a price comparison website dedicated to helping runners find the best deals on running shoes. We provide side-by-side price comparisons across multiple retailers, allowing users to search by brand and model to find the lowest prices.</p>
-
       <p>Our platform features price alerts, real-time deal updates, and direct links to merchant sites where users can complete their purchases.</p>
-
       <p>I will do my best to sniff out the best running shoe deals every day!</p>
-
-      <!-- Reduced space below image -->
       <div style="text-align: center; margin: 1.2rem 0 0.35rem;">
         <img src="/images/marty.svg" alt="Marty the Beagle" style="width: 200px; height: auto;">
       </div>
@@ -779,13 +757,13 @@
 
       <table class="alerts-table" aria-label="My Alerts Table" id="alertsTable">
         <colgroup>
-          <!-- reduced Date Set + Brand widths -->
           <col style="width: 9%;">
           <col style="width: 10%;">
-          <col style="width: 33%;"> <!-- Model gets most width -->
-          <col style="width: 14%;">
-          <col style="width: 16%;">
+          <!-- SHORTEN model column width -->
+          <col style="width: 24%;">
           <col style="width: 18%;">
+          <col style="width: 18%;">
+          <col style="width: 21%;">
         </colgroup>
         <thead>
           <tr>
@@ -842,13 +820,9 @@
     const alertsEmpty = document.getElementById("alertsEmpty");
     const alertsTable = document.getElementById("alertsTable");
 
-    // Store current search for alert
     let currentSearch = { brand: "", model: "" };
-
-    // Track if brand has been selected (not just typed)
     let brandSelected = false;
 
-    // ---------- Alerts storage ----------
     const ALERTS_KEY = "shoeBeagleAlerts";
     let alertsMemoryFallback = [];
 
@@ -858,9 +832,7 @@
         localStorage.setItem(k, "1");
         localStorage.removeItem(k);
         return true;
-      } catch (e) {
-        return false;
-      }
+      } catch (e) { return false; }
     }
 
     function loadAlerts() {
@@ -869,9 +841,7 @@
           const raw = localStorage.getItem(ALERTS_KEY);
           const parsed = raw ? JSON.parse(raw) : [];
           return Array.isArray(parsed) ? parsed : [];
-        } catch (e) {
-          return [];
-        }
+        } catch (e) { return []; }
       }
       return alertsMemoryFallback;
     }
@@ -977,18 +947,17 @@
 
         const tdModel = document.createElement("td");
         tdModel.textContent = a.model;
+        tdModel.className = "model-cell";
         tr.appendChild(tdModel);
 
-        // Days Left + Renew button
         const tdDays = document.createElement("td");
         tdDays.textContent = status === "Active" ? String(daysLeft) : "—";
-
         if (status === "Active") {
           const renewBtn = document.createElement("button");
           renewBtn.className = "action-btn secondary";
           renewBtn.textContent = "Renew";
           renewBtn.addEventListener("click", () => {
-            a.setAt = nowMs();     // resets back to 30 days
+            a.setAt = nowMs();
             a.cancelledAt = null;
             upsertAlert(a);
             renderAlertsDashboard();
@@ -997,12 +966,10 @@
         }
         tr.appendChild(tdDays);
 
-        // Target: inline editable number input w/ arrows + Update button (no popups)
         const tdTarget = document.createElement("td");
-
-        const targetLabel = document.createElement("span");
-        targetLabel.textContent = "$";
-        tdTarget.appendChild(targetLabel);
+        const dollar = document.createElement("span");
+        dollar.textContent = "$";
+        tdTarget.appendChild(dollar);
 
         const targetInput = document.createElement("input");
         targetInput.type = "number";
@@ -1025,14 +992,13 @@
               return;
             }
             a.targetPrice = Number(val).toFixed(2);
-            a.setAt = nowMs();      // start over at 30 days
+            a.setAt = nowMs();
             a.cancelledAt = null;
             upsertAlert(a);
             renderAlertsDashboard();
           });
           tdTarget.appendChild(updateBtn);
         }
-
         tr.appendChild(tdTarget);
 
         const tdStatus = document.createElement("td");
@@ -1058,7 +1024,6 @@
       });
     }
 
-    // ---------- Brand models ----------
     const brandModels = {
       "Asics": ["Novablast","Gel-Kayano","Gel-Nimbus","Gel-Cumulus","Metaspeed Sky"],
       "Nike": ["Pegasus","ZoomX Vaporfly","Alphafly","Infinity Run","Structure"],
@@ -1087,15 +1052,12 @@
       return brands.find(b => normalize(b) === normalized) || "";
     }
 
-    function resolveBrand() {
-      return resolveBrandKey(brandInput.value.trim());
-    }
+    function resolveBrand() { return resolveBrandKey(brandInput.value.trim()); }
 
     function resolveModelKey(brandKey, modelTyped) {
       const typed = String(modelTyped || "").trim();
       if (!typed) return "";
       if (!brandKey || !brandModels[brandKey]) return typed;
-
       const normalized = normalize(typed);
       const canonical = brandModels[brandKey].find(m => normalize(m) === normalized);
       return canonical || typed;
@@ -1145,10 +1107,8 @@
       if (!modelInput.disabled) {
         modelInput.placeholder = "Enter Shoe Model";
         brandSelected = true;
-
         brandPaw.classList.add("hidden");
         brandPaw.classList.remove("rock");
-
         modelPaw.classList.remove("hidden");
         modelPaw.classList.add("rock");
       }
@@ -1191,11 +1151,8 @@
 
     function clearSearchForm() {
       brandInput.value = "";
-      brandInput.placeholder = "Enter Shoe Brand";
-
       resetModelState();
       updatePaws();
-
       setTimeout(() => brandInput.focus(), 100);
     }
 
@@ -1211,26 +1168,19 @@
     function updateAlertSubmitButton() {
       const price = alertPriceInput.value.trim();
       const contact = alertContactInput.value.trim();
-
       const priceValid = price && parseFloat(price) > 0;
       const contactValid = contact.length > 0 && (
-        contact.includes('@') ||
-        /[\d\-\+\(\)\s]{7,}/.test(contact)
+        contact.includes('@') || /[\d\-\+\(\)\s]{7,}/.test(contact)
       );
-
       const isReady = priceValid && contactValid;
-
       alertSubmitBtn.disabled = !isReady;
       alertSubmitBtn.classList.toggle("ready", isReady);
     }
 
-    // Navigation Functions
     function hideAllContentBelowStatus() {
       mainContent.classList.add("hidden");
       aboutContent.classList.add("hidden");
       alertsDashboard.classList.add("hidden");
-
-      // clear below-tagline content only
       resultsEl.innerHTML = "";
       dailyDeals.style.display = "none";
       alertWrapper.style.display = "none";
@@ -1242,10 +1192,7 @@
       aboutContent.classList.add("hidden");
       alertsDashboard.classList.add("hidden");
       mainContent.classList.remove("hidden");
-
-      if (!resultsEl.innerHTML.trim()) {
-        dailyDeals.style.display = "block";
-      }
+      if (!resultsEl.innerHTML.trim()) dailyDeals.style.display = "block";
     }
 
     function showAbout() {
@@ -1273,7 +1220,6 @@
     // BRAND input
     brandInput.addEventListener("input", () => {
       const typed = brandInput.value.trim();
-
       if (typed) enableModel();
       else resetModelState();
 
@@ -1282,10 +1228,8 @@
       showSuggestions(brandSuggestions, matches, (value) => {
         brandInput.value = value;
         brandSuggestions.style.display = "none";
-
         enableModel();
         confirmBrandSelection();
-
         setTimeout(() => modelInput.focus(), 0);
         updatePaws();
       });
@@ -1293,9 +1237,7 @@
       updatePaws();
     });
 
-    brandInput.addEventListener("blur", () => {
-      setTimeout(() => { brandSuggestions.style.display = "none"; }, 120);
-    });
+    brandInput.addEventListener("blur", () => setTimeout(() => { brandSuggestions.style.display = "none"; }, 120));
 
     brandInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
@@ -1334,9 +1276,7 @@
       updatePaws();
     });
 
-    modelInput.addEventListener("blur", () => {
-      setTimeout(() => { modelSuggestions.style.display = "none"; }, 120);
-    });
+    modelInput.addEventListener("blur", () => setTimeout(() => { modelSuggestions.style.display = "none"; }, 120));
 
     // Submit search
     form.addEventListener("submit", async (e) => {
@@ -1354,7 +1294,6 @@
         return;
       }
 
-      // Ensure home view for searches
       if (!aboutContent.classList.contains("hidden") || !alertsDashboard.classList.contains("hidden")) {
         showHome();
       }
@@ -1364,7 +1303,11 @@
       statusMessageEl.textContent = "Searching deals…";
       resultsEl.innerHTML = "";
       dailyDeals.style.display = "none";
-      alertWrapper.style.display = "none";
+
+      // ALWAYS show price alert section even if no results
+      resetAlertSection();
+      alertWrapper.style.display = "flex";
+      alertProductName.textContent = `${brandKey} ${modelCanonical}`;
 
       const query = `${brandKey} ${modelCanonical}`;
       let data;
@@ -1372,19 +1315,20 @@
       try {
         const res = await fetch("/api/search?" + new URLSearchParams({ query }));
         data = await res.json();
-        if (!data || !data.results) {
-          statusMessageEl.textContent = "No results found.";
-          return;
-        }
       } catch (err) {
         console.error("Search error:", err);
         statusMessageEl.textContent = "Search failed. Please try again.";
+        // Keep alert section visible
+        clearSearchForm();
         return;
       }
 
-      const results = data.results || [];
+      const results = (data && data.results) ? data.results : [];
+
       if (!results.length) {
-        statusMessageEl.textContent = "No results.";
+        statusMessageEl.textContent = "No results found — set a price alert and we’ll keep sniffing.";
+        // keep alert section visible
+        clearSearchForm();
         return;
       }
 
@@ -1423,9 +1367,6 @@
         resultsEl.appendChild(card);
       });
 
-      resetAlertSection();
-      alertWrapper.style.display = "flex";
-
       clearSearchForm();
     });
 
@@ -1433,15 +1374,12 @@
     alertPromptBtn.addEventListener("click", () => {
       alertPromptBtn.style.display = "none";
       alertForm.style.display = "flex";
-      const product = `${currentSearch.brand} ${currentSearch.model}`;
-      alertProductName.textContent = product;
+      alertProductName.textContent = `${currentSearch.brand} ${currentSearch.model}`;
     });
 
-    // Alert form inputs
     alertPriceInput.addEventListener("input", updateAlertSubmitButton);
     alertContactInput.addEventListener("input", updateAlertSubmitButton);
 
-    // Alert submit
     alertSubmitBtn.addEventListener("click", async () => {
       if (alertSubmitBtn.disabled) return;
 
@@ -1462,7 +1400,6 @@
         return;
       }
 
-      // Duplicate active alert prevention
       const existingActive = findActiveAlertFor(brand, model);
       if (existingActive) {
         alertForm.style.display = "none";
@@ -1482,7 +1419,6 @@
         phone: isEmail ? "" : contact
       };
 
-      // Store alert locally
       const newAlert = {
         id: `a_${Math.random().toString(36).slice(2)}_${Date.now()}`,
         key: alertKey(brand, model),
@@ -1495,7 +1431,6 @@
       };
       upsertAlert(newAlert);
 
-      // Optional: hit API endpoint
       try {
         await fetch("/api/alerts", {
           method: "POST",
