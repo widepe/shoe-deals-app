@@ -568,6 +568,10 @@
       text-align: right;
     }
 
+    .alerts-table td.edit-cell {
+      text-align: center;
+    }
+
     .alerts-muted {
       text-align: center;
       padding: 1.25rem 0.5rem;
@@ -645,6 +649,7 @@
     .action-btn.edit-btn {
       background: #214478ff;
       border: 1px solid #1a3661;
+      margin-left: 0;
     }
     .action-btn.edit-btn:hover { 
       background: #1a3661; 
@@ -653,6 +658,7 @@
     .action-btn.save-btn {
       background: #214478ff;
       border: 1px solid #1a3661;
+      margin-left: 0;
     }
     .action-btn.save-btn:hover { 
       background: #1a3661; 
@@ -683,24 +689,22 @@
     }
 
     /* Target price display/editor */
-    .target-price-container {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-    }
-
     .target-price-static {
       font-size: 0.92rem;
       color: #2d2d2d;
+      display: inline-block;
+      text-align: right;
+      width: 100%;
     }
 
     .target-price-wrapper {
       position: relative;
       display: inline-block;
+      width: 100%;
     }
 
     .target-price-spinner {
-      width: 75px;
+      width: 100%;
       height: 28px;
       font-size: 0.9rem;
       padding: 0 0.3rem 0 1.5rem;
@@ -709,7 +713,7 @@
       background: #fafdf4;
       color: #444;
       box-sizing: border-box;
-      text-align: left;
+      text-align: right;
     }
 
     .target-price-wrapper::before {
@@ -851,11 +855,12 @@
 
       <table class="alerts-table" aria-label="My Alerts Table" id="alertsTable">
         <colgroup>
-          <col style="width: 11%;">  <!-- Date Set -->
-          <col style="width: 38%;">  <!-- Shoe -->
-          <col style="width: 12%;">  <!-- Days Left -->
-          <col style="width: 16%;">  <!-- Target -->
-          <col style="width: 23%;">  <!-- Status -->
+          <col style="width: 10%;">  <!-- Date Set -->
+          <col style="width: 35%;">  <!-- Shoe -->
+          <col style="width: 11%;">  <!-- Days Left -->
+          <col style="width: 14%;">  <!-- Target -->
+          <col style="width: 8%;">   <!-- Edit -->
+          <col style="width: 22%;">  <!-- Status -->
         </colgroup>
         <thead>
           <tr>
@@ -863,6 +868,7 @@
             <th>Shoe</th>
             <th>Days Left</th>
             <th>Target</th>
+            <th>Edit</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -1043,9 +1049,6 @@
         const tdTarget = document.createElement("td");
         tdTarget.className = "target-cell";
         
-        const container = document.createElement("span");
-        container.className = "target-price-container";
-        
         const priceStatic = document.createElement("span");
         priceStatic.className = "target-price-static";
         priceStatic.textContent = `$${Number(a.targetPrice).toFixed(0)}`;
@@ -1057,12 +1060,15 @@
         targetSpinner.type = "number";
         targetSpinner.step = "1";
         targetSpinner.min = "1";
-        targetSpinner.value = Number(a.targetPrice).toFixed(0);
         targetSpinner.className = "target-price-spinner";
         
         priceWrapper.appendChild(targetSpinner);
-        container.appendChild(priceStatic);
-        container.appendChild(priceWrapper);
+        tdTarget.appendChild(priceStatic);
+        tdTarget.appendChild(priceWrapper);
+        tr.appendChild(tdTarget);
+
+        const tdEdit = document.createElement("td");
+        tdEdit.className = "edit-cell";
         
         if (status === "Active") {
           const editBtn = document.createElement("button");
@@ -1076,6 +1082,7 @@
           saveBtn.setAttribute("data-tooltip", "Set new price");
           
           editBtn.addEventListener("click", () => {
+            targetSpinner.value = Number(a.targetPrice).toFixed(0);
             priceStatic.classList.add("hidden");
             priceWrapper.classList.remove("hidden");
             editBtn.classList.add("hidden");
@@ -1096,12 +1103,11 @@
             renderAlertsDashboard();
           });
           
-          container.appendChild(editBtn);
-          container.appendChild(saveBtn);
+          tdEdit.appendChild(editBtn);
+          tdEdit.appendChild(saveBtn);
         }
         
-        tdTarget.appendChild(container);
-        tr.appendChild(tdTarget);
+        tr.appendChild(tdEdit);
 
         const tdStatus = document.createElement("td");
         tdStatus.className = "status-cell";
