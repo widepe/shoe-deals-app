@@ -292,6 +292,7 @@
 
     .card {
       background: #ffffffc9;
+      border: 2px solid #214478ff; /* match Daily Deals border */
       border-radius: 0.75rem;
       padding: 0.75rem;
       display: flex;
@@ -363,6 +364,8 @@
     }
 
     .alert-prompt-btn {
+      display: block;
+      margin: 0 auto; /* center horizontally */
       padding: 0.75rem 1.5rem;
       border-radius: 0.75rem;
       background: #214478ff;
@@ -376,13 +379,16 @@
 
     .alert-form {
       width: 100%;
+      max-width: 600px;
       padding: 1.25rem;
       border-radius: 0.75rem;
-      background: #ffecd4;
+      background: #ffffffc9;        /* match About box */
+      border: 2px solid #214478ff;  /* match Daily Deals border */
       display: flex;
       flex-direction: column;
       gap: 1rem;
       align-items: center;
+      box-sizing: border-box;
     }
 
     .alert-product-message {
@@ -439,7 +445,7 @@
       color: #34452a;
       text-align: center;
       padding: 0.5rem;
-      background: #ffecd4;
+      background: transparent;
       border-radius: 0.5rem;
       width: 100%;
     }
@@ -464,7 +470,8 @@
       opacity: 0.6;
       width: auto;
       align-self: center;
-      margin-top: 0.5rem;
+      margin: 0.5rem auto 0; /* center */
+      display: block;
     }
 
     .alert-submit-btn.ready {
@@ -477,13 +484,17 @@
 
     .alert-confirmation {
       width: 100%;
+      max-width: 600px;
       padding: 1.25rem;
       border-radius: 0.75rem;
-      background: #d4e7c5;
+      background: #ffffffc9;        /* match About box */
+      border: 2px solid #214478ff;  /* match Daily Deals border */
       color: #2d3c22;
       text-align: center;
       font-size: 0.95rem;
       line-height: 1.6;
+      box-sizing: border-box;
+      margin: 0 auto;              /* ensure centered */
     }
     .alert-confirmation strong { color: #214478ff; }
 
@@ -554,6 +565,24 @@
       border: 1px solid rgba(33, 68, 120, 0.25);
       background: rgba(255, 255, 255, 0.6);
       color: #214478ff;
+    }
+
+    .pill.active {
+      background: rgba(46, 160, 67, 0.18);
+      border-color: rgba(46, 160, 67, 0.45);
+      color: #1f6a2a;
+    }
+
+    .pill.expired {
+      background: rgba(150, 150, 150, 0.18);
+      border-color: rgba(150, 150, 150, 0.40);
+      color: #555;
+    }
+
+    .pill.cancelled {
+      background: rgba(220, 53, 69, 0.14);
+      border-color: rgba(220, 53, 69, 0.35);
+      color: #8a1f2c;
     }
 
     .action-btn {
@@ -710,16 +739,20 @@
 
       <p>Shoe Beagle is a price comparison website dedicated to helping runners find the best deals on running shoes. We provide side-by-side price comparisons across multiple retailers, allowing users to search by brand and model to find the lowest prices.</p>
 
-      <p>Our platform features price alerts, deal updates, and direct links to merchant sites where users can complete their purchases.</p>
+      <p>Our platform features price alerts, real-time deal updates, and direct links to merchant sites where users can complete their purchases.</p>
 
-      <p>We do our best to find the best running shoe deals every day.</p>
+      <p>I will do my best to sniff out the best running shoe deals every day!</p>
+
+      <div style="text-align: center; margin: 1.5rem 0;">
+        <img src="/images/marty.svg" alt="Marty the Beagle" style="width: 200px; height: auto;">
+      </div>
     </div>
 
     <!-- MY ALERTS DASHBOARD (Hidden by default) -->
     <div id="alertsDashboard" class="alerts-dashboard hidden">
       <div class="alerts-title">My Alerts</div>
 
-      <table class="alerts-table" aria-label="My Alerts Table">
+      <table class="alerts-table" aria-label="My Alerts Table" id="alertsTable">
         <colgroup>
           <col style="width: 12%;">
           <col style="width: 14%;">
@@ -730,17 +763,15 @@
         </colgroup>
         <thead>
           <tr>
-            <th>DATE/SET</th>
-            <th>SHOE/BRAND</th>
-            <th>SHOE/MODEL</th>
-            <th>DAYS/LEFT</th>
-            <th>TARGET/PRICE</th>
-            <th>STATUS</th>
+            <th>Date Set</th>
+            <th>Brand</th>
+            <th>Model</th>
+            <th>Days Left</th>
+            <th>Target</th>
+            <th>Status</th>
           </tr>
         </thead>
-        <tbody id="alertsTbody">
-          <!-- Rows injected by JS -->
-        </tbody>
+        <tbody id="alertsTbody"></tbody>
       </table>
 
       <div id="alertsEmpty" class="alerts-muted hidden">No alerts have been set.</div>
@@ -783,6 +814,7 @@
 
     const alertsTbody = document.getElementById("alertsTbody");
     const alertsEmpty = document.getElementById("alertsEmpty");
+    const alertsTable = document.getElementById("alertsTable");
 
     // Store current search for alert
     let currentSearch = { brand: "", model: "" };
@@ -822,9 +854,7 @@
       if (canUseLocalStorage()) {
         try {
           localStorage.setItem(ALERTS_KEY, JSON.stringify(list));
-        } catch (e) {
-          // ignore
-        }
+        } catch (e) {}
       } else {
         alertsMemoryFallback = list;
       }
@@ -884,23 +914,26 @@
       saveAlerts(list);
     }
 
+    function pillClassFor(status) {
+      if (status === "Active") return "pill active";
+      if (status === "Expired") return "pill expired";
+      if (status === "Cancelled") return "pill cancelled";
+      return "pill";
+    }
+
     function renderAlertsDashboard() {
       const list = loadAlerts();
-
-      // Update statuses on render (expired if over 30 days)
-      // (We compute status dynamically, but we still want UI correct.)
       alertsTbody.innerHTML = "";
 
       if (!list.length) {
         alertsEmpty.classList.remove("hidden");
-        document.querySelector(".alerts-table").classList.add("hidden");
+        alertsTable.classList.add("hidden");
         return;
       }
 
       alertsEmpty.classList.add("hidden");
-      document.querySelector(".alerts-table").classList.remove("hidden");
+      alertsTable.classList.remove("hidden");
 
-      // Sort: Active first, then Expired, then Cancelled; within group newest first
       const order = { "Active": 0, "Expired": 1, "Cancelled": 2 };
       const sorted = [...list].sort((a, b) => {
         const sa = computeAlertStatus(a);
@@ -929,14 +962,13 @@
 
         const tdDays = document.createElement("td");
         tdDays.textContent = status === "Active" ? String(daysLeft) : "—";
-        // Renew button after days for ACTIVE
         if (status === "Active") {
           const renewBtn = document.createElement("button");
           renewBtn.className = "action-btn secondary";
           renewBtn.textContent = "Renew";
           renewBtn.addEventListener("click", () => {
-            a.setAt = nowMs();           // reset timer
-            a.cancelledAt = null;        // ensure active
+            a.setAt = nowMs();
+            a.cancelledAt = null;
             upsertAlert(a);
             renderAlertsDashboard();
           });
@@ -946,7 +978,6 @@
 
         const tdPrice = document.createElement("td");
         tdPrice.textContent = `$${Number(a.targetPrice).toFixed(2)}`;
-        // Edit button after price for ACTIVE
         if (status === "Active") {
           const editBtn = document.createElement("button");
           editBtn.className = "action-btn secondary";
@@ -960,7 +991,7 @@
               return;
             }
             a.targetPrice = Number(val).toFixed(2);
-            a.setAt = nowMs();           // start over at 30 days
+            a.setAt = nowMs();
             a.cancelledAt = null;
             upsertAlert(a);
             renderAlertsDashboard();
@@ -971,11 +1002,10 @@
 
         const tdStatus = document.createElement("td");
         const pill = document.createElement("span");
-        pill.className = "pill";
+        pill.className = pillClassFor(status);
         pill.textContent = status;
         tdStatus.appendChild(pill);
 
-        // Cancel button after any ACTIVE alert
         if (status === "Active") {
           const cancelBtn = document.createElement("button");
           cancelBtn.className = "action-btn";
@@ -989,7 +1019,6 @@
         }
 
         tr.appendChild(tdStatus);
-
         alertsTbody.appendChild(tr);
       });
     }
@@ -1166,7 +1195,7 @@
       aboutContent.classList.add("hidden");
       alertsDashboard.classList.add("hidden");
 
-      // Clear search results/alert UI so "My Alerts" is clean
+      // Clear results + alert UI for a clean "My Alerts" view
       resultsEl.innerHTML = "";
       dailyDeals.style.display = "none";
       alertWrapper.style.display = "none";
@@ -1178,7 +1207,6 @@
       alertsDashboard.classList.add("hidden");
       mainContent.classList.remove("hidden");
 
-      // If nothing is showing, restore daily deals
       if (!resultsEl.innerHTML.trim()) {
         dailyDeals.style.display = "block";
       }
@@ -1203,6 +1231,7 @@
     // Initial state
     resetModelState();
     updatePaws();
+    dailyDeals.style.display = "block";
 
     // BRAND input
     brandInput.addEventListener("input", () => {
@@ -1261,7 +1290,6 @@
       showSuggestions(modelSuggestions, matches, (value) => {
         modelInput.value = value;
         modelSuggestions.style.display = "none";
-
         setTimeout(() => fetchBtn.focus(), 0);
         updatePaws();
       });
@@ -1289,8 +1317,8 @@
         return;
       }
 
-      // Only show home content on search
-      if (aboutContent.classList.contains("hidden") === false || alertsDashboard.classList.contains("hidden") === false) {
+      // Ensure home view for searches
+      if (!aboutContent.classList.contains("hidden") || !alertsDashboard.classList.contains("hidden")) {
         showHome();
       }
 
@@ -1306,7 +1334,6 @@
 
       try {
         const res = await fetch("/api/search?" + new URLSearchParams({ query }));
-
         try {
           data = await res.json();
         } catch (parseErr) {
@@ -1314,12 +1341,10 @@
           statusEl.textContent = "Search failed. Please try again.";
           return;
         }
-
         if (!data || !data.results) {
           statusEl.textContent = "No results found.";
           return;
         }
-
       } catch (err) {
         statusEl.textContent = "Search failed. Please try again.";
         console.error("Fetch error:", err);
@@ -1376,7 +1401,6 @@
     alertPromptBtn.addEventListener("click", () => {
       alertPromptBtn.style.display = "none";
       alertForm.style.display = "flex";
-
       const product = `${currentSearch.brand} ${currentSearch.model}`;
       alertProductName.textContent = product;
     });
@@ -1426,7 +1450,7 @@
         phone: isEmail ? "" : contact
       };
 
-      // Store alert locally (date set + brand + model + price)
+      // Store alert locally
       const newAlert = {
         id: `a_${Math.random().toString(36).slice(2)}_${Date.now()}`,
         key: alertKey(brand, model),
@@ -1439,7 +1463,7 @@
       };
       upsertAlert(newAlert);
 
-      // Optional: still hit the API endpoint (keeps your backend path alive)
+      // Optional: hit API endpoint
       try {
         await fetch("/api/alerts", {
           method: "POST",
@@ -1450,7 +1474,6 @@
         console.error("Alert submission error:", err);
       }
 
-      // Confirmation UI
       const product = `${brand} ${model}`;
       alertForm.style.display = "none";
       alertConfirmation.innerHTML = `
@@ -1460,9 +1483,6 @@
       `;
       alertConfirmation.style.display = "block";
     });
-
-    // On first load, keep daily deals visible on home
-    dailyDeals.style.display = "block";
   </script>
 </body>
 </html>
