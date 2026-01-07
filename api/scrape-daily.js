@@ -118,16 +118,21 @@ async function scrapeRunningWarehouse() {
     $('.cattable-wrap-cell').each((i, element) => {
       const $el = $(element);
       
-      // Extract title - use data attribute if available, otherwise parse from text
+      // Extract title - try multiple methods
       let title = $el.find('[data-gtm_impression_name]').first().attr('data-gtm_impression_name');
       
-      // Fallback: if no data attribute, try to extract from text
       if (!title) {
-        const fullText = $el.text();
-        // Extract just the product name (usually between "Clearance" and price)
-        const lines = fullText.split('\n').map(l => l.trim()).filter(l => l.length > 10 && l.length < 100);
-        title = lines.find(l => !l.includes('$') && !l.includes('Clearance') && !l.includes('Review') && !l.includes('Size'));
+        // Try getting from the alt text of the image
+        title = $el.find('img').first().attr('alt');
       }
+      
+      if (!title || title.includes('<img')) {
+        // Last resort: skip this product
+        return;
+      }
+      
+      // Clean up the title
+      title = title.replace(/\s+/g, ' ').trim();
       
       const priceText = $el.find('[data-gtm_impression_price]').first().attr('data-gtm_impression_price') || 
                         $el.find('.price, .sale-price, [class*="price"]').first().text().trim();
