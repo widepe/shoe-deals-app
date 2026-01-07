@@ -67,11 +67,11 @@ module.exports = async (req, res) => {
       deals: allDeals
     };
 
-    // Save to data/deals.json
-    const dataDir = path.join(process.cwd(), 'data');
-    await fs.mkdir(dataDir, { recursive: true });
-    await fs.writeFile(
-      path.join(dataDir, 'deals.json'),
+// Save to /tmp (Vercel allows writes here)
+const dataDir = '/tmp';
+await fs.mkdir(dataDir, { recursive: true });
+await fs.writeFile(
+  path.join(dataDir, 'deals.json'),
       JSON.stringify(output, null, 2)
     );
 
