@@ -4,8 +4,7 @@
 
 const axios = require('axios');
 const cheerio = require('cheerio');
-const fs = require('fs').promises;
-const path = require('path');
+const { put } = require('@vercel/blob');
 
 /**
  * Main handler - triggered by Vercel Cron
@@ -67,13 +66,11 @@ module.exports = async (req, res) => {
       deals: allDeals
     };
 
-// Save to /tmp (Vercel allows writes here)
-const dataDir = '/tmp';
-await fs.mkdir(dataDir, { recursive: true });
-await fs.writeFile(
-  path.join(dataDir, 'deals.json'),
-      JSON.stringify(output, null, 2)
-    );
+// Save to Vercel Blob Storage
+await put('deals.json', JSON.stringify(output, null, 2), {
+  access: 'public',
+  contentType: 'application/json'
+});
 
     const duration = Date.now() - startTime;
     console.log(`[SCRAPER] Complete: ${allDeals.length} deals in ${duration}ms`);
