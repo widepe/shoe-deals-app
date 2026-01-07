@@ -99,8 +99,7 @@ await put('deals.json', JSON.stringify(output, null, 2), {
  */
 async function scrapeRunningWarehouse() {
   const deals = [];
-  const url = 'https://www.runningwarehouse.com/catpage-MSSALE.html';
-
+  const url = 'https://www.runningwarehouse.com/catpage-SALEMS.html';
   try {
     const response = await axios.get(url, {
       headers: {
