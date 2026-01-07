@@ -136,13 +136,46 @@ async function scrapeRunningWarehouse() {
       
       const priceText = $el.find('[data-gtm_impression_price]').first().attr('data-gtm_impression_price') || 
                         $el.find('.price, .sale-price, [class*="price"]').first().text().trim();
-      const link = $el.find('a').first().attr('href');
-      const image = $el.find('img').first().attr('src') || $el.find('img').first().attr('data-src');
+      
+      let link = $el.find('a').first().attr('href');
+      let image = $el.find('img').first().attr('src') || $el.find('img').first().attr('data-src');
+
+      // Clean up link - remove newlines and whitespace
+      if (link) {
+        link = link.replace(/[\r\n\t]/g, '').trim();
+      }
+
+      // Clean up image
+      if (image) {
+        image = image.replace(/[\r\n\t]/g, '').trim();
+      }
 
       const { brand, model } = parseBrandModel(title);
       const price = parsePrice(priceText);
 
       if (title && price > 0 && link) {
+        // Build clean URL
+        let cleanUrl = '';
+        if (link.startsWith('http')) {
+          cleanUrl = link;
+        } else if (link.startsWith('/')) {
+          cleanUrl = `https://www.runningwarehouse.com${link}`;
+        } else {
+          cleanUrl = `https://www.runningwarehouse.com/${link}`;
+        }
+
+        // Build clean image URL
+        let cleanImage = 'https://placehold.co/600x400?text=Running+Shoe';
+        if (image && !image.includes('blank.gif')) {
+          if (image.startsWith('http')) {
+            cleanImage = image;
+          } else if (image.startsWith('/')) {
+            cleanImage = `https://www.runningwarehouse.com${image}`;
+          } else {
+            cleanImage = `https://www.runningwarehouse.com/${image}`;
+          }
+        }
+
         deals.push({
           title,
           brand,
@@ -150,10 +183,8 @@ async function scrapeRunningWarehouse() {
           price,
           originalPrice: null,
           store: 'Running Warehouse',
-url: link ? (link.startsWith('http') ? link : `https://www.runningwarehouse.com${link}`) : '',
-image: (image && image !== 'https://img.runningwarehouse.com/blank.gif' && !image.includes('blank.gif')) 
-       ? (image.startsWith('http') ? image : `https://www.runningwarehouse.com${image}`)
-       : 'https://placehold.co/600x400?text=Running+Shoe',
+          url: cleanUrl,
+          image: cleanImage,
           discount: null,
           scrapedAt: new Date().toISOString()
         });
