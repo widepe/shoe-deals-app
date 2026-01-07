@@ -150,8 +150,10 @@ async function scrapeRunningWarehouse() {
           price,
           originalPrice: null,
           store: 'Running Warehouse',
-          url: link.startsWith('http') ? link : `https://www.runningwarehouse.com${link}`,
-          image: image && image.startsWith('http') ? image : `https://www.runningwarehouse.com${image || ''}`,
+url: link ? (link.startsWith('http') ? link : `https://www.runningwarehouse.com${link}`) : '',
+image: (image && image !== 'https://img.runningwarehouse.com/blank.gif' && !image.includes('blank.gif')) 
+       ? (image.startsWith('http') ? image : `https://www.runningwarehouse.com${image}`)
+       : 'https://placehold.co/600x400?text=Running+Shoe',
           discount: null,
           scrapedAt: new Date().toISOString()
         });
