@@ -118,7 +118,7 @@ async function scrapeRunningWarehouse() {
     $('.cattable-wrap-cell').each((i, element) => {
       const $el = $(element);
       
-      const title = $el.find('[data-gtm_impression_name]').first().attr('data-gtm_impression_name') || $el.find('.cattable-wrap-cell-inner').first().text().trim();
+      const title = $el.find('[data-gtm_impression_name]').first().attr('data-gtm_impression_name');
       const priceText = $el.find('.price, .sale-price, [class*="price"]').first().text().trim();
       const link = $el.find('a').first().attr('href');
       const image = $el.find('img').first().attr('src') || $el.find('img').first().attr('data-src');
