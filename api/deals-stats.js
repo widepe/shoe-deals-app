@@ -1,6 +1,6 @@
 // api/deals-stats.js
 //
-// Returns aggregate stats about all scraped Running Warehouse deals:
+// Returns aggregate stats about all scraped deals:
 //
 // {
 //   totalDeals: number,
@@ -13,14 +13,37 @@
 const { get } = require("@vercel/blob");
 
 function computeDiscountPercent(deal) {
-  const price = Number(deal.price);      // original price
-  const sale = Number(deal.salePrice);   // sale price
+  // Prefer price + originalPrice
+  const price = Number(deal.price);
+  const original = deal.originalPrice != null ? Number(deal.originalPrice) : NaN;
 
-  if (!Number.isFinite(price) || !Number.isFinite(sale)) return 0;
-  if (price <= 0 || sale >= price) return 0;
+  if (
+    Number.isFinite(price) &&
+    Number.isFinite(original) &&
+    original > 0 &&
+    price < original
+  ) {
+    const pct = ((original - price) / original) * 100;
+    return Math.round(pct);
+  }
 
-  const pct = ((price - sale) / price) * 100;
-  return Math.round(pct);
+  // Fallback: numeric discountPercent field
+  if (typeof deal.discountPercent === "number" && deal.discountPercent > 0) {
+    return Math.round(deal.discountPercent);
+  }
+
+  // Fallback: string discount like "-23%"
+  if (typeof deal.discount === "string") {
+    const m = deal.discount.match(/(\d+(?:\.\d+)?)%/);
+    if (m) {
+      const pct = Number(m[1]);
+      if (Number.isFinite(pct) && pct > 0) {
+        return Math.round(pct);
+      }
+    }
+  }
+
+  return 0;
 }
 
 module.exports = async (req, res) => {
@@ -29,9 +52,9 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // Read the same blob that scrape-daily.js writes to:
-    //   "scraped/runningwarehouse/deals.json"
-    const { blob } = await get("scraped/runningwarehouse/deals.json");
+    // IMPORTANT: this must match what scrape-daily.js writes:
+    //   put("deals.json", JSON.stringify(payload), { access: "public" })
+    const { blob } = await get("deals.json");
 
     if (!blob || !blob.url) {
       return res.status(500).json({ error: "Could not locate deals blob" });
@@ -46,15 +69,18 @@ module.exports = async (req, res) => {
     }
 
     const json = await resp.json();
-    const deals = Array.isArray(json) ? json : (json.deals || []);
 
+    // Support either [deal, deal, ...] or { deals: [...] }
+    const deals = Array.isArray(json) ? json : (json.deals || []);
     const totalDeals = deals.length;
 
     const dealsWithImages = deals.filter(
       (d) => typeof d.image === "string" && d.image.trim().length > 0
     ).length;
 
-    const withValidDiscount = deals.filter((d) => computeDiscountPercent(d) > 0);
+    const withValidDiscount = deals.filter(
+      (d) => computeDiscountPercent(d) > 0
+    );
 
     const off10OrMore = withValidDiscount.filter(
       (d) => computeDiscountPercent(d) >= 10
