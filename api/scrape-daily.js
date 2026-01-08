@@ -140,17 +140,15 @@ async function scrapeRunningWarehouse() {
       let link = $el.find('a').first().attr('href');
       let image = $el.find('img').first().attr('src') || $el.find('img').first().attr('data-src');
 
-// If src is blank.gif, try srcset
-if (!image || image.includes('blank.gif')) {
-  const srcset = $el.find('img').first().attr('srcset');
-  if (srcset) {
-    // Extract first URL from srcset
-    const match = srcset.match(/(https?:\/\/[^\s]+)/);
-    if (match) {
-      image = match[1];
-    }
-  }
-}
+      // If src is blank.gif or doesn't exist, try srcset
+      if (!image || image.includes('blank.gif')) {
+        const srcset = $el.find('img').first().attr('srcset');
+        if (srcset) {
+          // Extract first URL from srcset (remove any extra parameters for now)
+          const firstUrl = srcset.split(',')[0].trim().split(' ')[0];
+          image = firstUrl;
+        }
+      }
 
       // Clean up link - remove newlines and whitespace
       if (link) {
