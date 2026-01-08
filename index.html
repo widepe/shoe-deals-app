@@ -284,22 +284,25 @@
       flex-direction: column;
       gap: 0.4rem;
       text-align: center;
-      min-width: 180px;
     }
 
     /* Desktop: 3 items visible */
-    @media (min-width: 768px) {
-      .carousel-item {
-        width: calc((100% - 2rem) / 3);
-      }
-    }
+@media (min-width: 768px) {
+  .carousel-item {
+    width: calc((100% - 2rem) / 3);
+    min-width: calc((100% - 2rem) / 3);
+    max-width: calc((100% - 2rem) / 3);
+  }
+}
 
-    /* Mobile: 1 item visible */
-    @media (max-width: 767px) {
-      .carousel-item {
-        width: 100%;
-      }
-    }
+/* Mobile: 1 item visible */
+@media (max-width: 767px) {
+  .carousel-item {
+    width: calc(100% - 2rem);
+    min-width: calc(100% - 2rem);
+    max-width: calc(100% - 2rem);
+  }
+}
 
     .carousel-item img {
       width: 100%;
