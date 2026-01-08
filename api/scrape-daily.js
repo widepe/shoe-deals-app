@@ -100,96 +100,94 @@ module.exports = async (req, res) => {
  * Scrape Running Warehouse sale page
  */
 async function scrapeRunningWarehouse() {
+  console.log("[SCRAPER] Starting Running Warehouse scrape…");
+
+  // These are the two main sale pages you were already using
+  const urls = [
+    "https://www.runningwarehouse.com/catpage-SALEMS.html", // Men's
+    "https://www.runningwarehouse.com/catpage-SALEWS.html", // Women's
+  ];
+
   const deals = [];
-  const url = 'https://www.runningwarehouse.com/catpage-SALEMS.html';
 
   try {
-    const response = await axios.get(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; ShoeBeagleBot/1.0; +https://shoebeagle.com)',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-      },
-      timeout: 15000
-    });
+    for (const url of urls) {
+      console.log(`[SCRAPER] Fetching RW page: ${url}`);
 
-    const $ = cheerio.load(response.data);
+      const response = await axios.get(url, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        },
+        timeout: 30000,
+      });
 
-    $('.cattable-wrap-cell').each((i, element) => {
-      const $el = $(element);
-      
-      // Extract title - try multiple methods
-      let title = $el.find('[data-gtm_impression_name]').first().attr('data-gtm_impression_name');
-      
-      if (!title) {
-        // Try getting from the alt text of the image
-        title = $el.find('img').first().attr('alt');
-      }
-      
-      if (!title || title.includes('<img')) {
-        // Last resort: skip this product
-        return;
-      }
-      
-      // Clean up the title
-      title = title.replace(/\s+/g, ' ').trim();
-      
-      const priceText = $el.find('[data-gtm_impression_price]').first().attr('data-gtm_impression_price') || 
-                        $el.find('.price, .sale-price, [class*="price"]').first().text().trim();
-      
-      let link = $el.find('a').first().attr('href');
-      let image = null;
+      const html = response.data;
+      const $ = cheerio.load(html);
 
-      // Always try srcset first (Running Warehouse uses it)
-      const srcset = $el.find('img').first().attr('srcset');
-      if (srcset) {
-        // srcset format: "url1 width1, url2 width2, ..."
-        // Just take the first URL before the first space
-        const firstPart = srcset.split(',')[0]; // Get first option
-        image = firstPart.trim().split(' ')[0]; // Get URL before width
-      } else {
-        // Fallback to regular src
-        image = $el.find('img').first().attr('src');
-      }
+      // Each product is essentially a big link whose text looks like:
+      // "Clearance Brand Model Men's Shoes - Color $ 111.95 $140.00 *"
+      $("a").each((_, el) => {
+        const anchor = $(el);
+        let text = anchor.text().replace(/\s+/g, " ").trim();
 
-      // If still no image, try data-src
-      if (!image) {
-        image = $el.find('img').first().attr('data-src');
-      }
+        if (!text.startsWith("Clearance ")) return;
+        if (!/Shoes\b/i.test(text)) return;
 
-      // Clean up link - remove newlines and whitespace
-      if (link) {
-        link = link.replace(/[\r\n\t]/g, '').trim();
-      }
+        // Peel off the trailing asterisk, etc
+        text = text.replace(/\*\s*$/, "").trim();
 
-      // Clean up image
-      if (image) {
-        image = image.replace(/[\r\n\t]/g, '').trim();
-      }
+        const href = anchor.attr("href") || "";
+        if (!href) return;
 
-      const { brand, model } = parseBrandModel(title);
-      const price = parsePrice(priceText);
+        // Parse sale + original prices out of the text
+        const { salePrice, originalPrice } = parseSaleAndOriginalPrices(text);
+        if (!salePrice || !Number.isFinite(salePrice)) return;
 
-      if (title && price > 0 && link) {
-        // Build clean URL
-        let cleanUrl = '';
-        if (link.startsWith('http')) {
-          cleanUrl = link;
-        } else if (link.startsWith('/')) {
-          cleanUrl = `https://www.runningwarehouse.com${link}`;
-        } else {
-          cleanUrl = `https://www.runningwarehouse.com/${link}`;
+        const price = salePrice;
+        const hasValidOriginal =
+          Number.isFinite(originalPrice) && originalPrice > price;
+
+        let discount = null;
+        if (hasValidOriginal) {
+          const pct = Math.round(((originalPrice - price) / originalPrice) * 100);
+          if (pct > 0) {
+            discount = `${pct}% OFF`;
+          }
         }
 
-        // Build clean image URL
-        let cleanImage = 'https://placehold.co/600x400?text=Running+Shoe';
-        if (image && !image.includes('blank.gif')) {
-          if (image.startsWith('http')) {
-            cleanImage = image;
-          } else if (image.startsWith('/')) {
-            cleanImage = `https://www.runningwarehouse.com${image}`;
-          } else {
-            cleanImage = `https://www.runningwarehouse.com/${image}`;
+        // Clean title (drop the prices from the text)
+        const titleWithoutPrices = text.replace(/\$\s*\d[\d,]*\.?\d*/g, "").trim();
+        const title = titleWithoutPrices;
+
+        // Brand/model from the title, using your existing helper
+        const { brand, model } = parseBrandModel(title);
+
+        // Build a full URL
+        let cleanUrl = href;
+        if (!/^https?:\/\//i.test(cleanUrl)) {
+          cleanUrl = `https://www.runningwarehouse.com/${cleanUrl.replace(/^\/+/, "")}`;
+        }
+
+        // Try to find an image somewhere in the same product “chunk”
+        let cleanImage = null;
+        const container = anchor.closest("tr,td,div,li,article");
+        if (container.length) {
+          const imgEl = container.find("img").first();
+          const src =
+            imgEl.attr("data-src") ||
+            imgEl.attr("data-original") ||
+            imgEl.attr("src");
+          if (src) {
+            if (/^https?:\/\//i.test(src)) {
+              cleanImage = src;
+            } else {
+              cleanImage = `https://www.runningwarehouse.com/${src.replace(
+                /^\/+/,
+                ""
+              )}`;
+            }
           }
         }
 
@@ -197,24 +195,30 @@ async function scrapeRunningWarehouse() {
           title,
           brand,
           model,
+          store: "Running Warehouse",
           price,
-          originalPrice: null,
-          store: 'Running Warehouse',
+          originalPrice: hasValidOriginal ? originalPrice : null,
           url: cleanUrl,
           image: cleanImage,
-          discount: null,
-          scrapedAt: new Date().toISOString()
+          discount,
+          scrapedAt: new Date().toISOString(),
         });
-      }
-    });
+      });
 
+      // Be polite
+      await sleep(1500);
+    }
+
+    console.log(
+      `[SCRAPER] Running Warehouse scrape complete. Found ${deals.length} deals.`
+    );
+    return deals;
   } catch (error) {
-    console.error('[SCRAPER] Running Warehouse error:', error.message);
+    console.error("[SCRAPER] Running Warehouse error:", error.message);
     throw error;
   }
-
-  return deals;
 }
+
 
 /**
  * Scrape Zappos clearance/sale page
