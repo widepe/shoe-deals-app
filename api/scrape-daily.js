@@ -138,15 +138,23 @@ async function scrapeRunningWarehouse() {
                         $el.find('.price, .sale-price, [class*="price"]').first().text().trim();
       
       let link = $el.find('a').first().attr('href');
-      let image = $el.find('img').first().attr('src') || $el.find('img').first().attr('data-src');
+      let image = null;
 
-      // If src is blank.gif or doesn't exist, try srcset
-      if (!image || image.includes('blank.gif')) {
-        const srcset = $el.find('img').first().attr('srcset');
-        if (srcset) {
-          // Extract first URL from srcset (remove any extra parameters for now)
-          const firstUrl = srcset.split(',')[0].trim().split(' ')[0];
-          image = firstUrl;
+      // Try to get product code from image
+      const productCode = $el.find('img').first().attr('data-code');
+      if (productCode) {
+        // Build image URL from product code
+        image = `https://img.runningwarehouse.com/watermark/rs.php?path=${productCode}-1.jpg&nw=339`;
+      } else {
+        // Fallback to src/srcset
+        image = $el.find('img').first().attr('src') || $el.find('img').first().attr('data-src');
+        
+        if (!image || image.includes('blank.gif')) {
+          const srcset = $el.find('img').first().attr('srcset');
+          if (srcset) {
+            const firstUrl = srcset.split(',')[0].trim().split(' ')[0];
+            image = firstUrl;
+          }
         }
       }
 
