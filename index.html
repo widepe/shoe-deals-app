@@ -1357,28 +1357,67 @@
     function normalize(s) { return String(s || "").trim().toLowerCase(); }
     function nowMs() { return Date.now(); }
 
-    function getDiscountInfo(item) {
-      const price = Number(item.price);
-      const original = Number(item.originalPrice);
+function getDiscountInfo(item) {
+  // Try multiple possible fields for the *current* price
+  const rawPrice =
+    item.price ??
+    item.salePrice ??
+    item.currentPrice ??
+    item.dealPrice;
 
-      if (
-        !Number.isFinite(price) ||
-        !Number.isFinite(original) ||
-        original <= 0 ||
-        price >= original
-      ) {
-        return { hasDiscount: false };
-      }
+  // Try multiple possible fields for the *original* price
+  let rawOriginal =
+    item.originalPrice ??
+    item.wasPrice ??
+    item.listPrice ??
+    item.msrp ??
+    item.regularPrice;
 
-      const percent = Math.round(((original - price) / original) * 100);
+  let price = Number(rawPrice);
+  let original = Number(rawOriginal);
 
-      return {
-        hasDiscount: true,
-        current: price.toFixed(2),
-        original: original.toFixed(2),
-        percent
-      };
-    }
+  // Try percent-off style fields (e.g., "40" for 40% off)
+  let percentFromField = Number(
+    item.discountPercent ??
+    item.percentOff ??
+    item.offPercent
+  );
+
+  // If we don't have a clean original price but we do have price + percent off,
+  // back-calculate the original price.
+  if (
+    !Number.isFinite(original) &&
+    Number.isFinite(price) &&
+    Number.isFinite(percentFromField) &&
+    percentFromField > 0 &&
+    percentFromField < 100
+  ) {
+    original = price / (1 - percentFromField / 100);
+  }
+
+  // If we still don't have a valid discount situation, bail out.
+  if (
+    !Number.isFinite(price) ||
+    !Number.isFinite(original) ||
+    original <= 0 ||
+    price >= original
+  ) {
+    return {
+      hasDiscount: false,
+      current: Number.isFinite(price) ? price.toFixed(2) : null
+    };
+  }
+
+  const percent = Math.round(((original - price) / original) * 100);
+
+  return {
+    hasDiscount: true,
+    current: price.toFixed(2),
+    original: original.toFixed(2),
+    percent
+  };
+}
+
 
     function daysBetween(msA, msB) {
       const diff = Math.abs(msA - msB);
@@ -1972,90 +2011,97 @@
     alertContactInput.addEventListener("input", updateAlertSubmitButton);
 
     // Helper: create unified deal card (search + daily deals)
-    function createDealCard(item) {
-      const card = document.createElement("div");
-      card.className = "card";
+function createDealCard(item) {
+  const card = document.createElement("div");
+  card.className = "card";
 
-      const link = document.createElement("a");
-      link.className = "card-link";
-      link.href = item.url || "#";
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
+  const link = document.createElement("a");
+  link.className = "card-link";
+  link.href = item.url || "#";
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
 
-      const discountInfo = getDiscountInfo(item);
+  // Figure out pricing / discount
+  const discountInfo = getDiscountInfo(item);
 
-      if (item.image) {
-        const wrapper = document.createElement("div");
-        wrapper.className = "card-image-wrapper";
+  // IMAGE + BADGE
+  if (item.image) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "card-image-wrapper";
 
-        const img = document.createElement("img");
-        img.src = item.image;
-        img.alt = item.title || "Deal image";
-        wrapper.appendChild(img);
+    const img = document.createElement("img");
+    img.src = item.image;
+    img.alt = item.title || "Deal image";
+    wrapper.appendChild(img);
 
-        if (discountInfo.hasDiscount) {
-          const badge = document.createElement("div");
-          badge.className = "discount-badge";
-          badge.textContent = `-${discountInfo.percent}%`;
-          wrapper.appendChild(badge);
-        }
-
-        link.appendChild(wrapper);
-      }
-
-      const titleDiv = document.createElement("div");
-      titleDiv.className = "card-title";
-      titleDiv.textContent = item.title || "Deal";
-      link.appendChild(titleDiv);
-
-      if (item.store) {
-        const storeDiv = document.createElement("div");
-        storeDiv.className = "card-store";
-        storeDiv.textContent = item.store;
-        link.appendChild(storeDiv);
-      }
-
-      const priceRow = document.createElement("div");
-      priceRow.className = "card-price-row";
-
-      const priceSpan = document.createElement("span");
-      priceSpan.className = "price";
-
-      let displayPrice = null;
-      if (discountInfo.hasDiscount) {
-        displayPrice = discountInfo.current;
-      } else if (Number.isFinite(Number(item.price))) {
-        displayPrice = Number(item.price).toFixed(2);
-      }
-
-      priceSpan.textContent = displayPrice ? `$${displayPrice}` : (item.price ? String(item.price) : "—");
-      priceRow.appendChild(priceSpan);
-
-      if (discountInfo.hasDiscount) {
-        const origSpan = document.createElement("span");
-        origSpan.className = "card-original";
-        origSpan.textContent = `$${discountInfo.original}`;
-        priceRow.appendChild(origSpan);
-      }
-
-      link.appendChild(priceRow);
-
-      if (discountInfo.hasDiscount) {
-        const discDiv = document.createElement("div");
-        discDiv.className = "card-discount";
-        discDiv.textContent = `You save ${discountInfo.percent}% off original price.`;
-        link.appendChild(discDiv);
-      } else if (item.discount) {
-        // Fallback if scraper has a discount text string
-        const discDiv = document.createElement("div");
-        discDiv.className = "card-discount";
-        discDiv.textContent = item.discount;
-        link.appendChild(discDiv);
-      }
-
-      card.appendChild(link);
-      return card;
+    // Corner percentage badge, like "-35%"
+    if (discountInfo.hasDiscount) {
+      const badge = document.createElement("div");
+      badge.className = "discount-badge";
+      badge.textContent = `-${discountInfo.percent}%`;
+      wrapper.appendChild(badge);
     }
+
+    link.appendChild(wrapper);
+  }
+
+  // TITLE
+  const titleDiv = document.createElement("div");
+  titleDiv.className = "card-title";
+  titleDiv.textContent = item.title || "Deal";
+  link.appendChild(titleDiv);
+
+  // STORE
+  if (item.store) {
+    const storeDiv = document.createElement("div");
+    storeDiv.className = "card-store";
+    storeDiv.textContent = item.store;
+    link.appendChild(storeDiv);
+  }
+
+  // PRICE ROW
+  const priceRow = document.createElement("div");
+  priceRow.className = "card-price-row";
+
+  const priceSpan = document.createElement("span");
+  priceSpan.className = "price";
+
+  // Use discountInfo.current when available, otherwise fall back to item.price
+  let displayPrice = discountInfo.current;
+  if (!displayPrice && Number.isFinite(Number(item.price))) {
+    displayPrice = Number(item.price).toFixed(2);
+  }
+  priceSpan.textContent = displayPrice ? `$${displayPrice}` : (item.price ? String(item.price) : "—");
+  priceRow.appendChild(priceSpan);
+
+  // Original (struck-through) price if we have a valid discount
+  if (discountInfo.hasDiscount) {
+    const origSpan = document.createElement("span");
+    origSpan.className = "card-original";
+    origSpan.textContent = `$${discountInfo.original}`;
+    priceRow.appendChild(origSpan);
+  }
+
+  link.appendChild(priceRow);
+
+  // Savings text line under the prices
+  if (discountInfo.hasDiscount) {
+    const discDiv = document.createElement("div");
+    discDiv.className = "card-discount";
+    discDiv.textContent = `You save ${discountInfo.percent}% off original price.`;
+    link.appendChild(discDiv);
+  } else if (item.discount) {
+    // Fallback if your scraper already gives a discount string
+    const discDiv = document.createElement("div");
+    discDiv.className = "card-discount";
+    discDiv.textContent = item.discount;
+    link.appendChild(discDiv);
+  }
+
+  card.appendChild(link);
+  return card;
+}
+
 
     // Load daily deals from API and render as cards
     async function loadDailyDeals() {
