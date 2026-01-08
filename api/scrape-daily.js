@@ -239,27 +239,53 @@ async function scrapeZappos() {
       const $el = $(element);
       
       const title = $el.find('[itemprop="name"], .product-name, h2, h3').first().text().trim();
-      const priceText = $el.find('[itemprop="price"], .price').first().text().trim();
-      const link = $el.find('a').first().attr('href');
-      const image = $el.find('img').first().attr('src');
+      const priceText =
+        $el
+          .find('[data-gtm_impression_price]')
+          .first()
+          .attr("data-gtm_impression_price") ||
+        $el
+          .find(".price, .sale-price, [class*='price']")
+          .first()
+          .text()
+          .trim();
 
-      const { brand, model } = parseBrandModel(title);
-      const price = parsePrice(priceText);
+      // Parse all $X.XX numbers we can see in the price area
+      const dollarMatches =
+        (priceText.match(/\$[\d.,]+/g) || [])
+          .map((txt) => parsePrice(txt))
+          .filter((n) => Number.isFinite(n));
 
-      if (title && price > 0 && link) {
+      // Fallback: parse the whole string as a single price
+      let sale = parsePrice(priceText);
+      let original = null;
+
+      if (dollarMatches.length >= 2) {
+        // For strings like "$99.88 $140.00" we treat the lower as sale, higher as original
+        sale = Math.min(...dollarMatches);
+        original = Math.max(...dollarMatches);
+      }
+
+      const discountPct =
+        Number.isFinite(sale) &&
+        Number.isFinite(original) &&
+        original > 0 &&
+        sale < original
+          ? Math.round(((original - sale) / original) * 100)
+          : 0;
+
+      if (title && sale > 0 && link) {
         deals.push({
           title,
-          brand,
-          model,
-          price,
-          originalPrice: null,
-          store: 'Zappos',
-          url: link.startsWith('http') ? link : `https://www.zappos.com${link}`,
-          image: image || 'https://placehold.co/600x400?text=Running+Shoe',
-          discount: null,
-          scrapedAt: new Date().toISOString()
+          store: "Running Warehouse",
+          price: sale,              // current sale price
+          originalPrice: original,  // previous price (null if none)
+          image: imageUrl,
+          url: link,
+          discount: discountPct > 0 ? `${discountPct}% OFF` : null
         });
       }
+
     });
 
   } catch (error) {
