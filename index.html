@@ -246,22 +246,14 @@
       min-height: 1.1rem;
     }
 
-    /* Carousel Container Styles */
-.carousel-container {
-  width: 100%;
-  max-width: 850px;
-  margin-top: 1.0rem;
-  position: relative;
-  padding: 0 50px; /* Space for arrows */
-}
+    /* Daily Deals Section */
+    .daily-deals {
+      width: 100%;
+      max-width: 850px;
+      margin-top: 1.0rem;
+    }
 
-@media (max-width: 767px) {
-  .carousel-container {
-    padding: 0 10px; /* Less padding on mobile */
-  }
-}
-
-    .carousel-header {
+    .daily-deals-header {
       font-size: 1.3rem;
       font-weight: 700;
       color: #214478ff;
@@ -269,46 +261,25 @@
       text-align: center;
     }
 
-    .carousel-wrapper {
-      position: relative;
-      overflow: hidden;
+    .daily-deals-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      width: 100%;
     }
 
-    .carousel-track {
-  display: flex;
-  gap: 1rem;
-  transition: transform 0.3s ease;
-  touch-action: pan-y pinch-zoom;
-  width: 100%;
-}
+    .daily-deal-card {
+      background: #ffffffc9;
+      border: 2px solid #214478ff;
+      border-radius: 0.75rem;
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      text-align: center;
+    }
 
-.carousel-item {
-  flex: 0 0 auto;
-  background: #ffffffc9;
-  border: 2px solid #214478ff;
-  border-radius: 0.75rem;
-  padding: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  text-align: center;
-}
-
-/* Desktop: 3 items visible */
-@media (min-width: 768px) {
-  .carousel-item {
-    width: calc((100% - 2rem) / 3);
-  }
-}
-
-/* Mobile: 1 item visible - account for padding */
-@media (max-width: 767px) {
-  .carousel-item {
-    width: calc(100vw - 80px); /* Full viewport minus arrows and padding */
-  }
-}
-
-    .carousel-item img {
+    .daily-deal-card img {
       width: 100%;
       height: 120px;
       object-fit: contain;
@@ -316,65 +287,43 @@
       background: #fafafa;
     }
 
-    .carousel-item-title { 
-      font-size: 0.85rem; 
-      font-weight: 600; 
-      color: #2d2d2d; 
+    .daily-deal-title { font-size: 0.85rem; font-weight: 600; color: #2d2d2d; }
+    .daily-deal-price { font-size: 1rem; font-weight: 700; color: #214478ff; }
+
+    .results {
+      margin-top: 1.0rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      width: 100%;
+      max-width: 850px;
     }
 
-    .carousel-item-store {
-      font-size: 0.8rem; 
-      color: #49543a; 
-      margin: 0.2rem 0;
+    .card {
+      background: #ffffffc9;
+      border: 2px solid #214478ff;
+      border-radius: 0.75rem;
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
     }
 
-    .carousel-item-price { 
-      font-size: 1rem; 
-      font-weight: 700; 
-      color: #214478ff; 
+    .card img {
+      width: 100%;
+      border-radius: 0.6rem;
+      object-fit: contain;
+      max-height: 170px;
+      background: #fafafa;
     }
 
-    .carousel-item-meta {
+    .card-title { font-size: 0.92rem; font-weight: 600; }
+
+    .card-meta {
       font-size: 0.82rem;
       color: #49543a;
       display: flex;
       justify-content: space-between;
-    }
-
-    .carousel-arrow {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(33, 68, 120, 0.9);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      font-size: 1.2rem;
-      cursor: pointer;
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s ease;
-    }
-
-    .carousel-arrow:hover {
-      background: rgba(33, 68, 120, 1);
-    }
-
-    .carousel-arrow.left {
-  left: 5px;
-}
-
-.carousel-arrow.right {
-  right: 5px;
-}
-
-    .carousel-arrow:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
     }
 
     .price { font-weight: 700; color: #214478ff; }
@@ -612,7 +561,7 @@
     }
 
     .alerts-table colgroup col:nth-child(1) { width: 12%; }  /* Date Set */
-    .alerts-table colgroup col:nth-child(2) { width: 45%; }  /* Shoe - unchanged */
+    .alerts-table colgroup col:nth-child(2) { width: 45%; }  /* Shoe */
     .alerts-table colgroup col:nth-child(3) { width: 7%; }   /* Days Left - HALF */
     .alerts-table colgroup col:nth-child(4) { width: 10%; }  /* Target */
     .alerts-table colgroup col:nth-child(5) { width: 19%; }  /* Status */
@@ -996,30 +945,55 @@
 
     <div id="mainContent">
       
-     <!-- Daily Deals Carousel -->
-     <div class="carousel-container" id="dailyDealsCarousel">
-        <div class="carousel-header">Marty's Daily Deals</div>
-        <div class="carousel-wrapper">
-          <button class="carousel-arrow left" id="dailyPrev">‹</button>
-          <div class="carousel-track" id="dailyTrack">
-            <!-- Daily deals will be inserted here by JS -->
+     <div class="daily-deals" id="dailyDeals">
+        <div class="daily-deals-header">Marty's Daily Deals</div>
+        <div class="daily-deals-grid">
+          <div class="daily-deal-card">
+            <a href="https://www.runningwarehouse.com/New_Balance_Fresh_Foam_X_1080_v14/descpage-N141M00.html" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit;">
+              <img src="https://img.runningwarehouse.com/watermark/rs.php?path=N141M00-1.jpg&nw=300" alt="New Balance Fresh Foam X 1080 v14">
+              <div class="daily-deal-title">New Balance Fresh Foam X 1080 v14</div>
+              <div style="font-size: 0.8rem; color: #49543a; margin: 0.2rem 0;">Running Warehouse</div>
+              <div class="daily-deal-price">$99.88 <span style="text-decoration: line-through; font-size: 0.8rem; color: #999;">$164.95</span></div>
+            </a>
           </div>
-          <button class="carousel-arrow right" id="dailyNext">›</button>
+          <div class="daily-deal-card">
+            <a href="https://www.runningwarehouse.com/New_Balance_FuelCell_Rebel_v4/descpage-NB4REM6.html" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit;">
+              <img src="https://img.runningwarehouse.com/watermark/rs.php?path=NB4REM6-1.jpg&nw=300" alt="New Balance FuelCell Rebel v4">
+              <div class="daily-deal-title">New Balance FuelCell Rebel v4</div>
+              <div style="font-size: 0.8rem; color: #49543a; margin: 0.2rem 0;">Running Warehouse</div>
+              <div class="daily-deal-price">$99.88 <span style="text-decoration: line-through; font-size: 0.8rem; color: #999;">$139.99</span></div>
+            </a>
+          </div>
+          <div class="daily-deal-card">
+            <a href="https://www.zappos.com/p/mens-saucony-echelon-9-charcoal-red-sky/product/9733648/color/994739" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit;">
+              <img src="https://m.media-amazon.com/images/I/81LlrWNr6wL._AC_SR300,200_.jpg" alt="Saucony Echelon 9">
+              <div class="daily-deal-title">Saucony Echelon 9</div>
+              <div style="font-size: 0.8rem; color: #49543a; margin: 0.2rem 0;">Zappos</div>
+              <div class="daily-deal-price">$120.00 <span style="text-decoration: line-through; font-size: 0.8rem; color: #999;">$150.00</span></div>
+            </a>
+          </div>
+          <div class="daily-deal-card">
+            <a href="https://www.zappos.com/p/mens-on-cloudmonster-all-black/product/9700021/color/8768" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit;">
+              <img src="https://m.media-amazon.com/images/I/715pj6Rsn2L._AC_SR300,200_.jpg" alt="On Cloudmonster">
+              <div class="daily-deal-title">On Cloudmonster</div>
+              <div style="font-size: 0.8rem; color: #49543a; margin: 0.2rem 0;">Zappos</div>
+              <div class="daily-deal-price">$127.50 <span style="text-decoration: line-through; font-size: 0.8rem; color: #999;">$170.00</span></div>
+            </a>
+          </div>
+          <div class="daily-deal-card">
+            <a href="https://www.zappos.com/p/mens-hoka-clifton-10/product/9984276" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit;">
+              <img src="https://m.media-amazon.com/images/I/71BkU2gMQ4L._AC_SR300,200_.jpg" alt="Hoka Clifton 10">
+              <div class="daily-deal-title">Hoka Clifton 10</div>
+              <div style="font-size: 0.8rem; color: #49543a; margin: 0.2rem 0;">Zappos</div>
+              <div class="daily-deal-price">$155.00</div>
+            </a>
+          </div>
         </div>
       </div>
 
-      <!-- Search Results Carousel -->
-      <div class="carousel-container hidden" id="resultsCarousel">
-        <div class="carousel-header">Search Results</div>
-        <div class="carousel-wrapper">
-          <button class="carousel-arrow left" id="resultsPrev">‹</button>
-          <div class="carousel-track" id="resultsTrack">
-            <!-- Search results will be inserted here by JS -->
-          </div>
-          <button class="carousel-arrow right" id="resultsNext">›</button>
-        </div>
-      </div>
 
+
+      <div class="results" id="results"></div>
       <p class="disclaimer">Prices are subject to change. Shoe Beagle does not sell products directly and is not responsible for changes in price, availability, or shipping terms on retailer sites.</p>
 
       <div class="alert-wrapper" id="alertWrapper" style="display:none;">
@@ -1228,8 +1202,8 @@
   <script>
     const form = document.getElementById("search-form");
     const statusMessageEl = document.getElementById("statusMessage");
-    const dailyDealsCarousel = document.getElementById("dailyDealsCarousel");
-    const resultsCarousel = document.getElementById("resultsCarousel");
+    const resultsEl = document.getElementById("results");
+    const dailyDeals = document.getElementById("dailyDeals");
 
     const alertWrapper = document.getElementById("alertWrapper");
     const alertPromptBtn = document.getElementById("alertPromptBtn");
@@ -1278,157 +1252,6 @@
 
     const ALERTS_KEY = "shoeBeagleAlerts";
     let alertsMemoryFallback = [];
-
-    // Daily deals data
-    const dailyDealsData = [
-      {
-        title: "New Balance Fresh Foam X 1080 v14",
-        url: "https://www.runningwarehouse.com/New_Balance_Fresh_Foam_X_1080_v14/descpage-N141M00.html",
-        image: "https://img.runningwarehouse.com/watermark/rs.php?path=N141M00-1.jpg&nw=300",
-        store: "Running Warehouse",
-        price: "$99.88",
-        originalPrice: "$164.95"
-      },
-      {
-        title: "New Balance FuelCell Rebel v4",
-        url: "https://www.runningwarehouse.com/New_Balance_FuelCell_Rebel_v4/descpage-NB4REM6.html",
-        image: "https://img.runningwarehouse.com/watermark/rs.php?path=NB4REM6-1.jpg&nw=300",
-        store: "Running Warehouse",
-        price: "$99.88",
-        originalPrice: "$139.99"
-      },
-      {
-        title: "Saucony Echelon 9",
-        url: "https://www.zappos.com/p/mens-saucony-echelon-9-charcoal-red-sky/product/9733648/color/994739",
-        image: "https://m.media-amazon.com/images/I/81LlrWNr6wL._AC_SR300,200_.jpg",
-        store: "Zappos",
-        price: "$120.00",
-        originalPrice: "$150.00"
-      },
-      {
-        title: "On Cloudmonster",
-        url: "https://www.zappos.com/p/mens-on-cloudmonster-all-black/product/9700021/color/8768",
-        image: "https://m.media-amazon.com/images/I/715pj6Rsn2L._AC_SR300,200_.jpg",
-        store: "Zappos",
-        price: "$127.50",
-        originalPrice: "$170.00"
-      },
-      {
-        title: "Hoka Clifton 10",
-        url: "https://www.zappos.com/p/mens-hoka-clifton-10/product/9984276",
-        image: "https://m.media-amazon.com/images/I/71BkU2gMQ4L._AC_SR300,200_.jpg",
-        store: "Zappos",
-        price: "$155.00",
-        originalPrice: null
-      }
-    ];
-
-    // Carousel functionality
-    class Carousel {
-      constructor(trackId, prevBtnId, nextBtnId) {
-        this.track = document.getElementById(trackId);
-        this.prevBtn = document.getElementById(prevBtnId);
-        this.nextBtn = document.getElementById(nextBtnId);
-        this.currentIndex = 0;
-        this.itemsPerView = window.innerWidth >= 768 ? 3 : 1;
-        
-        this.prevBtn.addEventListener('click', () => this.prev());
-        this.nextBtn.addEventListener('click', () => this.next());
-        
-        // Touch/swipe support
-        let touchStartX = 0;
-        let touchEndX = 0;
-        
-        this.track.addEventListener('touchstart', (e) => {
-          touchStartX = e.changedTouches[0].screenX;
-        });
-        
-        this.track.addEventListener('touchend', (e) => {
-          touchEndX = e.changedTouches[0].screenX;
-          if (touchStartX - touchEndX > 50) this.next();
-          if (touchEndX - touchStartX > 50) this.prev();
-        });
-
-        window.addEventListener('resize', () => {
-          this.itemsPerView = window.innerWidth >= 768 ? 3 : 1;
-          this.updatePosition();
-        });
-      }
-
-      getTotalItems() {
-        return this.track.children.length;
-      }
-
-      getMaxIndex() {
-        return Math.max(0, this.getTotalItems() - this.itemsPerView);
-      }
-
-      updatePosition() {
-        const itemWidth = this.track.children[0]?.offsetWidth || 0;
-        const gap = 16; // 1rem = 16px
-        const offset = -(this.currentIndex * (itemWidth + gap));
-        this.track.style.transform = `translateX(${offset}px)`;
-        this.updateButtons();
-      }
-
-      updateButtons() {
-        this.prevBtn.disabled = this.currentIndex === 0;
-        this.nextBtn.disabled = this.currentIndex >= this.getMaxIndex();
-      }
-
-      next() {
-        if (this.currentIndex < this.getMaxIndex()) {
-          this.currentIndex++;
-          this.updatePosition();
-        }
-      }
-
-      prev() {
-        if (this.currentIndex > 0) {
-          this.currentIndex--;
-          this.updatePosition();
-        }
-      }
-
-      reset() {
-        this.currentIndex = 0;
-        this.updatePosition();
-      }
-    }
-
-    // Initialize daily deals carousel
-    function initDailyDeals() {
-      const track = document.getElementById('dailyTrack');
-      track.innerHTML = '';
-      
-      dailyDealsData.forEach(deal => {
-        const item = document.createElement('div');
-        item.className = 'carousel-item';
-        
-        const link = document.createElement('a');
-        link.href = deal.url;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.style.textDecoration = 'none';
-        link.style.color = 'inherit';
-        
-        link.innerHTML = `
-          <img src="${deal.image}" alt="${deal.title}">
-          <div class="carousel-item-title">${deal.title}</div>
-          <div class="carousel-item-store">${deal.store}</div>
-          <div class="carousel-item-price">${deal.price}${deal.originalPrice ? ` <span style="text-decoration: line-through; font-size: 0.8rem; color: #999;">${deal.originalPrice}</span>` : ''}</div>
-        `;
-        
-        item.appendChild(link);
-        track.appendChild(item);
-      });
-      
-      const dailyCarousel = new Carousel('dailyTrack', 'dailyPrev', 'dailyNext');
-      return dailyCarousel;
-    }
-
-    let dailyCarousel = initDailyDeals();
-    let resultsCarouselObj = null;
 
     // Set footer year
     if (footerYear) {
@@ -1777,7 +1600,7 @@
             priceWrapper.appendChild(saveBtn);
             actionsDiv.appendChild(priceWrapper);
 
-            // Add 10 Days
+            // Add 10 Days - keep date same, just extend days
             const add10Btn = document.createElement("button");
             add10Btn.textContent = "Add 10 Days";
             add10Btn.className = "secondary";
@@ -1940,6 +1763,7 @@
     }
 
     function updatePaws() {
+      // Brand paw - hide when typing
       if (brandInput.value.trim()) {
         brandPaw.classList.add("hidden");
       } else if (!brandSelected) {
@@ -1947,6 +1771,7 @@
         brandPaw.classList.add("rock");
       }
 
+      // Model paw
       if (brandSelected && !modelInput.disabled) {
         if (!modelInput.value.trim()) {
           modelPaw.classList.remove("hidden");
@@ -1963,14 +1788,14 @@
       updateFetchReady();
     }
 
-    function updateAlertSubmitButton() {
-      const price = alertPriceInput.value.trim();
-      const contact = alertContactInput.value.trim();
-      const priceValid = price && parseFloat(price) > 0;
-      const contactValid = contact.length > 0 && contact.includes('@');
-      const isReady = priceValid && contactValid;
-      alertSubmitBtn.classList.toggle("ready", isReady);
-    }
+function updateAlertSubmitButton() {
+  const price = alertPriceInput.value.trim();
+  const contact = alertContactInput.value.trim();
+  const priceValid = price && parseFloat(price) > 0;
+  const contactValid = contact.length > 0 && contact.includes('@');
+  const isReady = priceValid && contactValid;
+  alertSubmitBtn.classList.toggle("ready", isReady);
+}
 
     function resetAlertSection() {
       alertPromptBtn.style.display = "block";
@@ -1988,8 +1813,8 @@
       mainContent.classList.add("hidden");
       aboutContent.classList.add("hidden");
       alertsDashboard.classList.add("hidden");
-      dailyDealsCarousel.classList.add("hidden");
-      resultsCarousel.classList.add("hidden");
+      resultsEl.innerHTML = "";
+      dailyDeals.style.display = "none";
       alertWrapper.style.display = "none";
       resetAlertSection();
       statusMessageEl.textContent = "";
@@ -1999,10 +1824,7 @@
       aboutContent.classList.add("hidden");
       alertsDashboard.classList.add("hidden");
       mainContent.classList.remove("hidden");
-      
-      if (resultsCarousel.classList.contains('hidden')) {
-        dailyDealsCarousel.classList.remove('hidden');
-      }
+      if (!resultsEl.innerHTML.trim()) dailyDeals.style.display = "block";
     }
 
     function showAbout() {
@@ -2024,6 +1846,7 @@
 
     resetModelState();
     updatePaws();
+    dailyDeals.style.display = "block";
 
     brandInput.addEventListener("input", () => {
       const typed = brandInput.value.trim();
@@ -2084,6 +1907,7 @@
 
     modelInput.addEventListener("blur", () => setTimeout(() => { modelSuggestions.style.display = "none"; }, 120));
 
+    // Alert price paw
     alertPriceInput.addEventListener("input", () => {
       if (alertPriceInput.value.trim()) {
         alertPricePaw.classList.add("hidden");
@@ -2115,7 +1939,8 @@
       currentSearch = { brand: brandKey, model: modelCanonical };
 
       statusMessageEl.textContent = "Searching deals…";
-      dailyDealsCarousel.classList.add("hidden");
+      resultsEl.innerHTML = "";
+      dailyDeals.style.display = "none";
 
       resetAlertSection();
       alertWrapper.style.display = "flex";
@@ -2155,50 +1980,45 @@
 
       if (!results.length) {
         statusMessageEl.textContent = "No results found — set a price alert and we'll keep sniffing.";
-        resultsCarousel.classList.add("hidden");
         return;
       }
 
       statusMessageEl.textContent = `Top ${results.length} deal(s) found.`;
-      
-      // Populate results carousel
-      const resultsTrack = document.getElementById('resultsTrack');
-      resultsTrack.innerHTML = '';
-      
+      resultsEl.innerHTML = "";
+
       results.forEach(item => {
-        const carouselItem = document.createElement('div');
-        carouselItem.className = 'carousel-item';
+        const card = document.createElement("div");
+        card.className = "card";
 
         if (item.image) {
-          const img = document.createElement('img');
+          const img = document.createElement("img");
           img.src = item.image;
-          img.alt = item.title || 'Deal image';
-          carouselItem.appendChild(img);
+          img.alt = item.title || "Deal image";
+          card.appendChild(img);
         }
 
-        const title = document.createElement('div');
-        title.className = 'carousel-item-title';
-        title.textContent = item.title || 'Deal';
-        carouselItem.appendChild(title);
+        const t = document.createElement("div");
+        t.className = "card-title";
+        t.textContent = item.title || "Deal";
+        card.appendChild(t);
 
-        const meta = document.createElement('div');
-        meta.className = 'carousel-item-meta';
-        const price = (typeof item.price === 'number') ? item.price.toFixed(2) : (item.price ? String(item.price) : '—');
-        meta.innerHTML = `<span class="price">$${price}</span><span>${item.store || ''}</span>`;
-        carouselItem.appendChild(meta);
+        const meta = document.createElement("div");
+        meta.className = "card-meta";
+        const p = (typeof item.price === "number") ? item.price.toFixed(2) : (item.price ? String(item.price) : "—");
+        meta.innerHTML = `<span class="price">$${p}</span><span>${item.store || ""}</span>`;
+        card.appendChild(meta);
 
-        const link = document.createElement('a');
-        link.textContent = 'View Deal';
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.href = item.url || '#';
-        carouselItem.appendChild(link);
+        const link = document.createElement("a");
+        link.textContent = "View Deal";
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.href = item.url || "#";
+        card.appendChild(link);
 
-        resultsTrack.appendChild(carouselItem);
+        resultsEl.appendChild(card);
       });
 
-      resultsCarousel.classList.remove('hidden');
-      resultsCarouselObj = new Carousel('resultsTrack', 'resultsPrev', 'resultsNext');
+      // DO NOT clear inputs - keep brand and model
     });
 
     alertPromptBtn.addEventListener("click", () => {
