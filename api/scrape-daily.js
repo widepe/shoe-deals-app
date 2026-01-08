@@ -140,22 +140,21 @@ async function scrapeRunningWarehouse() {
       let link = $el.find('a').first().attr('href');
       let image = null;
 
-      // Try to get product code from image
-      const productCode = $el.find('img').first().attr('data-code');
-      if (productCode) {
-        // Build image URL from product code
-        image = `https://img.runningwarehouse.com/watermark/rs.php?path=${productCode}-1.jpg&nw=339`;
+      // Always try srcset first (Running Warehouse uses it)
+      const srcset = $el.find('img').first().attr('srcset');
+      if (srcset) {
+        // srcset format: "url1 width1, url2 width2, ..."
+        // Just take the first URL before the first space
+        const firstPart = srcset.split(',')[0]; // Get first option
+        image = firstPart.trim().split(' ')[0]; // Get URL before width
       } else {
-        // Fallback to src/srcset
-        image = $el.find('img').first().attr('src') || $el.find('img').first().attr('data-src');
-        
-        if (!image || image.includes('blank.gif')) {
-          const srcset = $el.find('img').first().attr('srcset');
-          if (srcset) {
-            const firstUrl = srcset.split(',')[0].trim().split(' ')[0];
-            image = firstUrl;
-          }
-        }
+        // Fallback to regular src
+        image = $el.find('img').first().attr('src');
+      }
+
+      // If still no image, try data-src
+      if (!image) {
+        image = $el.find('img').first().attr('data-src');
       }
 
       // Clean up link - remove newlines and whitespace
