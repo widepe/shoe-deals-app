@@ -257,7 +257,7 @@
       font-size: 1.3rem;
       font-weight: 700;
       color: #214478ff;
-      margin-bottom: 0.6rem;
+      margin-bottom: 1rem;
       text-align: center;
     }
 
@@ -268,35 +268,69 @@
       width: 100%;
     }
 
-    .daily-deal-card {
+    /* Unified card style: search + daily deals */
+    .card {
       background: #d9e1ebff;
       border: 2px solid #214478ff;
       border-radius: 0.75rem;
       padding: 0.75rem;
       display: flex;
       flex-direction: column;
+      text-align: left;
+      box-sizing: border-box;
+    }
+
+    .card-link {
+      display: flex;
+      flex-direction: column;
       gap: 0.4rem;
-      text-align: center;
+      text-decoration: none;
+      color: inherit;
+      height: 100%;
     }
 
-    .daily-deal-card img {
+    .card img {
       width: 100%;
-      height: 120px;
-      object-fit: contain;
       border-radius: 0.6rem;
+      object-fit: contain;
+      max-height: 170px;
       background: #fafafa;
-      border: 1px solid #214478ff;
+      border: 1px solid #214478ff; /* thin blue border around image */
+      box-sizing: border-box;
     }
 
-    .daily-deal-title { font-size: 0.85rem; font-weight: 600; color: #2d2d2d; }
-    .daily-deal-price { font-size: 1rem; font-weight: 700; color: #214478ff; }
+    .card-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
 
-    .daily-deals-status {
-      margin-top: 0.35rem;
-      font-size: 0.85rem;
-      text-align: center;
+    .card-store {
+      font-size: 0.82rem;
       color: #49543a;
-      min-height: 1em;
+    }
+
+    .card-price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.3rem;
+      font-size: 0.95rem;
+    }
+
+    .price {
+      font-weight: 700;
+      color: #214478ff;
+    }
+
+    .card-original {
+      text-decoration: line-through;
+      font-size: 0.8rem;
+      color: #777;
+    }
+
+    .card-discount {
+      font-size: 0.8rem;
+      color: #2d3c22;
+      margin-top: 0.05rem;
     }
 
     .results {
@@ -307,36 +341,6 @@
       width: 100%;
       max-width: 850px;
     }
-
-    .card {
-      background: #d9e1ebff;
-      border: 2px solid #214478ff;
-      border-radius: 0.75rem;
-      padding: 0.75rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.45rem;
-    }
-
-    .card img {
-      width: 100%;
-      border-radius: 0.6rem;
-      object-fit: contain;
-      max-height: 170px;
-      background: #fafafa;
-      border: 1px solid #214478ff;
-    }
-
-    .card-title { font-size: 0.92rem; font-weight: 600; }
-
-    .card-meta {
-      font-size: 0.82rem;
-      color: #49543a;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .price { font-weight: 700; color: #214478ff; }
 
     .disclaimer {
       font-size: 0.8rem;
@@ -454,9 +458,9 @@
       color: #444;
     }
 
-    .price-input-wrapper { 
-      position: relative; 
-      width: 100%; 
+    .price-input-wrapper {
+      position: relative;
+      width: 100%;
     }
     .price-input-wrapper::before {
       content: '$';
@@ -469,8 +473,8 @@
       pointer-events: none;
       font-weight: 500;
     }
-    .price-input-wrapper input { 
-      padding-left: 1.75rem; 
+    .price-input-wrapper input {
+      padding-left: 1.75rem;
       padding-right: 2.1rem;
     }
 
@@ -620,7 +624,6 @@
       line-height: 1.3;
     }
 
-    /* Shoe column - truncate at 30 chars */
     .alerts-table tbody td:nth-child(2) {
       max-width: 0;
       white-space: nowrap;
@@ -813,7 +816,7 @@
 
     .hidden { display: none !important; }
 
-    /* Footer - now scrolls with the page (no fixed positioning) */
+    /* Footer */
     .footer {
       margin-top: 2rem;
       padding: 0.75rem 1rem;
@@ -954,10 +957,10 @@
     <div class="status-message" id="statusMessage"></div>
 
     <div id="mainContent">
+
       <div class="daily-deals" id="dailyDeals">
         <div class="daily-deals-header">Marty's Daily Deals</div>
         <div class="daily-deals-grid" id="dailyDealsGrid"></div>
-        <div class="daily-deals-status" id="dailyDealsStatus"></div>
       </div>
 
       <div class="results" id="results"></div>
@@ -1016,11 +1019,11 @@
       <div class="alerts-table-wrapper">
         <table class="alerts-table" aria-label="My Alerts Table" id="alertsTable">
           <colgroup>
-            <col style="width: 12%;">
-            <col style="width: 45%;">
-            <col style="width: 7%;">
-            <col style="width: 10%;">
-            <col style="width: 19%;">
+            <col style="width: 12%;">  <!-- Date Set -->
+            <col style="width: 45%;">  <!-- Shoe -->
+            <col style="width: 7%;">   <!-- Days Left - HALF -->
+            <col style="width: 10%;">  <!-- Target -->
+            <col style="width: 19%;">  <!-- Status -->
           </colgroup>
           <thead>
             <tr>
@@ -1040,7 +1043,7 @@
       <div class="clear-inactive-wrapper hidden" id="clearInactiveWrapper"></div>
     </div>
 
-    <!-- Footer - scrolls with page, no affiliate sentence -->
+    <!-- Footer -->
     <div class="footer">
       © <span id="footerYear"></span> Shoe Beagle. All rights reserved.
       <br>
@@ -1058,9 +1061,53 @@
         <h2 id="privacyTitle">Privacy Policy</h2>
       </div>
       <div class="modal-body">
-        <!-- (privacy body unchanged for brevity) -->
         <p>Last Updated: January 6, 2026</p>
-        <!-- ... -->
+
+        <h3>1. Who we are</h3>
+        <p>Shoe Beagle is a website that helps runners discover and compare prices on running shoes from multiple online retailers.</p>
+
+        <h3>2. What information we collect</h3>
+        <p>We collect only the information we need to operate the site and provide price alerts:</p>
+        <ul>
+          <li><strong>Search information:</strong> brands and models you search for.</li>
+          <li><strong>Alert information:</strong> the shoe you choose, your target price, and the email address or phone number you provide for that alert.</li>
+          <li><strong>Basic usage data:</strong> standard log data such as browser type, approximate location, and pages visited, typically collected via analytics tools or server logs.</li>
+        </ul>
+
+        <h3>3. How we use your information</h3>
+        <p>We use your information to:</p>
+        <ul>
+          <li>Process your shoe searches and show you deals.</li>
+          <li>Send you price alerts that you have requested.</li>
+          <li>Monitor and improve the performance and reliability of Shoe Beagle.</li>
+        </ul>
+
+        <h3>4. Price alerts and communications</h3>
+        <p>When you set a price alert, we use your email address or phone number only to send you alert-related messages (for example, when a deal meets your target price). We do not sell your contact details to third parties for their own marketing.</p>
+
+        <h3>5. Cookies and similar technologies</h3>
+        <p>Like most websites, Shoe Beagle may use cookies or similar technologies to remember your preferences and understand how visitors use the site. You can usually control cookies through your browser settings.</p>
+
+        <h3>6. Third-party services and links</h3>
+        <p>Our site links to third-party websites (for example, online retailers that sell shoes). When you click a link and leave Shoe Beagle, this Privacy Policy no longer applies and the third party's own policies will govern their use of your information.</p>
+        <p>Some of the links on Shoe Beagle are affiliate links. This means we may earn a small commission if you click a link and make a purchase, at no extra cost to you.</p>
+
+        <h3>7. Data security</h3>
+        <p>We use reasonable technical and organizational measures to help protect the information we collect. However, no website or internet transmission is ever completely secure, and we cannot guarantee absolute security.</p>
+
+        <h3>8. Data retention</h3>
+        <p>We retain alert-related contact information as long as needed to provide your alerts or as required by law. You can request deletion of your alert-related information at any time by contacting us.</p>
+
+        <h3>9. Your choices and rights</h3>
+        <p>You may:</p>
+        <ul>
+          <li>Stop using the site at any time.</li>
+          <li>Cancel or adjust your alerts in the "My Alerts" area.</li>
+          <li>Request that we delete your alert-related information by contacting us at <a href="mailto:widepe@gmail.com">widepe@gmail.com</a>.</li>
+        </ul>
+
+        <h3>10. Contact us</h3>
+        <p>If you have questions about this Privacy Policy or how we handle your data, you can contact us at: <a href="mailto:widepe@gmail.com">widepe@gmail.com</a>.</p>
       </div>
       <div class="modal-close-row">
         <button type="button" class="modal-close-btn" data-close="privacyModal">Close</button>
@@ -1076,9 +1123,45 @@
         <h2 id="termsTitle">Terms of Use</h2>
       </div>
       <div class="modal-body">
-        <!-- (terms body unchanged for brevity) -->
         <p>Last Updated: January 6, 2026</p>
-        <!-- ... -->
+
+        <h3>1. Acceptance of these terms</h3>
+        <p>By accessing or using Shoe Beagle, you agree to these Terms of Use. If you do not agree, please do not use the site.</p>
+
+        <h3>2. What Shoe Beagle does</h3>
+        <p>Shoe Beagle helps you discover and compare prices on running shoes from third-party retailers. We do not sell products directly, handle payments, or fulfill orders. When you click a link to a retailer, you leave our site and complete your purchase (if any) on the retailer's website.</p>
+        <p>Some links to retailers on Shoe Beagle may be affiliate links, which means we may earn a small commission if you make a purchase through those links, at no extra cost to you.</p>
+
+        <h3>3. No guarantees on prices or availability</h3>
+        <p>We do our best to show accurate and timely deal information, but prices, discounts, and availability can change quickly. We cannot guarantee that any price or offer listed on Shoe Beagle will still be available when you click through to a retailer.</p>
+
+        <h3>4. Your responsibilities</h3>
+        <p>You are responsible for:</p>
+        <ul>
+          <li>Reviewing the final price, shipping, taxes, and terms on the retailer's website before you complete any purchase.</li>
+          <li>Using Shoe Beagle in compliance with applicable laws and these Terms of Use.</li>
+        </ul>
+
+        <h3>5. Price alerts</h3>
+        <p>When you set a price alert, you agree to receive alert-related messages using the contact details you provide. You can manage or cancel your alerts from the "My Alerts" section of the site. Alerts are provided as a convenience only and we do not guarantee that every qualifying deal will trigger or reach you.</p>
+
+        <h3>6. Intellectual property</h3>
+        <p>The Shoe Beagle name, logo, and overall site design, along with the underlying software and content we create, are owned by us or our licensors and protected by copyright and other laws. You may not copy, modify, or redistribute the site or its content except as allowed by law or with our written permission.</p>
+
+        <h3>7. Third-party sites and services</h3>
+        <p>Any websites or services we link to are operated by third parties, not by Shoe Beagle. We are not responsible for the content, policies, or practices of any third-party website or service, and your use of those sites is at your own risk.</p>
+
+        <h3>8. Disclaimer of warranties</h3>
+        <p>Shoe Beagle is provided "as is" and "as available." To the fullest extent permitted by law, we disclaim all warranties, express or implied, including but not limited to implied warranties of merchantability, fitness for a particular purpose, and non-infringement.</p>
+
+        <h3>9. Limitation of liability</h3>
+        <p>To the fullest extent permitted by law, Shoe Beagle and its owners will not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or related to your use of the site, even if we have been advised of the possibility of such damages.</p>
+
+        <h3>10. Changes to these terms</h3>
+        <p>We may update these Terms of Use from time to time. The "Last Updated" date at the top will tell you when we last made changes. Your continued use of the site after changes are posted means you accept the updated terms.</p>
+
+        <h3>11. Contact us</h3>
+        <p>If you have questions about these Terms of Use, you can contact us at: <a href="mailto:widepe@gmail.com">widepe@gmail.com</a>.</p>
       </div>
       <div class="modal-close-row">
         <button type="button" class="modal-close-btn" data-close="termsModal">Close</button>
@@ -1092,7 +1175,6 @@
     const resultsEl = document.getElementById("results");
     const dailyDeals = document.getElementById("dailyDeals");
     const dailyDealsGrid = document.getElementById("dailyDealsGrid");
-    const dailyDealsStatus = document.getElementById("dailyDealsStatus");
 
     const alertWrapper = document.getElementById("alertWrapper");
     const alertPromptBtn = document.getElementById("alertPromptBtn");
@@ -1283,14 +1365,14 @@
 
     function showConfirmation(actionsDiv, message, onYes) {
       actionsDiv.innerHTML = "";
-      
+
       const confirmDiv = document.createElement("div");
       confirmDiv.className = "confirmation";
-      
+
       const confirmText = document.createElement("span");
       confirmText.className = "confirmation-text";
       confirmText.textContent = message;
-      
+
       const yesBtn = document.createElement("button");
       yesBtn.textContent = "Yes";
       yesBtn.className = "success";
@@ -1298,7 +1380,7 @@
         e.stopPropagation();
         onYes();
       });
-      
+
       const noBtn = document.createElement("button");
       noBtn.textContent = "No";
       noBtn.className = "secondary";
@@ -1306,7 +1388,7 @@
         e.stopPropagation();
         renderAlertsDashboard();
       });
-      
+
       confirmDiv.appendChild(confirmText);
       confirmDiv.appendChild(yesBtn);
       confirmDiv.appendChild(noBtn);
@@ -1315,28 +1397,28 @@
 
     function showClearInactiveConfirmation() {
       clearInactiveWrapper.innerHTML = "";
-      
+
       const actionsDiv = document.createElement("div");
       actionsDiv.className = "clear-inactive-actions";
-      
+
       const confirmText = document.createElement("span");
       confirmText.className = "confirmation-text";
       confirmText.textContent = "Clear all inactive alerts?";
-      
+
       const yesBtn = document.createElement("button");
       yesBtn.textContent = "Yes";
       yesBtn.className = "success";
       yesBtn.addEventListener("click", () => {
         clearAllInactive();
       });
-      
+
       const noBtn = document.createElement("button");
       noBtn.textContent = "No";
       noBtn.className = "secondary";
       noBtn.addEventListener("click", () => {
         renderAlertsDashboard();
       });
-      
+
       actionsDiv.appendChild(confirmText);
       actionsDiv.appendChild(yesBtn);
       actionsDiv.appendChild(noBtn);
@@ -1363,7 +1445,7 @@
         const status = computeAlertStatus(a);
         return status === "Expired" || status === "Cancelled";
       });
-      
+
       if (hasInactive) {
         clearInactiveWrapper.classList.remove("hidden");
         const clearBtn = document.createElement("button");
@@ -1389,7 +1471,7 @@
 
         const tr = document.createElement("tr");
         tr.dataset.alertId = a.id;
-        
+
         if (status !== "Active") {
           tr.classList.add("inactive");
         }
@@ -1422,7 +1504,7 @@
 
         tr.addEventListener("click", (e) => {
           e.stopPropagation();
-          
+
           const existingActionRow = document.querySelector(".alert-actions-row");
           if (existingActionRow) {
             existingActionRow.remove();
@@ -1450,24 +1532,24 @@
           if (status === "Active") {
             const priceWrapper = document.createElement("div");
             priceWrapper.className = "price-change-wrapper";
-            
+
             const editLabel = document.createElement("span");
             editLabel.className = "edit-price-label";
             editLabel.textContent = "Edit Price:";
             priceWrapper.appendChild(editLabel);
-            
+
             const priceInputWrapper = document.createElement("span");
             priceInputWrapper.className = "price-change-input";
-            
+
             const priceInput = document.createElement("input");
             priceInput.type = "number";
             priceInput.step = "1";
             priceInput.min = "1";
             priceInput.value = Number(a.targetPrice).toFixed(0);
-            
+
             priceInputWrapper.appendChild(priceInput);
             priceWrapper.appendChild(priceInputWrapper);
-            
+
             const saveBtn = document.createElement("button");
             saveBtn.textContent = "Save";
             saveBtn.addEventListener("click", (e) => {
@@ -1484,7 +1566,7 @@
                 renderAlertsDashboard();
               });
             });
-            
+
             priceWrapper.appendChild(saveBtn);
             actionsDiv.appendChild(priceWrapper);
 
@@ -1802,95 +1884,95 @@
 
     alertContactInput.addEventListener("input", updateAlertSubmitButton);
 
-    async function loadDailyDeals() {
-      if (!dailyDealsGrid || !dailyDealsStatus) return;
-      dailyDealsGrid.innerHTML = "";
-      dailyDealsStatus.textContent = "Fetching today's deals…";
+    // Helper: create unified deal card (used for search + daily deals)
+    function createDealCard(item) {
+      const card = document.createElement("div");
+      card.className = "card";
 
+      const link = document.createElement("a");
+      link.className = "card-link";
+      link.href = item.url || "#";
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+
+      if (item.image) {
+        const img = document.createElement("img");
+        img.src = item.image;
+        img.alt = item.title || "Deal image";
+        link.appendChild(img);
+      }
+
+      const titleDiv = document.createElement("div");
+      titleDiv.className = "card-title";
+      titleDiv.textContent = item.title || "Deal";
+      link.appendChild(titleDiv);
+
+      if (item.store) {
+        const storeDiv = document.createElement("div");
+        storeDiv.className = "card-store";
+        storeDiv.textContent = item.store;
+        link.appendChild(storeDiv);
+      }
+
+      const priceRow = document.createElement("div");
+      priceRow.className = "card-price-row";
+
+      const priceSpan = document.createElement("span");
+      priceSpan.className = "price";
+      if (typeof item.price === "number" && !isNaN(item.price)) {
+        priceSpan.textContent = `$${item.price.toFixed(2)}`;
+      } else {
+        priceSpan.textContent = item.price ? String(item.price) : "—";
+      }
+      priceRow.appendChild(priceSpan);
+
+      if (item.originalPrice && item.price && item.originalPrice > item.price) {
+        const origSpan = document.createElement("span");
+        origSpan.className = "card-original";
+        origSpan.textContent = `$${Number(item.originalPrice).toFixed(2)}`;
+        priceRow.appendChild(origSpan);
+      }
+
+      link.appendChild(priceRow);
+
+      if (item.discount) {
+        const discDiv = document.createElement("div");
+        discDiv.className = "card-discount";
+        discDiv.textContent = item.discount;
+        link.appendChild(discDiv);
+      }
+
+      card.appendChild(link);
+      return card;
+    }
+
+    // Load daily deals from API and render as cards
+    async function loadDailyDeals() {
       try {
         const res = await fetch("/api/daily-deals");
-        if (!res.ok) throw new Error("HTTP " + res.status);
         const data = await res.json();
-        const deals = Array.isArray(data.deals) ? data.deals : [];
+        const deals = (data && Array.isArray(data.deals)) ? data.deals : [];
+        dailyDealsGrid.innerHTML = "";
 
         if (!deals.length) {
-          dailyDealsStatus.textContent = "Daily deals are not available right now. Try searching above.";
+          dailyDeals.style.display = "none";
           return;
         }
 
-        dailyDealsStatus.textContent = "";
-        dailyDealsGrid.innerHTML = "";
-
-        deals.forEach((deal) => {
-          const card = document.createElement("div");
-          card.className = "daily-deal-card";
-
-          const link = document.createElement("a");
-          link.href = deal.url || "#";
-          link.target = "_blank";
-          link.rel = "noopener noreferrer";
-          link.style.textDecoration = "none";
-          link.style.color = "inherit";
-
-          if (deal.image) {
-            const img = document.createElement("img");
-            img.src = deal.image;
-            img.alt = deal.title || `${deal.brand || ""} ${deal.model || ""}`.trim() || "Running shoe deal";
-            link.appendChild(img);
-          }
-
-          const titleDiv = document.createElement("div");
-          titleDiv.className = "daily-deal-title";
-          titleDiv.textContent = deal.title || `${deal.brand || ""} ${deal.model || ""}`.trim() || "Shoe deal";
-          link.appendChild(titleDiv);
-
-          const storeDiv = document.createElement("div");
-          storeDiv.style.fontSize = "0.8rem";
-          storeDiv.style.color = "#49543a";
-          storeDiv.style.margin = "0.2rem 0";
-          storeDiv.textContent = deal.store || "";
-          link.appendChild(storeDiv);
-
-          const priceDiv = document.createElement("div");
-          priceDiv.className = "daily-deal-price";
-
-          const price =
-            typeof deal.price === "number"
-              ? deal.price.toFixed(2)
-              : deal.price
-              ? String(deal.price)
-              : null;
-
-          if (price) {
-            const priceSpan = document.createElement("span");
-            priceSpan.textContent = `$${price}`;
-            priceDiv.appendChild(priceSpan);
-          }
-
-          if (
-            typeof deal.originalPrice === "number" &&
-            deal.originalPrice > 0 &&
-            deal.originalPrice > deal.price
-          ) {
-            const orig = document.createElement("span");
-            orig.style.textDecoration = "line-through";
-            orig.style.fontSize = "0.8rem";
-            orig.style.color = "#999";
-            orig.style.marginLeft = "0.35rem";
-            orig.textContent = `$${deal.originalPrice.toFixed(2)}`;
-            priceDiv.appendChild(orig);
-          }
-
-          link.appendChild(priceDiv);
-          card.appendChild(link);
+        deals.forEach(item => {
+          const card = createDealCard(item);
           dailyDealsGrid.appendChild(card);
         });
+
+        dailyDeals.style.display = "block";
       } catch (err) {
-        console.error("Daily deals error:", err);
-        dailyDealsStatus.textContent =
-          "We couldn't load daily deals right now. Try refreshing or searching directly.";
+        console.error("Error loading daily deals:", err);
+        dailyDeals.style.display = "none";
       }
     }
+
+    // Initial daily deals load
+    loadDailyDeals();
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -1959,34 +2041,7 @@
       resultsEl.innerHTML = "";
 
       results.forEach(item => {
-        const card = document.createElement("div");
-        card.className = "card";
-
-        if (item.image) {
-          const img = document.createElement("img");
-          img.src = item.image;
-          img.alt = item.title || "Deal image";
-          card.appendChild(img);
-        }
-
-        const t = document.createElement("div");
-        t.className = "card-title";
-        t.textContent = item.title || "Deal";
-        card.appendChild(t);
-
-        const meta = document.createElement("div");
-        meta.className = "card-meta";
-        const p = (typeof item.price === "number") ? item.price.toFixed(2) : (item.price ? String(item.price) : "—");
-        meta.innerHTML = `<span class="price">$${p}</span><span>${item.store || ""}</span>`;
-        card.appendChild(meta);
-
-        const link = document.createElement("a");
-        link.textContent = "View Deal";
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.href = item.url || "#";
-        card.appendChild(link);
-
+        const card = createDealCard(item);
         resultsEl.appendChild(card);
       });
     });
@@ -2003,14 +2058,14 @@
       const brand = currentSearch.brand;
       const model = currentSearch.model;
 
-      if (!brand || !model) { 
-        alert("Please search for a shoe first, then set an alert."); 
-        return; 
+      if (!brand || !model) {
+        alert("Please search for a shoe first, then set an alert.");
+        return;
       }
-      
-      if (!isFinite(priceNum) || priceNum <= 0) { 
-        alert("Please enter a valid target price greater than 0."); 
-        return; 
+
+      if (!isFinite(priceNum) || priceNum <= 0) {
+        alert("Please enter a valid target price greater than 0.");
+        return;
       }
 
       const existingActive = findActiveAlertFor(brand, model);
@@ -2025,11 +2080,11 @@
       }
 
       const isEmail = contact.includes('@');
-      const payload = { 
-        product: `${brand} ${model}`, 
-        targetPrice: Number(priceNum).toFixed(2), 
-        email: isEmail ? contact : "", 
-        phone: isEmail ? "" : contact 
+      const payload = {
+        product: `${brand} ${model}`,
+        targetPrice: Number(priceNum).toFixed(2),
+        email: isEmail ? contact : "",
+        phone: isEmail ? "" : contact
       };
 
       const newAlert = {
@@ -2045,13 +2100,13 @@
       upsertAlert(newAlert);
 
       try {
-        await fetch("/api/alerts", { 
-          method: "POST", 
-          headers: { "Content-Type": "application/json" }, 
-          body: JSON.stringify(payload) 
+        await fetch("/api/alerts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
         });
-      } catch (err) { 
-        console.error("Alert submission error:", err); 
+      } catch (err) {
+        console.error("Alert submission error:", err);
       }
 
       alertForm.style.display = "none";
@@ -2062,9 +2117,6 @@
       `;
       alertConfirmation.style.display = "block";
     });
-
-    // Kick off daily deals on first load
-    loadDailyDeals();
   </script>
 </body>
 </html>
