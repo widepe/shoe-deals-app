@@ -1998,7 +1998,9 @@
     }
 
     // Helper: create unified deal card (used for search + daily deals)
-    function createDealCard(item) {
+        function createDealCard(item) {
+      const discount = getDiscountInfo(item); // uses price + originalPrice
+
       const card = document.createElement("div");
       card.className = "card";
 
@@ -2008,27 +2010,32 @@
       link.target = "_blank";
       link.rel = "noopener noreferrer";
 
-      const discountInfo = getDiscountInfo(item);
+      // --- image + corner badge ---
+      const imgWrapper = document.createElement("div");
+      imgWrapper.className = "card-image-wrapper";
 
       if (item.image) {
-        const wrapper = document.createElement("div");
-        wrapper.className = "card-image-wrapper";
-
         const img = document.createElement("img");
         img.src = item.image;
-        img.alt = item.title || "Deal image";
-        wrapper.appendChild(img);
-
-        if (discountInfo.hasDiscount && discountInfo.percent > 0) {
-          const badge = document.createElement("div");
-          badge.className = "discount-badge";
-          badge.textContent = `-${discountInfo.percent}%`;
-          wrapper.appendChild(badge);
-        }
-
-        link.appendChild(wrapper);
+        img.alt = item.title || "Running shoe deal";
+        imgWrapper.appendChild(img);
+      } else {
+        // keep your existing behavior if you prefer, or leave empty
+        const img = document.createElement("img");
+        img.alt = "Running shoe";
+        imgWrapper.appendChild(img);
       }
 
+      if (discount.hasDiscount) {
+        const badge = document.createElement("div");
+        badge.className = "discount-badge";
+        badge.textContent = `${discount.percent}% OFF`;
+        imgWrapper.appendChild(badge);
+      }
+
+      link.appendChild(imgWrapper);
+
+      // --- title & store ---
       const titleDiv = document.createElement("div");
       titleDiv.className = "card-title";
       titleDiv.textContent = item.title || "Deal";
@@ -2041,23 +2048,25 @@
         link.appendChild(storeDiv);
       }
 
+      // --- price row (current + struck-through original) ---
       const priceRow = document.createElement("div");
       priceRow.className = "card-price-row";
 
       const priceSpan = document.createElement("span");
       priceSpan.className = "price";
 
-      if (discountInfo.hasDiscount) {
-        priceSpan.textContent = `$${discountInfo.current}`;
+      const currentPrice = Number(item.price);
+      if (Number.isFinite(currentPrice)) {
+        priceSpan.textContent = `$${currentPrice.toFixed(2)}`;
       } else {
-        priceSpan.textContent = formatPriceValue(item.price);
+        priceSpan.textContent = item.price ? String(item.price) : "—";
       }
       priceRow.appendChild(priceSpan);
 
-      if (discountInfo.hasDiscount) {
+      if (discount.hasDiscount) {
         const origSpan = document.createElement("span");
         origSpan.className = "card-original-price";
-        origSpan.textContent = `$${discountInfo.original}`;
+        origSpan.textContent = `$${discount.original}`;
         priceRow.appendChild(origSpan);
       }
 
@@ -2066,6 +2075,7 @@
       card.appendChild(link);
       return card;
     }
+
 
     // Load daily deals from API and render as cards
     async function loadDailyDeals() {
