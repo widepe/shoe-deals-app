@@ -28,18 +28,18 @@ module.exports = async (req, res) => {
     const allDeals = [];
     const scraperResults = {};
 
-/* DISABLED FOR TESTING
-// Scrape Running Warehouse
-try {
-  const rwDeals = await scrapeRunningWarehouse();
-  allDeals.push(...rwDeals);
-  scraperResults['Running Warehouse'] = { success: true, count: rwDeals.length };
-  console.log(`[SCRAPER] Running Warehouse: ${rwDeals.length} deals`);
-} catch (error) {
-  scraperResults['Running Warehouse'] = { success: false, error: error.message };
-  console.error('[SCRAPER] Running Warehouse failed:', error.message);
-}
-*/
+    /* DISABLED FOR TESTING - Enable after Fleet Feet is working
+    // Scrape Running Warehouse
+    try {
+      const rwDeals = await scrapeRunningWarehouse();
+      allDeals.push(...rwDeals);
+      scraperResults['Running Warehouse'] = { success: true, count: rwDeals.length };
+      console.log(`[SCRAPER] Running Warehouse: ${rwDeals.length} deals`);
+    } catch (error) {
+      scraperResults['Running Warehouse'] = { success: false, error: error.message };
+      console.error('[SCRAPER] Running Warehouse failed:', error.message);
+    }
+    */
 
     // Scrape Fleet Feet
     try {
@@ -68,9 +68,10 @@ try {
       deals: allDeals
     };
 
-    // Save to Vercel Blob Storage
+    // Save to Vercel Blob Storage (fixed filename, no random suffix)
     const blob = await put('deals.json', JSON.stringify(output, null, 2), {
-      access: 'public'
+      access: 'public',
+      addRandomSuffix: false
     });
 
     console.log('[SCRAPER] Saved to blob:', blob.url);
