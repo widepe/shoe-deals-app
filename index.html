@@ -1903,23 +1903,28 @@ if (termsLink && termsModal) {
     dailyDeals.style.display = "block";
 
     brandInput.addEventListener("input", () => {
-      const typed = brandInput.value.trim();
-      if (typed) enableModel();
-      else resetModelState();
+  const typed = brandInput.value.trim();
+  if (typed) enableModel();
+  else resetModelState();
+  const matches = filterStartsWith(brands, typed);
+  showSuggestions(brandSuggestions, matches, (value) => {
+    brandInput.value = value;
+    brandSuggestions.style.display = "none";
+    enableModel();
+    confirmBrandSelection();
+    setTimeout(() => modelInput.focus(), 0);
+    updatePaws();
+  });
+  updatePaws();
+});
 
-      const matches = filterStartsWith(brands, typed);
-
-      showSuggestions(brandSuggestions, matches, (value) => {
-        brandInput.value = value;
-        brandSuggestions.style.display = "none";
-        enableModel();
-        confirmBrandSelection();
-        setTimeout(() => modelInput.focus(), 0);
-        updatePaws();
-      });
-
-      updatePaws();
-    });
+brandInput.addEventListener("focus", () => {
+  // Clear the search when user starts typing a new search
+  resultsEl.innerHTML = "";
+  dailyDeals.style.display = "block";
+  alertWrapper.style.display = "none";
+  statusMessageEl.textContent = "";
+});
 
     brandInput.addEventListener("blur", () => setTimeout(() => { brandSuggestions.style.display = "none"; }, 120));
 
@@ -2148,8 +2153,8 @@ if (termsLink && termsModal) {
     return;
   }
   
-  statusMessageEl.textContent = `Top ${results.length} deal(s) found.`;
-  resultsEl.innerHTML = "";
+statusMessageEl.textContent = `Top ${results.length} deal${results.length === 1 ? '' : 's'} found for ${brandTyped} ${modelTyped}`;
+      resultsEl.innerHTML = "";
   
   results.forEach(item => {
     const card = createDealCard(item);
