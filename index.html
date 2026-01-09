@@ -2094,16 +2094,16 @@ modelInput.addEventListener("click", () => {
   e.preventDefault();
   
   // Get whatever the user typed - no validation required
-  const brandTyped = brandInput.value.trim();
-  const modelTyped = modelInput.value.trim();
-  
- if (!brandTyped) {
+  const brandKey = resolveBrand();
+const modelTyped = modelInput.value.trim();
+
+if (!brandKey) {
   statusMessageEl.textContent = "Please enter a brand.";
   updatePaws();
   return;
 }
-  
-  currentSearch = { brand: brandTyped, model: modelTyped };
+
+currentSearch = { brand: brandKey, model: modelTyped };
   
   statusMessageEl.textContent = "Searching deals…";
   resultsEl.innerHTML = "";
