@@ -328,15 +328,20 @@ function parseSaleAndOriginalPrices(text) {
     return { salePrice: 0, originalPrice: 0 };
   }
 
-  // Grab all dollar-ish numbers in the string
-  const matches = text.match(/\d[\d,]*\.?\d*/g);
+  // Match dollar amounts like $114.88 or $155.00
+  // This avoids matching model numbers like "5" in "Pegasus Trail 5"
+  const matches = text.match(/\$\s*(\d[\d,]*\.?\d*)/g);
   if (!matches) {
     return { salePrice: 0, originalPrice: 0 };
   }
 
   const values = matches
-    .map((m) => parseFloat(m.replace(/,/g, "")))
-    .filter((v) => Number.isFinite(v));
+    .map((m) => {
+      // Remove $ and any spaces, then parse
+      const cleaned = m.replace(/[$\s]/g, '').replace(/,/g, '');
+      return parseFloat(cleaned);
+    })
+    .filter((v) => Number.isFinite(v) && v > 0);
 
   if (!values.length) {
     return { salePrice: 0, originalPrice: 0 };
