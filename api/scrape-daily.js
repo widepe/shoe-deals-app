@@ -67,10 +67,10 @@ module.exports = async (req, res) => {
     };
 
     // Save to Vercel Blob Storage
-const blob = await put('deals.json', JSON.stringify(output, null, 2), {
-  access: 'public',
-  addRandomSuffix: false
-});
+    const blob = await put('deals.json', JSON.stringify(output, null, 2), {
+      access: 'public',
+      addRandomSuffix: false
+    });
 
     console.log('[SCRAPER] Saved to blob:', blob.url);
 
@@ -165,14 +165,6 @@ async function scrapeRunningWarehouse() {
         // Brand/model from the title, using your existing helper
         const { brand, model } = parseBrandModel(title);
 
-// Build a full URL - always strip and rebuild to avoid doubling
-let cleanUrl = href;
-// Strip any domain that might already be there
-cleanUrl = cleanUrl.replace(/^https?:\/\/[^\/]+/, "");
-// Remove leading slashes
-cleanUrl = cleanUrl.replace(/^\/+/, "");
-// Add domain exactly once
-cleanUrl = `https://www.runningwarehouse.com/${cleanUrl}`;
 
         // Try to find an image somewhere in the same product “chunk”
         let cleanImage = null;
@@ -202,7 +194,7 @@ cleanUrl = `https://www.runningwarehouse.com/${cleanUrl}`;
           store: "Running Warehouse",
           price,
           originalPrice: hasValidOriginal ? originalPrice : null,
-          url: cleanUrl,
+          url: href,
           image: cleanImage,
           discount,
           scrapedAt: new Date().toISOString(),
