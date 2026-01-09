@@ -1902,7 +1902,7 @@ if (termsLink && termsModal) {
     updatePaws();
     dailyDeals.style.display = "block";
 
-    brandInput.addEventListener("input", () => {
+brandInput.addEventListener("input", () => {
   const typed = brandInput.value.trim();
   if (typed) enableModel();
   else resetModelState();
@@ -1918,52 +1918,59 @@ if (termsLink && termsModal) {
   updatePaws();
 });
 
+brandInput.addEventListener("click", () => {
+  // Clear everything when clicking brand input
+  brandInput.value = "";
+  modelInput.value = "";
+  resultsEl.innerHTML = "";
+  dailyDeals.style.display = "block";
+  alertWrapper.style.display = "none";
+  statusMessageEl.textContent = "";
+  resetModelState();
+});
+
+brandInput.addEventListener("blur", () => setTimeout(() => { brandSuggestions.style.display = "none"; }, 120));
+
+brandInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    const typed = brandInput.value.trim();
+    if (typed) {
+      e.preventDefault();
+      enableModel();
+      confirmBrandSelection();
+      modelInput.focus();
+      updatePaws();
+    }
+  }
+});
+
+modelInput.addEventListener("input", () => {
+  const brandKey = resolveBrand();
+  const text = modelInput.value.trim();
+  if (!brandKey || !brandModels[brandKey]) {
+    modelSuggestions.style.display = "none";
+    updatePaws();
+    return;
+  }
+  const models = brandModels[brandKey];
+  const matches = filterStartsWith(models, text);
+  showSuggestions(modelSuggestions, matches, (value) => {
+    modelInput.value = value;
+    modelSuggestions.style.display = "none";
+    setTimeout(() => fetchBtn.focus(), 0);
+    updatePaws();
+  });
+  updatePaws();
+});
+
 modelInput.addEventListener("click", () => {
-  // Only clear model and results when clicking model input
+  // Only clear model when clicking model input
   modelInput.value = "";
   resultsEl.innerHTML = "";
   dailyDeals.style.display = "block";
   alertWrapper.style.display = "none";
   statusMessageEl.textContent = "";
 });
-
-    brandInput.addEventListener("blur", () => setTimeout(() => { brandSuggestions.style.display = "none"; }, 120));
-
-    brandInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        const typed = brandInput.value.trim();
-        if (typed) {
-          e.preventDefault();
-          enableModel();
-          confirmBrandSelection();
-          modelInput.focus();
-          updatePaws();
-        }
-      }
-    });
-
-    modelInput.addEventListener("input", () => {
-      const brandKey = resolveBrand();
-      const text = modelInput.value.trim();
-
-      if (!brandKey || !brandModels[brandKey]) {
-        modelSuggestions.style.display = "none";
-        updatePaws();
-        return;
-      }
-
-      const models = brandModels[brandKey];
-      const matches = filterStartsWith(models, text);
-
-      showSuggestions(modelSuggestions, matches, (value) => {
-        modelInput.value = value;
-        modelSuggestions.style.display = "none";
-        setTimeout(() => fetchBtn.focus(), 0);
-        updatePaws();
-      });
-
-      updatePaws();
-    });
 
     modelInput.addEventListener("blur", () => setTimeout(() => { modelSuggestions.style.display = "none"; }, 120));
 
