@@ -28,16 +28,18 @@ module.exports = async (req, res) => {
     const allDeals = [];
     const scraperResults = {};
 
-    // Scrape Running Warehouse
-    try {
-      const rwDeals = await scrapeRunningWarehouse();
-      allDeals.push(...rwDeals);
-      scraperResults['Running Warehouse'] = { success: true, count: rwDeals.length };
-      console.log(`[SCRAPER] Running Warehouse: ${rwDeals.length} deals`);
-    } catch (error) {
-      scraperResults['Running Warehouse'] = { success: false, error: error.message };
-      console.error('[SCRAPER] Running Warehouse failed:', error.message);
-    }
+// Scrape Running Warehouse
+/* TEMPORARILY DISABLED - TESTING ZAPPOS
+try {
+  const rwDeals = await scrapeRunningWarehouse();
+  allDeals.push(...rwDeals);
+  scraperResults['Running Warehouse'] = { success: true, count: rwDeals.length };
+  console.log(`[SCRAPER] Running Warehouse: ${rwDeals.length} deals`);
+} catch (error) {
+  scraperResults['Running Warehouse'] = { success: false, error: error.message };
+  console.error('[SCRAPER] Running Warehouse failed:', error.message);
+}
+*/
 
     // Scrape Zappos
     try {
