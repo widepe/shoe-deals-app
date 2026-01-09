@@ -1820,12 +1820,12 @@ if (termsLink && termsModal) {
       }
     }
 
-    function updateFetchReady() {
-      const brandKey = resolveBrand();
-      const modelHasText = !!modelInput.value.trim();
-      const ready = !!brandKey && !modelInput.disabled && modelHasText;
-      fetchBtn.classList.toggle("ready", ready);
-    }
+function updateFetchReady() {
+  const brandKey = resolveBrand();
+  // Model is now optional - button ready when brand is selected
+  const ready = !!brandKey && !modelInput.disabled;
+  fetchBtn.classList.toggle("ready", ready);
+}
 
     function updatePaws() {
       if (brandInput.value.trim()) {
