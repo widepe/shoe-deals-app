@@ -1918,16 +1918,7 @@ brandInput.addEventListener("input", () => {
   updatePaws();
 });
 
-brandInput.addEventListener("click", () => {
-  // Clear everything when clicking brand input
-  brandInput.value = "";
-  modelInput.value = "";
-  resultsEl.innerHTML = "";
-  dailyDeals.style.display = "block";
-  alertWrapper.style.display = "none";
-  statusMessageEl.textContent = "";
-  resetModelState();
-});
+
 
 brandInput.addEventListener("blur", () => setTimeout(() => { brandSuggestions.style.display = "none"; }, 120));
 
@@ -1963,15 +1954,13 @@ modelInput.addEventListener("input", () => {
   updatePaws();
 });
 
-modelInput.addEventListener("click", () => {
-  // Only clear model when clicking model input
-  modelInput.value = "";
-  resultsEl.innerHTML = "";
-  dailyDeals.style.display = "block";
-  alertWrapper.style.display = "none";
-  statusMessageEl.textContent = "";
+brandInput.addEventListener("click", () => {
+  brandInput.select();
 });
 
+modelInput.addEventListener("click", () => {
+  modelInput.select();
+});
     modelInput.addEventListener("blur", () => setTimeout(() => { modelSuggestions.style.display = "none"; }, 120));
 
     alertPriceInput.addEventListener("input", () => {
