@@ -292,7 +292,7 @@
     }
 
     .daily-deals-header {
-      font-size: 1.3rem;
+      font-size: 1.8rem;
       font-weight: 700;
       color: #214478ff;
       margin-bottom: 1rem;
@@ -2098,10 +2098,6 @@ if (termsLink && termsModal) {
         statusMessageEl.textContent = "Please provide a brand & model.";
         updatePaws();
         return;
-      }
-
-      if (!aboutContent.classList.contains("hidden") || !alertsDashboard.classList.contains("hidden")) {
-        showHome();
       }
 
       currentSearch = { brand: brandKey, model: modelCanonical };
