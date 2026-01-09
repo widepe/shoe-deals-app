@@ -139,7 +139,7 @@ async function scrapeRunningWarehouse() {
         // Peel off the trailing asterisk, etc
         text = text.replace(/\*\s*$/, "").trim();
 
-        const href = anchor.attr("href") || "";
+        const href = (anchor.attr("href") || "").trim().replace(/[\n\r]/g, "");
         if (!href) return;
 
         // Parse sale + original prices out of the text
