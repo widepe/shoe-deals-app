@@ -312,68 +312,6 @@ async function scrapeZappos() {
   return deals;
 }
 
-    const $ = cheerio.load(response.data);
-
-    $('[data-product-id], .product, article').each((i, element) => {
-      const $el = $(element);
-      
-      const title = $el.find('[itemprop="name"], .product-name, h2, h3').first().text().trim();
-      const priceText =
-        $el
-          .find('[data-gtm_impression_price]')
-          .first()
-          .attr("data-gtm_impression_price") ||
-        $el
-          .find(".price, .sale-price, [class*='price']")
-          .first()
-          .text()
-          .trim();
-
-      // Parse all $X.XX numbers we can see in the price area
-      const dollarMatches =
-        (priceText.match(/\$[\d.,]+/g) || [])
-          .map((txt) => parsePrice(txt))
-          .filter((n) => Number.isFinite(n));
-
-      // Fallback: parse the whole string as a single price
-      let sale = parsePrice(priceText);
-      let original = null;
-
-      if (dollarMatches.length >= 2) {
-        // For strings like "$99.88 $140.00" we treat the lower as sale, higher as original
-        sale = Math.min(...dollarMatches);
-        original = Math.max(...dollarMatches);
-      }
-
-      const discountPct =
-        Number.isFinite(sale) &&
-        Number.isFinite(original) &&
-        original > 0 &&
-        sale < original
-          ? Math.round(((original - sale) / original) * 100)
-          : 0;
-
-      if (title && sale > 0 && link) {
-        deals.push({
-          title,
-          store: "Running Warehouse",
-          price: sale,              // current sale price
-          originalPrice: original,  // previous price (null if none)
-          image: imageUrl,
-          url: link,
-          discount: discountPct > 0 ? `${discountPct}% OFF` : null
-        });
-      }
-
-    });
-
-  } catch (error) {
-    console.error('[SCRAPER] Zappos error:', error.message);
-    throw error;
-  }
-
-  return deals;
-}
 
 function parseBrandModel(title) {
   if (!title) return { brand: 'Unknown', model: '' };
