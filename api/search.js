@@ -1,4 +1,4 @@
-const { get } = require("@vercel/blob");
+const { list } = require("@vercel/blob");
 
 function normalize(s) {
   return String(s || "")
@@ -54,15 +54,17 @@ module.exports = async (req, res) => {
     }
 
     // Fetch from Vercel Blob Storage by name
-    const { blob } = await get("deals.json");
+const { blobs } = await list({ prefix: "deals.json" });
 
-    if (!blob || !blob.url) {
-      console.error("[/api/search] Could not locate deals blob");
-      return res.status(500).json({
-        error: "Failed to load deals data",
-        requestId,
-      });
-    }
+if (!blobs || blobs.length === 0) {
+  console.error("[/api/daily-deals] Could not locate deals blob");
+  return res.status(500).json({
+    error: "Failed to load deals data",
+    requestId,
+  });
+}
+
+const blob = blobs[0];
 
     let dealsData;
     try {
