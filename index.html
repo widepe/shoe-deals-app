@@ -2097,11 +2097,11 @@ modelInput.addEventListener("click", () => {
   const brandTyped = brandInput.value.trim();
   const modelTyped = modelInput.value.trim();
   
-  if (!brandTyped || !modelTyped) {
-    statusMessageEl.textContent = "Please enter both brand and model.";
-    updatePaws();
-    return;
-  }
+ if (!brandTyped) {
+  statusMessageEl.textContent = "Please enter a brand.";
+  updatePaws();
+  return;
+}
   
   currentSearch = { brand: brandTyped, model: modelTyped };
   
