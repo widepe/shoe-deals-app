@@ -1918,15 +1918,13 @@ if (termsLink && termsModal) {
   updatePaws();
 });
 
-brandInput.addEventListener("click", () => {
-  // Clear everything when user clicks to start a new search
-  brandInput.value = "";
+modelInput.addEventListener("click", () => {
+  // Only clear model and results when clicking model input
   modelInput.value = "";
   resultsEl.innerHTML = "";
   dailyDeals.style.display = "block";
   alertWrapper.style.display = "none";
   statusMessageEl.textContent = "";
-  resetModelState();
 });
 
     brandInput.addEventListener("blur", () => setTimeout(() => { brandSuggestions.style.display = "none"; }, 120));
