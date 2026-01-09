@@ -1,4 +1,4 @@
-const axios = require("axios");
+const { get } = require("@vercel/blob");
 
 function normalize(s) {
   return String(s || "")
@@ -53,13 +53,24 @@ module.exports = async (req, res) => {
       return res.status(200).json({ results: cached, requestId, cached: true });
     }
 
-    // Load deals from Vercel Blob Storage
-    const blobUrl = 'https://v3gjlrmpc76mymfc.public.blob.vercel-storage.com/deals-xYNKTRtjMYCwJbor5T63ZCNKf6cFjE.json';
+    // Fetch from Vercel Blob Storage by name
+    const { blob } = await get("deals.json");
+
+    if (!blob || !blob.url) {
+      console.error("[/api/search] Could not locate deals blob");
+      return res.status(500).json({
+        error: "Failed to load deals data",
+        requestId,
+      });
+    }
+
     let dealsData;
-    
     try {
-      const response = await axios.get(blobUrl);
-      dealsData = response.data;
+      const response = await fetch(blob.url);
+      if (!response.ok) {
+        throw new Error(`Blob fetch failed: ${response.status}`);
+      }
+      dealsData = await response.json();
     } catch (blobError) {
       console.error("[/api/search] Error fetching from blob:", blobError.message);
       return res.status(500).json({ 
@@ -68,7 +79,10 @@ module.exports = async (req, res) => {
       });
     }
 
-    const deals = dealsData.deals || [];
+    // Support both { deals: [...] } and bare array [...]
+    const deals = (dealsData && Array.isArray(dealsData.deals))
+      ? dealsData.deals
+      : (Array.isArray(dealsData) ? dealsData : []);
 
     console.log("[/api/search] Loaded deals:", {
       total: deals.length,
