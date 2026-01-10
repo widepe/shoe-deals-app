@@ -1,14 +1,51 @@
 // api/daily-deals.js
 const axios = require("axios");
 
-// Simple random sampler without modifying original array
+// ============================================================================
+// DATE-BASED SEEDED RANDOM FUNCTIONS
+// ============================================================================
+// These functions ensure that "random" selections stay the same all day long.
+// 
+// How it works:
+// 1. Use today's date (e.g., "2026-01-09") as a seed
+// 2. Convert date to a number (sum of character codes)
+// 3. Generate "random" numbers based on this seed
+// 4. Same seed = same "random" numbers = same deals all day
+// 5. New day = new seed = new "random" numbers = new deals
+//
+// Why this matters:
+// - Users see the same deals all day (no confusion when refreshing page)
+// - Deals change automatically at midnight (no manual updates needed)
+// - No database needed to remember which deals were selected
+// - All users see the same deals (consistent experience)
+// ============================================================================
+
+// Simple seeded random number generator
+// Same seed always produces same sequence of "random" numbers
+function seededRandom(seed) {
+  const x = Math.sin(seed++) * 10000;
+  return x - Math.floor(x);
+}
+
+// Randomly sample from array using date-based seed
+// Returns same results all day, different results each day
 function getRandomSample(array, count) {
+  // Use today's date as seed (YYYY-MM-DD format, changes at midnight UTC)
+  const today = new Date().toISOString().split('T')[0]; // e.g., "2026-01-09"
+  
+  // Convert date string to number seed
+  let seed = 0;
+  for (let i = 0; i < today.length; i++) {
+    seed += today.charCodeAt(i);
+  }
+  
   const copy = [...array];
   const picked = [];
 
   const n = Math.min(count, copy.length);
   for (let i = 0; i < n; i++) {
-    const idx = Math.floor(Math.random() * copy.length);
+    const rng = seededRandom(seed + i);
+    const idx = Math.floor(rng * copy.length);
     picked.push(copy[idx]);
     copy.splice(idx, 1);
   }
@@ -95,33 +132,89 @@ module.exports = async (req, res) => {
       hasDealsField: !!dealsData?.deals,
     });
 
-    // 1) Preferred: discounted + image
-    const discountedWithImages = allDeals.filter(
-      (d) => hasGoodImage(d) && isDiscounted(d)
+    // Filter for deals with discounts and images (quality pool)
+    // ========================================================================
+    // DAILY DEALS SELECTION STRATEGY
+    // ========================================================================
+    // Goal: Show 12 high-quality deals that change once per day (at midnight)
+    //
+    // Selection Method (4 + 4 + 4):
+    // 1. Sort by HIGHEST PERCENTAGE OFF → take top 20 → RANDOMLY PICK 4 from those 20
+    // 2. Sort by BIGGEST DOLLAR SAVINGS → take top 20 → RANDOMLY PICK 4 from those 20 (no duplicates)
+    // 3. From all remaining deals → RANDOMLY PICK 4 (for variety/discovery)
+    //
+    // Why this approach:
+    // - Guarantees quality: 8 deals come from top 20 pools (best discounts)
+    // - Provides variety: Random selection within pools means different deals daily
+    // - Ensures discovery: 4 completely random deals expose lesser-known deals
+    // - No duplicates: Each step excludes previous selections
+    // - Changes daily: Date-based random seed picks different deals each day
+    // - Fair exposure: All top 20 deals get rotated through over time
+    //
+    // Example with 56 deals:
+    // - Day 1: Picks deals #3, #7, #12, #18 from top 20% pool
+    // - Day 2: Picks deals #1, #5, #14, #19 from top 20% pool (different!)
+    //
+    // Display order: All 12 shuffled randomly (same shuffle all day)
+    // ========================================================================
+
+    const qualityDeals = allDeals.filter(
+      (d) => hasGoodImage(d) && isDiscounted(d) && d.originalPrice && d.price
     );
 
-    // 2) Fallback: image only
-    const withImagesOnly =
-      discountedWithImages.length === 0
-        ? allDeals.filter(hasGoodImage)
-        : [];
+    // If we don't have enough quality deals, use all deals with images
+    const workingPool = qualityDeals.length >= 12 
+      ? qualityDeals 
+      : allDeals.filter(hasGoodImage);
 
-    // 3) Final pool: prefer discountedWithImages, else withImagesOnly, else allDeals
-    let pool = discountedWithImages;
-    let poolReason = "discountedWithImages";
+    // 1) TOP 20 BY PERCENTAGE OFF → Pick random 4
+    const top20ByPercent = [...workingPool].sort((a, b) => {
+      const pctA = a.originalPrice && a.price 
+        ? ((a.originalPrice - a.price) / a.originalPrice) * 100 
+        : 0;
+      const pctB = b.originalPrice && b.price 
+        ? ((b.originalPrice - b.price) / b.originalPrice) * 100 
+        : 0;
+      return pctB - pctA;
+    }).slice(0, 20);
+    const byPercent = getRandomSample(top20ByPercent, 4);
 
-    if (pool.length === 0) {
-      pool = withImagesOnly;
-      poolReason = "withImagesOnly";
+    // 2) TOP 20 BY DOLLAR SAVINGS → Pick random 4 (excluding already picked)
+    const top20ByDollar = [...workingPool]
+      .filter(d => !byPercent.includes(d))
+      .sort((a, b) => {
+        const savingsA = (a.originalPrice || 0) - (a.price || 0);
+        const savingsB = (b.originalPrice || 0) - (b.price || 0);
+        return savingsB - savingsA;
+      })
+      .slice(0, 20);
+    const byDollar = getRandomSample(top20ByDollar, 4);
+
+    // 3) 4 RANDOM from remaining (excluding already picked)
+    const remaining = workingPool.filter(
+      d => !byPercent.includes(d) && !byDollar.includes(d)
+    );
+    const randomPicks = getRandomSample(remaining, 4);
+
+    // Combine all 12 deals and SHUFFLE them for random display order
+    const selectedRaw = [...byPercent, ...byDollar, ...randomPicks];
+    
+    // Shuffle using the same date-based seed so order stays same all day
+    const today = new Date().toISOString().split('T')[0];
+    let shuffleSeed = 999; // Different seed than selection
+    for (let i = 0; i < today.length; i++) {
+      shuffleSeed += today.charCodeAt(i) * 7;
     }
-    if (pool.length === 0) {
-      pool = allDeals;
-      poolReason = "allDeals";
+    
+    // Fisher-Yates shuffle with seed
+    const shuffled = [...selectedRaw];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const rng = seededRandom(shuffleSeed + i);
+      const j = Math.floor(rng * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-
-    const selectedRaw = getRandomSample(pool, 8);
-
-    const selected = selectedRaw.map((deal) => {
+    
+    const selected = shuffled.map((deal) => {
       const price = parseMoney(deal.price);
       const original = parseMoney(deal.originalPrice);
 
