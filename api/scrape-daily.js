@@ -28,7 +28,6 @@ module.exports = async (req, res) => {
     const allDeals = [];
     const scraperResults = {};
 
-
     // Scrape Running Warehouse
     try {
       const rwDeals = await scrapeRunningWarehouse();
@@ -39,18 +38,17 @@ module.exports = async (req, res) => {
       scraperResults['Running Warehouse'] = { success: false, error: error.message };
       console.error('[SCRAPER] Running Warehouse failed:', error.message);
     }
- 
 
-    // Scrape Fleet Feet
+    // Scrape Zappos
     try {
       await sleep(2000); // Be respectful - 2 second delay between sites
-      const fleetFeetDeals = await scrapeFleetFeet();
-      allDeals.push(...fleetFeetDeals);
-      scraperResults['Fleet Feet'] = { success: true, count: fleetFeetDeals.length };
-      console.log(`[SCRAPER] Fleet Feet: ${fleetFeetDeals.length} deals`);
+      const zapposDeals = await scrapeZappos();
+      allDeals.push(...zapposDeals);
+      scraperResults['Zappos'] = { success: true, count: zapposDeals.length };
+      console.log(`[SCRAPER] Zappos: ${zapposDeals.length} deals`);
     } catch (error) {
-      scraperResults['Fleet Feet'] = { success: false, error: error.message };
-      console.error('[SCRAPER] Fleet Feet failed:', error.message);
+      scraperResults['Zappos'] = { success: false, error: error.message };
+      console.error('[SCRAPER] Zappos failed:', error.message);
     }
 
     // Calculate statistics
@@ -58,6 +56,21 @@ module.exports = async (req, res) => {
     allDeals.forEach(deal => {
       dealsByStore[deal.store] = (dealsByStore[deal.store] || 0) + 1;
     });
+
+    // DEBUG: Log what we're about to save
+    console.log('[SCRAPER] === BEFORE SAVING TO BLOB ===');
+    console.log('[SCRAPER] allDeals.length:', allDeals.length);
+    console.log('[SCRAPER] dealsByStore:', JSON.stringify(dealsByStore));
+    
+    // Count Fleet Feet deals in array
+    const ffCount = allDeals.filter(d => d.store === 'Fleet Feet').length;
+    const rwCount = allDeals.filter(d => d.store === 'Running Warehouse').length;
+    console.log('[SCRAPER] Fleet Feet in allDeals:', ffCount);
+    console.log('[SCRAPER] Running Warehouse in allDeals:', rwCount);
+    
+    if (ffCount > 0) {
+      console.log('[SCRAPER] Sample Fleet Feet deal:', JSON.stringify(allDeals.find(d => d.store === 'Fleet Feet'), null, 2));
+    }
 
     // Prepare output
     const output = {
@@ -68,10 +81,9 @@ module.exports = async (req, res) => {
       deals: allDeals
     };
 
-    // Save to Vercel Blob Storage (fixed filename, no random suffix)
+    // Save to Vercel Blob Storage
     const blob = await put('deals.json', JSON.stringify(output, null, 2), {
-      access: 'public',
-      addRandomSuffix: false
+      access: 'public'
     });
 
     console.log('[SCRAPER] Saved to blob:', blob.url);
@@ -103,9 +115,9 @@ module.exports = async (req, res) => {
  * Scrape Running Warehouse sale page
  */
 async function scrapeRunningWarehouse() {
-  console.log("[SCRAPER] Starting Running Warehouse scrape...");
+  console.log("[SCRAPER] Starting Running Warehouse scrape…");
 
-  // Men's and Women's sale pages
+  // These are the two main sale pages you were already using
   const urls = [
     "https://www.runningwarehouse.com/catpage-SALEMS.html", // Men's
     "https://www.runningwarehouse.com/catpage-SALEWS.html", // Women's
@@ -129,7 +141,7 @@ async function scrapeRunningWarehouse() {
       const html = response.data;
       const $ = cheerio.load(html);
 
-      // Each product is a link with text like:
+      // Each product is essentially a big link whose text looks like:
       // "Clearance Brand Model Men's Shoes - Color $ 111.95 $140.00 *"
       $("a").each((_, el) => {
         const anchor = $(el);
@@ -138,13 +150,13 @@ async function scrapeRunningWarehouse() {
         if (!text.startsWith("Clearance ")) return;
         if (!/Shoes\b/i.test(text)) return;
 
-        // Remove trailing asterisk
+        // Peel off the trailing asterisk, etc
         text = text.replace(/\*\s*$/, "").trim();
 
         const href = anchor.attr("href") || "";
         if (!href) return;
 
-        // Parse sale + original prices
+        // Parse sale + original prices out of the text
         const { salePrice, originalPrice } = parseSaleAndOriginalPrices(text);
         if (!salePrice || !Number.isFinite(salePrice)) return;
 
@@ -160,20 +172,20 @@ async function scrapeRunningWarehouse() {
           }
         }
 
-        // Clean title (remove prices)
+        // Clean title (drop the prices from the text)
         const titleWithoutPrices = text.replace(/\$\s*\d[\d,]*\.?\d*/g, "").trim();
         const title = titleWithoutPrices;
 
-        // Parse brand and model
+        // Brand/model from the title, using your existing helper
         const { brand, model } = parseBrandModel(title);
 
-        // Build full URL
+        // Build a full URL
         let cleanUrl = href;
         if (!/^https?:\/\//i.test(cleanUrl)) {
           cleanUrl = `https://www.runningwarehouse.com/${cleanUrl.replace(/^\/+/, "")}`;
         }
 
-        // Try to find image
+        // Try to find an image somewhere in the same product “chunk”
         let cleanImage = null;
         const container = anchor.closest("tr,td,div,li,article");
         if (container.length) {
@@ -208,7 +220,7 @@ async function scrapeRunningWarehouse() {
         });
       });
 
-      // Be polite - 1.5 second delay between pages
+      // Be polite
       await sleep(1500);
     }
 
@@ -222,153 +234,95 @@ async function scrapeRunningWarehouse() {
   }
 }
 
+
 /**
- * Scrape Fleet Feet clearance running shoes
+ * Scrape Zappos clearance/sale page
  */
-async function scrapeFleetFeet() {
-  console.log("[SCRAPER] Starting Fleet Feet scrape...");
-
-  const urls = [
-    "https://www.fleetfeet.com/browse/shoes/mens?clearance=on",
-    "https://www.fleetfeet.com/browse/shoes/womens?clearance=on"
-  ];
-
+async function scrapeZappos() {
   const deals = [];
+  const url = 'https://www.zappos.com/men-athletic-shoes/CK_XARC81wHAAQLiAgMBAhg.zso';
 
   try {
-    for (const url of urls) {
-      console.log(`[SCRAPER] Fetching Fleet Feet page: ${url}`);
+    const response = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; ShoeBeagleBot/1.0; +https://shoebeagle.com)',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      timeout: 15000
+    });
 
-      const response = await axios.get(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9'
-        },
-        timeout: 30000
-      });
+    const $ = cheerio.load(response.data);
 
-      const $ = cheerio.load(response.data);
+    $('[data-product-id], .product, article').each((i, element) => {
+      const $el = $(element);
+      
+      const title = $el.find('[itemprop="name"], .product-name, h2, h3').first().text().trim();
+      const priceText =
+        $el
+          .find('[data-gtm_impression_price]')
+          .first()
+          .attr("data-gtm_impression_price") ||
+        $el
+          .find(".price, .sale-price, [class*='price']")
+          .first()
+          .text()
+          .trim();
 
-      // Fleet Feet uses links to product pages
-      // Structure: <a href="/products/mens-asics-gel-kayano-31">
-      //   <img src="...">
-      //   "Men's ASICS Gel-Kayano 31 Running Shoes"
-      //   "original price $165 sale/discounted price $124.95"
-      // </a>
+      // Parse all $X.XX numbers we can see in the price area
+      const dollarMatches =
+        (priceText.match(/\$[\d.,]+/g) || [])
+          .map((txt) => parsePrice(txt))
+          .filter((n) => Number.isFinite(n));
 
-      $('a[href^="/products/"]').each((_, el) => {
-        const $link = $(el);
-        const href = $link.attr('href');
+      // Fallback: parse the whole string as a single price
+      let sale = parsePrice(priceText);
+      let original = null;
 
-        // Skip if not a product link
-        if (!href || !href.startsWith('/products/')) return;
+      if (dollarMatches.length >= 2) {
+        // For strings like "$99.88 $140.00" we treat the lower as sale, higher as original
+        sale = Math.min(...dollarMatches);
+        original = Math.max(...dollarMatches);
+      }
 
-        // Get all text from the link
-        const fullText = $link.text().replace(/\s+/g, ' ').trim();
+      const discountPct =
+        Number.isFinite(sale) &&
+        Number.isFinite(original) &&
+        original > 0 &&
+        sale < original
+          ? Math.round(((original - sale) / original) * 100)
+          : 0;
 
-        // Must contain shoe-related keywords
-        if (!/running|shoes|race|trail|walking|sneakers/i.test(fullText)) return;
-
-        // Skip if it's clearly a brand link or navigation
-        if (fullText.length < 20) return;
-
-        // Extract title (first part before prices)
-        // Example: "Men's ASICS Gel-Kayano 31 Running Shoes original price $165..."
-        const titleMatch = fullText.match(/^(.+?)\s*(?:original price|sale|discounted|\$)/i);
-        const title = titleMatch ? titleMatch[1].trim() : fullText.split('$')[0].trim();
-
-        // Parse brand and model
-        const { brand, model } = parseBrandModel(title);
-
-        // Extract prices from text
-        // Pattern: "original price $165 sale/discounted price $124.95"
-        const priceMatches = fullText.match(/\$\s*[\d,]+\.?\d*/g);
-        
-        let salePrice = null;
-        let originalPrice = null;
-
-        if (priceMatches && priceMatches.length > 0) {
-          const prices = priceMatches.map(p => parsePrice(p)).filter(p => p > 0);
-          
-          if (prices.length === 1) {
-            salePrice = prices[0];
-          } else if (prices.length >= 2) {
-            // Fleet Feet shows: "original price $165 sale/discounted price $124.95"
-            // So higher price is original, lower is sale
-            originalPrice = Math.max(...prices);
-            salePrice = Math.min(...prices);
-          }
-        }
-
-        // Skip if no valid sale price
-        if (!salePrice || salePrice <= 0) return;
-
-        // Get image URL
-        let imageUrl = null;
-        const $img = $link.find('img').first();
-        if ($img.length) {
-          imageUrl = $img.attr('src') || $img.attr('data-src');
-          // Fleet Feet uses cdn.fleetfeet.com
-          if (imageUrl && !imageUrl.startsWith('http')) {
-            imageUrl = 'https://cdn.fleetfeet.com' + (imageUrl.startsWith('/') ? '' : '/') + imageUrl;
-          }
-        }
-
-        // Build full URL
-        let fullUrl = href;
-        if (!fullUrl.startsWith('http')) {
-          fullUrl = 'https://www.fleetfeet.com' + (href.startsWith('/') ? '' : '/') + href;
-        }
-
-        // Calculate discount
-        let discount = null;
-        if (originalPrice && originalPrice > salePrice) {
-          const pct = Math.round(((originalPrice - salePrice) / originalPrice) * 100);
-          if (pct > 0) {
-            discount = `${pct}% OFF`;
-          }
-        }
-
+      if (title && sale > 0 && link) {
         deals.push({
           title,
-          brand,
-          model,
-          store: "Fleet Feet",
-          price: salePrice,
-          originalPrice: originalPrice || null,
-          url: fullUrl,
+          store: "Running Warehouse",
+          price: sale,              // current sale price
+          originalPrice: original,  // previous price (null if none)
           image: imageUrl,
-          discount,
-          scrapedAt: new Date().toISOString()
+          url: link,
+          discount: discountPct > 0 ? `${discountPct}% OFF` : null
         });
-      });
+      }
 
-      // Be polite - 2 second delay between pages
-      await sleep(2000);
-    }
-
-    console.log(`[SCRAPER] Fleet Feet scrape complete. Found ${deals.length} deals.`);
-    return deals;
+    });
 
   } catch (error) {
-    console.error("[SCRAPER] Fleet Feet error:", error.message);
+    console.error('[SCRAPER] Zappos error:', error.message);
     throw error;
   }
+
+  return deals;
 }
 
-/**
- * Helper: Parse brand and model from title
- */
 function parseBrandModel(title) {
   if (!title) return { brand: 'Unknown', model: '' };
   
   const brands = [
-    'Nike', 'Adidas', 'adidas', 'New Balance', 'Brooks', 'ASICS', 'Asics',
-    'HOKA', 'Hoka', 'Saucony', 'On', 'Altra', 'Mizuno',
-    'Salomon', 'Reebok', 'Under Armour', 'Puma', 'PUMA',
-    'Karhu', 'KARHU', 'Topo Athletic', 'Newton', 'Saysh', 'TYR',
-    'Craft', 'OOFOS', 'Skora'
+    'Nike', 'Adidas', 'New Balance', 'Brooks', 'Asics',
+    'Hoka', 'Saucony', 'On', 'Altra', 'Mizuno',
+    'Salomon', 'Reebok', 'Under Armour', 'Puma',
+    'Karhu', 'Topo Athletic', 'Newton'
   ];
 
   let brand = 'Unknown';
@@ -384,16 +338,10 @@ function parseBrandModel(title) {
     }
   }
 
-  // Clean up common suffixes
-  model = model.replace(/\s*-?\s*(Men's|Women's|Mens|Womens|Running|Shoes|Race|Trail|Walking)\s*$/gi, '');
-  model = model.replace(/\s+/g, ' ').trim();
+  model = model.replace(/\s*-\s*(Men's|Women's|Mens|Womens)\s*$/i, '');
 
   return { brand, model };
 }
-
-/**
- * Helper: Parse sale and original prices from text
- */
 function parseSaleAndOriginalPrices(text) {
   if (!text) {
     return { salePrice: 0, originalPrice: 0 };
@@ -413,7 +361,7 @@ function parseSaleAndOriginalPrices(text) {
     return { salePrice: 0, originalPrice: 0 };
   }
 
-  // If there's only one price, assume no discount
+  // If there’s only one price, assume no discount
   if (values.length === 1) {
     const v = values[0];
     return { salePrice: v, originalPrice: v };
@@ -425,10 +373,6 @@ function parseSaleAndOriginalPrices(text) {
 
   return { salePrice, originalPrice };
 }
-
-/**
- * Helper: Parse price from text
- */
 function parsePrice(priceText) {
   if (!priceText) return 0;
   
@@ -439,9 +383,6 @@ function parsePrice(priceText) {
   return isNaN(price) ? 0 : price;
 }
 
-/**
- * Helper: Sleep function
- */
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
