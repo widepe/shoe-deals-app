@@ -139,14 +139,31 @@ async function scrapeRunningWarehouse() {
         // Remove trailing asterisk
         text = text.replace(/\*\s*$/, "").trim();
 
-        const href = anchor.attr("href") || "";
-        if (!href) return;
+        // Clean up href: trim, handle multiple URLs/newlines
+        let rawHref = (anchor.attr("href") || "").trim();
+        if (!rawHref) return;
 
-        // Parse sale + original prices (now only from $-prefixed numbers with sanity check)
+        // Sometimes the href might contain multiple URLs separated by whitespace/newlines.
+        // Keep the last URL-ish token.
+        const hrefParts = rawHref.split(/\s+/).filter(Boolean);
+        let href = hrefParts[hrefParts.length - 1];
+
+        // Parse sale + original prices (only from $-prefixed numbers with sanity check)
         const { salePrice, originalPrice } = parseSaleAndOriginalPrices(text);
         if (!salePrice || !Number.isFinite(salePrice)) return;
 
         const price = salePrice;
+
+        // FINAL sanity gate for RW: kill absurd prices
+        if (price < 20 || price > 700) {
+          console.warn("[SCRAPER][RW] Ignoring out-of-range price", {
+            title: text,
+            price,
+            originalPrice,
+          });
+          return;
+        }
+
         const hasValidOriginal =
           Number.isFinite(originalPrice) && originalPrice > price;
 
@@ -257,10 +274,10 @@ async function scrapeFleetFeet() {
 
       $('a[href^="/products/"]').each((_, el) => {
         const $link = $(el);
-        const href = $link.attr('href');
+        const rawHref = ($link.attr('href') || '').trim();
 
         // Skip if not a product link
-        if (!href || !href.startsWith('/products/')) return;
+        if (!rawHref || !rawHref.startsWith('/products/')) return;
 
         // Get all text from the link
         const fullText = $link.text().replace(/\s+/g, ' ').trim();
@@ -305,6 +322,16 @@ async function scrapeFleetFeet() {
         // Skip if no valid sale price
         if (!salePrice || salePrice <= 0) return;
 
+        // FINAL sanity gate for Fleet Feet
+        if (salePrice < 20 || salePrice > 700) {
+          console.warn("[SCRAPER][FleetFeet] Ignoring out-of-range price", {
+            title: fullText,
+            salePrice,
+            originalPrice,
+          });
+          return;
+        }
+
         // Get image URL
         let imageUrl = null;
         const $img = $link.find('img').first();
@@ -317,9 +344,9 @@ async function scrapeFleetFeet() {
         }
 
         // Build full URL
-        let fullUrl = href;
+        let fullUrl = rawHref;
         if (!fullUrl.startsWith('http')) {
-          fullUrl = 'https://www.fleetfeet.com' + (href.startsWith('/') ? '' : '/') + href;
+          fullUrl = 'https://www.fleetfeet.com' + (fullUrl.startsWith('/') ? '' : '/') + fullUrl;
         }
 
         // Calculate discount
@@ -402,7 +429,7 @@ function parseSaleAndOriginalPrices(text) {
     return { salePrice: 0, originalPrice: 0 };
   }
 
-  // Match only numbers that are prefixed by a $
+  // Match only numbers that are prefixed by a $, e.g. "$ 111.95", "$140.00"
   const matches = [...text.matchAll(/\$\s*([\d,]+(?:\.\d+)?)/g)];
   if (!matches.length) {
     return { salePrice: 0, originalPrice: 0 };
@@ -412,8 +439,8 @@ function parseSaleAndOriginalPrices(text) {
     .map((m) => parseFloat(m[1].replace(/,/g, "")))
     .filter((v) => Number.isFinite(v));
 
-  // Sanity filter: keep only realistic running shoe prices
-  const saneValues = values.filter(v => v >= 20 && v <= 700);
+  // Sanity filter: realistic running shoe prices
+  const saneValues = values.filter((v) => v >= 20 && v <= 700);
 
   if (!saneValues.length) {
     return { salePrice: 0, originalPrice: 0 };
