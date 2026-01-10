@@ -1944,11 +1944,14 @@ if (contactLink && contactModal) {
       statusMessageEl.textContent = "";
     }
 
-    function showHome() {
-      alertsDashboard.classList.add("hidden");
-      mainContent.classList.remove("hidden");
-      if (!resultsEl.innerHTML.trim()) dailyDeals.style.display = "block";
-    }
+function showHome() {
+  alertsDashboard.classList.add("hidden");
+  mainContent.classList.remove("hidden");
+  resultsEl.innerHTML = "";              // Clear search results
+  dailyDeals.style.display = "block";    // Always show daily deals
+  statusMessageEl.textContent = "";      // Clear status message
+  alertWrapper.style.display = "none";   // Hide alert section
+}
 
 
     function showMyAlerts() {
