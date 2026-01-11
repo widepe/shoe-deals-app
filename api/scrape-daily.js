@@ -488,14 +488,15 @@ function parseSaleAndOriginalPrices(text) {
     return { salePrice: 0, originalPrice: 0 };
   }
 
-  const matches = text.match(/\d[\d,]*\.?\d*/g);
+  // Only match numbers that follow a $ sign
+  const matches = text.match(/\$\s*([\d,]+\.?\d*)/g);
   if (!matches) {
     return { salePrice: 0, originalPrice: 0 };
   }
 
   const values = matches
-    .map((m) => parseFloat(m.replace(/,/g, "")))
-    .filter((v) => Number.isFinite(v));
+    .map(m => parseFloat(m.replace(/[^\d.]/g, "")))
+    .filter(v => Number.isFinite(v));
 
   if (!values.length) {
     return { salePrice: 0, originalPrice: 0 };
@@ -511,6 +512,7 @@ function parseSaleAndOriginalPrices(text) {
 
   return { salePrice, originalPrice };
 }
+
 
 /**
  * Helper: Parse price from text
