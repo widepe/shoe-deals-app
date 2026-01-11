@@ -543,21 +543,29 @@ function parseSaleAndOriginalPrices(text) {
 function parsePrice(priceText) {
   if (!priceText) return 0;
 
-  // Keep only digits (Shopify often renders 200.00 as "20000" via <sup>)
+  // Detect if the original text explicitly shows cents (e.g. "109.95" or "200.00")
+  const hasExplicitDecimal = /\d\.\d{2}/.test(priceText);
+
+  // Keep only digits
   const digits = priceText.replace(/\D/g, '');
   if (!digits) return 0;
 
   const intVal = parseInt(digits, 10);
   if (!Number.isFinite(intVal)) return 0;
 
-  // Heuristic:
-  // - If there are 1–2 digits, treat as whole dollars (e.g. "50" -> 50)
-  // - If 3+ digits, treat last 2 as cents (e.g. "20000" -> 200.00, "9995" -> 99.95)
-  if (digits.length <= 2) {
-    return intVal;
+  if (hasExplicitDecimal) {
+    // "109.95" -> "10995" -> 109.95
+    return intVal / 100;
   }
 
-  return intVal / 100;
+  // No decimal:
+  // If there are 4+ digits and the last two are 00, it's likely "200.00" rendered as "20000"
+  if (digits.length >= 4 && digits.endsWith('00')) {
+    return intVal / 100;
+  }
+
+  // Otherwise treat it as whole dollars: "140" -> 140
+  return intVal;
 }
 
 
