@@ -2164,10 +2164,10 @@ async function loadDailyDeals() {
     dailyDeals.style.display = "block";
 
     // UPDATE TAGLINE WITH DEAL COUNT
-    if (taglineEl && data.totalDeals) {
-      const count = data.totalDeals;
-      taglineEl.textContent = `There are ${count.toLocaleString()} shoe deals today. Let's find yours!`;
-    }
+ if (taglineEl) {
+  const count = data.totalDeals ?? deals.length;
+  taglineEl.textContent = `There are ${count.toLocaleString()} shoe deals today. Let's find yours!`;
+}
 
   } catch (err) {
     console.error("Error loading daily deals:", err);
