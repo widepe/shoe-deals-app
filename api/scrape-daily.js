@@ -386,26 +386,41 @@ async function scrapeLukesLocker() {
       // Parse brand and model
       const { brand, model } = parseBrandModel(title);
 
-      // Extract prices - Luke's format: "Sale price $99.99 Regular price $150.00"
-      const priceMatches = fullText.match(/\$\s*[\d,]+\.?\d*/g);
-      
+           // Extract prices - Luke's format: "Price $200.00 $150.00 Save $50.00"
+      const priceMatches = fullText.match(/\$\s*[\d,\.]+/g);
+
       let salePrice = null;
       let originalPrice = null;
 
       if (priceMatches && priceMatches.length > 0) {
-        const prices = priceMatches.map(p => parsePrice(p)).filter(p => p > 0);
-        
+        // Convert to numbers, drop invalids, dedupe, sort high → low
+        let prices = [...new Set(
+          priceMatches
+            .map(p => parsePrice(p))
+            .filter(p => p > 0)
+        )].sort((a, b) => b - a);
+
+        // If we have at least 3 prices and the smallest is exactly
+        // the difference between the two largest, it's "Save $XX" — drop it.
+        if (prices.length >= 3) {
+          const [orig, sale, maybeSave] = prices;
+          if (Math.abs((orig - sale) - maybeSave) < 0.01) {
+            prices = prices.slice(0, 2); // keep only orig & sale
+          }
+        }
+
         if (prices.length === 1) {
           salePrice = prices[0];
         } else if (prices.length >= 2) {
-          // Luke's shows sale price first, then regular price
-          salePrice = Math.min(...prices);
-          originalPrice = Math.max(...prices);
+          // highest = original, second highest = sale
+          originalPrice = prices[0];
+          salePrice = prices[1];
         }
       }
 
       // Skip if no valid sale price
       if (!salePrice || salePrice <= 0) return;
+
 
       // Get image URL
       let imageUrl = null;
@@ -520,18 +535,23 @@ function parseSaleAndOriginalPrices(text) {
 function parsePrice(priceText) {
   if (!priceText) return 0;
 
-  // Require a $ and collapse whitespace
-  const cleaned = priceText.replace(/\s+/g, '')
-                           .replace(/[^\d.,]/g, '')
-                           .replace(',', '');
+  // Keep only digits (Shopify often renders 200.00 as "20000" via <sup>)
+  const digits = priceText.replace(/\D/g, '');
+  if (!digits) return 0;
 
-  const price = parseFloat(cleaned);
+  const intVal = parseInt(digits, 10);
+  if (!Number.isFinite(intVal)) return 0;
 
-  // Guardrail: reject absurd numbers like 25000 caused by space-separated thousands
-  if (price > 1000) return 0;
+  // Heuristic:
+  // - If there are 1–2 digits, treat as whole dollars (e.g. "50" -> 50)
+  // - If 3+ digits, treat last 2 as cents (e.g. "20000" -> 200.00, "9995" -> 99.95)
+  if (digits.length <= 2) {
+    return intVal;
+  }
 
-  return isNaN(price) ? 0 : price;
+  return intVal / 100;
 }
+
 
 
 /**
