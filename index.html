@@ -2163,11 +2163,25 @@ async function loadDailyDeals() {
 
     dailyDeals.style.display = "block";
 
-// UPDATE TAGLINE WITH DEAL COUNT (based on deals.length)
-if (taglineEl) {
-  const count = deals.length;
-  taglineEl.textContent = `There are ${count.toLocaleString()} shoe deals today. Let's find yours!`;
-}
+    // UPDATE TAGLINE WITH REAL TOTAL DEAL COUNT FROM BLOB
+    try {
+      const cacheBuster = Date.now();
+      const resp = await fetch(`https://v3gjlrmpc76mymfc.public.blob.vercel-storage.com/deals.json?t=${cacheBuster}`);
+      const blobData = await resp.json();
+      const allDeals = (blobData && Array.isArray(blobData.deals)) ? blobData.deals : [];
+
+      if (taglineEl) {
+        const count = allDeals.length;
+        taglineEl.textContent = `There are ${count.toLocaleString()} shoe deals today. Let's find yours!`;
+      }
+    } catch (e) {
+      console.error("Error loading total deals for tagline:", e);
+      // Fallback: use the 12 daily deals if blob fetch fails
+      if (taglineEl) {
+        const count = deals.length;
+        taglineEl.textContent = `There are ${count.toLocaleString()} shoe deals today. Let's find yours!`;
+      }
+    }
 
 
   } catch (err) {
