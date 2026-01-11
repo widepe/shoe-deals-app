@@ -1343,6 +1343,7 @@
     const contactModal = document.getElementById("contactModal");
     const contactForm = document.getElementById("contactForm");
     const contactStatus = document.getElementById("contactStatus");
+    const taglineEl = document.getElementById("tagline");
     
     let currentSearch = { brand: "", model: "" };
     let brandSelected = false;
@@ -2143,29 +2144,36 @@ modelInput.addEventListener("click", () => {
 
 
     // Load daily deals from API and render as cards
-    async function loadDailyDeals() {
-      try {
-        const res = await fetch("/api/daily-deals");
-        const data = await res.json();
-        const deals = (data && Array.isArray(data.deals)) ? data.deals : [];
-        dailyDealsGrid.innerHTML = "";
+async function loadDailyDeals() {
+  try {
+    const res = await fetch("/api/daily-deals");
+    const data = await res.json();
+    const deals = (data && Array.isArray(data.deals)) ? data.deals : [];
+    dailyDealsGrid.innerHTML = "";
 
-        if (!deals.length) {
-          dailyDeals.style.display = "none";
-          return;
-        }
-
-        deals.forEach(item => {
-          const card = createDealCard(item);
-          dailyDealsGrid.appendChild(card);
-        });
-
-        dailyDeals.style.display = "block";
-      } catch (err) {
-        console.error("Error loading daily deals:", err);
-        dailyDeals.style.display = "none";
-      }
+    if (!deals.length) {
+      dailyDeals.style.display = "none";
+      return;
     }
+
+    deals.forEach(item => {
+      const card = createDealCard(item);
+      dailyDealsGrid.appendChild(card);
+    });
+
+    dailyDeals.style.display = "block";
+
+    // UPDATE TAGLINE WITH DEAL COUNT
+    if (taglineEl && data.totalDeals) {
+      const count = data.totalDeals;
+      taglineEl.textContent = `There are ${count.toLocaleString()} shoe deals today. Let's find yours!`;
+    }
+
+  } catch (err) {
+    console.error("Error loading daily deals:", err);
+    dailyDeals.style.display = "none";
+  }
+}
 
     // Initial daily deals load
     loadDailyDeals();
