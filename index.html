@@ -29,7 +29,13 @@
       background: linear-gradient(135deg, #e87a00, #b85000);
       color: #ffffff;
     }
-
+/* Glowing red badge for hot deals (50%+ off) */
+.discount-badge.hot-badge {
+  background: linear-gradient(135deg, #ff4b4b, #b00020);
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.9),
+    0 0 14px rgba(255, 0, 0, 0.9);
+}
     /* Price row styling */
     .card-meta .price {
       display: inline-flex;
@@ -318,43 +324,10 @@
       box-sizing: border-box;
     }
 
-   /* Hot deal shimmer — border only */
-.card.hot-deal::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  padding: 2px;                     /* thickness of the border */
-  border-radius: inherit;
-  background: linear-gradient(
-    120deg,
-    rgba(255,255,255,0) 0%,
-    rgba(255,255,255,0) 40%,
-    rgba(255,255,255,0.6) 50%,
-    rgba(255,255,255,0) 60%,
-    rgba(255,255,255,0) 100%
-  );
-  mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);      /* keep inside hollow */
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-          mask-composite: exclude;  /* create hollow center */
-  border-radius: inherit;
-  animation: borderShimmer 2.5s linear infinite;
-  pointer-events: none;
-}
-
-/* Make sure cards are positioned */
-.card {
-  position: relative;
-  overflow: hidden;
-}
-
-@keyframes borderShimmer {
-  0%   { transform: translateX(-150%); }
-  100% { transform: translateX(150%); }
+/* Hot deal card background (50%+ off) */
+.card.hot-deal {
+  /* RGBA 255, 204, 170, 1 (CSS alpha is 0–1) */
+  background: rgba(255, 204, 170, 1);
 }
 
     .card-link {
@@ -2138,12 +2111,19 @@ modelInput.addEventListener("click", () => {
         imgWrapper.appendChild(img);
       }
 
-      if (discount.hasDiscount) {
+         if (discount.hasDiscount) {
         const badge = document.createElement("div");
         badge.className = "discount-badge";
+
+        // If this is a hot deal (50%+), make the badge glow red
+        if (isHotDeal) {
+          badge.classList.add("hot-badge");
+        }
+
         badge.textContent = `${discount.percent}% OFF`;
         imgWrapper.appendChild(badge);
       }
+
 
       link.appendChild(imgWrapper);
 
