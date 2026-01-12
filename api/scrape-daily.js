@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
     const allDeals = [];
     const scraperResults = {};
 
-/*    // Scrape Running Warehouse
+    // Scrape Running Warehouse
     try {
       const rwDeals = await scrapeRunningWarehouse();
       allDeals.push(...rwDeals);
@@ -61,18 +61,6 @@ module.exports = async (req, res) => {
     } catch (error) {
       scraperResults["Luke's Locker"] = { success: false, error: error.message };
       console.error("[SCRAPER] Luke's Locker failed:", error.message);
-    }
-    */
-    // Scrape REI Outlet
-    try {
-      await randomDelay(); // Be respectful - 2 second delay between sites
-      const reiDeals = await scrapeREIOutlet();
-      allDeals.push(...reiDeals);
-      scraperResults["REI Outlet"] = { success: true, count: reiDeals.length };
-      console.log(`[SCRAPER] REI Outlet: ${reiDeals.length} deals`);
-    } catch (error) {
-      scraperResults["REI Outlet"] = { success: false, error: error.message };
-      console.error("[SCRAPER] REI Outlet failed:", error.message);
     }
     
     // Calculate statistics
@@ -434,146 +422,6 @@ async function scrapeLukesLocker() {
   }
 }
 
-/**
- * Scrape REI Outlet running shoes
- */
-async function scrapeREIOutlet() {
-  console.log("[SCRAPER] Starting REI Outlet scrape...");
-
-  const urls = [
-    "https://www.rei.com/c/mens-running-shoes/f/scd-deals",
-    "https://www.rei.com/c/womens-running-shoes/f/scd-deals"
-  ];
-
-  const deals = [];
-
-  try {
-    for (const url of urls) {
-      console.log(`[SCRAPER] Fetching REI Outlet page: ${url}`);
-
-      const response = await axios.get(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'DNT': '1',
-          'Connection': 'keep-alive',
-          'Upgrade-Insecure-Requests': '1',
-          'Sec-Fetch-Dest': 'document',
-          'Sec-Fetch-Mode': 'navigate',
-          'Sec-Fetch-Site': 'none',
-          'Sec-Fetch-User': '?1',
-          'Cache-Control': 'max-age=0',
-          'Referer': 'https://www.rei.com/'
-        },
-        timeout: 45000, // Increased from 30s to 45s
-        maxRedirects: 5
-      });
-
-      const $ = cheerio.load(response.data);
-
-      // Collect unique product links first to avoid duplicates
-      const productLinks = new Set();
-      $('a[href*="/product/"]').each((_, el) => {
-        const href = $(el).attr('href');
-        if (href && href.includes('/product/')) {
-          productLinks.add(href);
-        }
-      });
-
-      // Process each unique product
-      productLinks.forEach(href => {
-        try {
-          const $link = $(`a[href="${href}"]`).first();
-          if (!$link.length) return;
-
-          // Get the product container
-          const $container = $link.closest('[class*="product"], [class*="card"], li, article');
-          const fullText = ($container.length ? $container : $link).text().replace(/\s+/g, ' ').trim();
-
-          if (!fullText.includes('$') || fullText.length < 20) return;
-
-          // Extract title - try multiple methods
-          let title = '';
-          
-          // Method 1: Look for title elements
-          const $titleEl = ($container.length ? $container : $link).find('h2, h3, h4, [class*="title"], [class*="name"]').first();
-          if ($titleEl.length) {
-            title = $titleEl.text().replace(/\s+/g, ' ').trim();
-          }
-
-          // Method 2: Parse from text
-          if (!title || title.length < 5) {
-            const beforePrice = fullText.split('$')[0];
-            title = beforePrice
-              .replace(/\(\d+\)\s*\d+\s*reviews.*$/i, '')
-              .replace(/Rated\s+[\d.]+\s+out\s+of\s+5\s+stars/i, '')
-              .replace(/Add.*to\s+Compare/i, '')
-              .replace(/Members\s+use\s+code.*$/i, '')
-              .replace(/Save\s+\d+%.*$/i, '')
-              .replace(/compared\s+to.*$/i, '')
-              .replace(/Top\s+Rated/i, '')
-              .replace(/New\s+arrival/i, '')
-              .replace(/REI\s+OUTLET/i, '')
-              .trim();
-          }
-
-          title = title
-            .replace(/\s*-\s*(Men's|Women's|Mens|Womens)\s*$/i, '')
-            .replace(/\s+(Road-Running|Trail-Running|Running)\s+Shoes\s*$/i, '')
-            .replace(/\s+/g, ' ')
-            .trim();
-
-          if (!title || title.length < 5) return;
-
-          const { brand, model } = parseBrandModel(title);
-
-          const { salePrice, originalPrice, valid } = extractPrices($, $container.length ? $container : $link, fullText);
-          if (!valid || !salePrice || salePrice <= 0) return;
-
-          let imageUrl = null;
-          const $img = ($container.length ? $container : $link).find('img').first();
-          if ($img.length) {
-            imageUrl = $img.attr('src') || $img.attr('data-src') || $img.attr('data-lazy-src');
-            if (imageUrl && !imageUrl.startsWith('http')) {
-              imageUrl = 'https://www.rei.com' + (imageUrl.startsWith('/') ? '' : '/') + imageUrl;
-            }
-          }
-
-          let fullUrl = href;
-          if (!fullUrl.startsWith('http')) {
-            fullUrl = 'https://www.rei.com' + (href.startsWith('/') ? '' : '/') + href;
-          }
-
-          deals.push({
-            title,
-            brand,
-            model,
-            store: "REI Outlet",
-            price: salePrice,
-            originalPrice: originalPrice || null,
-            url: fullUrl,
-            image: imageUrl,
-            scrapedAt: new Date().toISOString()
-          });
-        } catch (err) {
-          // Skip individual product errors silently
-        }
-      });
-
-      // Longer delay for REI
-      await randomDelay(4000, 6000);
-    }
-
-    console.log(`[SCRAPER] REI Outlet scrape complete. Found ${deals.length} deals.`);
-    return deals;
-
-  } catch (error) {
-    console.error("[SCRAPER] REI Outlet error:", error.message);
-    throw error;
-  }
-}
 
 /**
  * Helper: Parse brand and model from title
