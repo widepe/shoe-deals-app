@@ -318,33 +318,45 @@
       box-sizing: border-box;
     }
 
-    /* Shimmer overlay for hot-deal cards */
-    .card.hot-deal::before {
-      content: "";
-      position: absolute;
-      inset: 0;  /* top:0; right:0; bottom:0; left:0 */
-      background: linear-gradient(
-        120deg,
-        rgba(255, 255, 255, 0) 0%,
-        rgba(255, 255, 255, 0.0) 30%,
-        rgba(255, 255, 255, 0.25) 50%,
-        rgba(255, 255, 255, 0.0) 70%,
-        rgba(255, 255, 255, 0) 100%
-      );
-      transform: translateX(-150%);
-      animation: hotCardShimmer 2.2s linear infinite;
-      pointer-events: none;   /* don’t block clicks */
-      mix-blend-mode: screen; /* keeps your base colors visible */
-    }
+   /* Hot deal shimmer — border only */
+.card.hot-deal::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 2px;                     /* thickness of the border */
+  border-radius: inherit;
+  background: linear-gradient(
+    120deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0) 40%,
+    rgba(255,255,255,0.6) 50%,
+    rgba(255,255,255,0) 60%,
+    rgba(255,255,255,0) 100%
+  );
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);      /* keep inside hollow */
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;  /* create hollow center */
+  border-radius: inherit;
+  animation: borderShimmer 2.5s linear infinite;
+  pointer-events: none;
+}
 
-    @keyframes hotCardShimmer {
-      0% {
-        transform: translateX(-150%);
-      }
-      100% {
-        transform: translateX(150%);
-      }
-    }
+/* Make sure cards are positioned */
+.card {
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes borderShimmer {
+  0%   { transform: translateX(-150%); }
+  100% { transform: translateX(150%); }
+}
+
     .card-link {
       display: flex;
       flex-direction: column;
