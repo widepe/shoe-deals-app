@@ -41,8 +41,7 @@ module.exports = async (req, res) => {
 
     // Scrape Fleet Feet
     try {
-      await randomDelay()
-; // Be respectful - 2 second delay between sites
+      await randomDelay(); // Be respectful - 2 second delay between sites
       const fleetFeetDeals = await scrapeFleetFeet();
       allDeals.push(...fleetFeetDeals);
       scraperResults['Fleet Feet'] = { success: true, count: fleetFeetDeals.length };
@@ -54,8 +53,7 @@ module.exports = async (req, res) => {
 
     // Scrape Luke's Locker
     try {
-      await randomDelay()
-; // Be respectful - 2 second delay between sites
+      await randomDelay(); // Be respectful - 2 second delay between sites
       const lukesDeals = await scrapeLukesLocker();
       allDeals.push(...lukesDeals);
       scraperResults["Luke's Locker"] = { success: true, count: lukesDeals.length };
@@ -65,17 +63,16 @@ module.exports = async (req, res) => {
       console.error("[SCRAPER] Luke's Locker failed:", error.message);
     }
     
-    // Scrape Famous Footwear
+    // Scrape REI Outlet
     try {
-      await randomDelay()
-; // Be respectful - 2 second delay between sites
-      const famousDeals = await scrapeFamousFootwear();
-      allDeals.push(...famousDeals);
-      scraperResults["Famous Footwear"] = { success: true, count: famousDeals.length };
-      console.log(`[SCRAPER] Famous Footwear: ${famousDeals.length} deals`);
+      await randomDelay(); // Be respectful - 2 second delay between sites
+      const reiDeals = await scrapeREIOutlet();
+      allDeals.push(...reiDeals);
+      scraperResults["REI Outlet"] = { success: true, count: reiDeals.length };
+      console.log(`[SCRAPER] REI Outlet: ${reiDeals.length} deals`);
     } catch (error) {
-      scraperResults["Famous Footwear"] = { success: false, error: error.message };
-      console.error("[SCRAPER] Famous Footwear failed:", error.message);
+      scraperResults["REI Outlet"] = { success: false, error: error.message };
+      console.error("[SCRAPER] REI Outlet failed:", error.message);
     }
     
     // Calculate statistics
@@ -235,8 +232,7 @@ async function scrapeRunningWarehouse() {
       });
 
       // Be polite - 1.5 second delay between pages
-      await randomDelay()
-;
+      await randomDelay();
     }
 
     console.log(
@@ -324,8 +320,7 @@ async function scrapeFleetFeet() {
         });
       });
 
-      await randomDelay()
-;
+      await randomDelay();
     }
 
     console.log(`[SCRAPER] Fleet Feet scrape complete. Found ${deals.length} deals.`);
@@ -438,107 +433,131 @@ async function scrapeLukesLocker() {
     throw error;
   }
 }
-/**
- * Scrape Famous Footwear running shoe deals
- * (uses the universal extractPrices helper)
- */
-async function scrapeFamousFootwear() {
-  console.log("[SCRAPER] Starting Famous Footwear scrape...");
 
-  // TODO: Adjust these URLs to exactly the clearance/sale running-shoe pages you want
+/**
+ * Scrape REI Outlet running shoes
+ */
+async function scrapeREIOutlet() {
+  console.log("[SCRAPER] Starting REI Outlet scrape...");
+
   const urls = [
-    "https://www.famousfootwear.com/browse/sale/mens?icid=mdd_uncat_click_sale#sortCriteria=relevance&f-webgenders=Men's&cf-categories=Sneakers%20and%20Athletic%20Shoes,Running%20Shoes",
-    "https://www.famousfootwear.com/browse/sale?icid=sdd_vwall#sortCriteria=relevance&f-webgenders=Women's&cf-categories=Sneakers%20and%20Athletic%20Shoes,Running%20Shoes"
+    "https://www.rei.com/c/mens-running-shoes/f/scd-deals",
+    "https://www.rei.com/c/womens-running-shoes/f/scd-deals"
   ];
 
   const deals = [];
 
   try {
     for (const url of urls) {
-      console.log(`[SCRAPER] Fetching Famous Footwear page: ${url}`);
+      console.log(`[SCRAPER] Fetching REI Outlet page: ${url}`);
 
       const response = await axios.get(url, {
         headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-          "Accept-Language": "en-US,en;q=0.9",
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9'
         },
-        timeout: 30000,
+        timeout: 30000
       });
 
       const $ = cheerio.load(response.data);
 
-      // This selector is a starting point – you may refine it after inspecting Famous Footwear HTML.
-      // We look for product tiles with links that contain "$" in their text (so they include prices).
-      $("a").each((_, el) => {
+      // REI uses product links in the format /product/PRODUCTID/brand-model-name
+      $('a[href*="/product/"]').each((_, el) => {
         const $link = $(el);
-        const href = $link.attr("href") || "";
+        const href = $link.attr('href');
 
-        // Skip links that don't go to a product page
-        if (!href || !href.includes("/product/")) return;
+        if (!href || !href.includes('/product/')) return;
 
-        const fullText = $link.text().replace(/\s+/g, " ").trim();
-        if (!fullText.includes("$")) return;
+        // Get all text from the link
+        const fullText = $link.text().replace(/\s+/g, ' ').trim();
 
-        // Optional: filter a bit to focus on shoes
-        if (!/shoe|sneaker|runner|running|athletic/i.test(fullText)) return;
+        // Skip if no price indicator or if it's too short
+        if (!fullText.includes('$') || fullText.length < 20) return;
 
-        // Title: text before the first "$"
-        const titlePart = fullText.split("$")[0].trim();
-        if (!titlePart || titlePart.length < 5) return;
+        // Extract title - REI typically shows "Brand Model Name - Men's/Women's"
+        // The product name is usually before the price
+        let title = '';
+        
+        // Try to find the product title in a more structured way
+        const $productTitle = $link.find('[class*="product"]').first();
+        if ($productTitle.length) {
+          title = $productTitle.text().replace(/\s+/g, ' ').trim();
+        }
+        
+        // Fallback: extract from full text before price
+        if (!title || title.length < 5) {
+          const beforePrice = fullText.split('$')[0];
+          // Remove review text and clean up
+          title = beforePrice
+            .replace(/\(\d+\)\d+\s*reviews.*$/i, '')
+            .replace(/Rated\s+[\d.]+\s+out\s+of\s+5\s+stars/i, '')
+            .replace(/Add.*to\s+Compare/i, '')
+            .replace(/Members use code.*$/i, '')
+            .replace(/Save\s+\d+%/i, '')
+            .replace(/compared to/i, '')
+            .replace(/Top Rated/i, '')
+            .replace(/New arrival/i, '')
+            .trim();
+        }
 
-        const title = titlePart;
+        // Skip if we couldn't get a reasonable title
+        if (!title || title.length < 5) return;
+
+        // Remove common suffixes and clean up
+        title = title
+          .replace(/\s*-\s*(Men's|Women's|Mens|Womens)\s*$/i, '')
+          .replace(/\s+(Road-Running|Trail-Running|Running)\s+Shoes\s*$/i, '')
+          .trim();
+
+        // Parse brand and model
         const { brand, model } = parseBrandModel(title);
 
-        // UNIVERSAL PRICE EXTRACTOR
+        // UNIVERSAL PRICE PARSER
         const { salePrice, originalPrice, valid } = extractPrices($, $link, fullText);
-        if (!valid || !salePrice || !Number.isFinite(salePrice)) return;
+        if (!valid || !salePrice || salePrice <= 0) return;
+
+        // Get image URL
+        let imageUrl = null;
+        const $img = $link.find('img').first();
+        if ($img.length) {
+          imageUrl = $img.attr('src') || $img.attr('data-src') || $img.attr('data-lazy-src');
+          if (imageUrl && !imageUrl.startsWith('http')) {
+            imageUrl = 'https://www.rei.com' + (imageUrl.startsWith('/') ? '' : '/') + imageUrl;
+          }
+        }
 
         // Build full URL
         let fullUrl = href;
-        if (!/^https?:\/\//i.test(fullUrl)) {
-          fullUrl = "https://www.famousfootwear.com" + (href.startsWith("/") ? "" : "/") + href;
-        }
-
-        // Image (best-effort – may tweak selectors once you inspect HTML)
-        let imageUrl = null;
-        const $img = $link.find("img").first();
-        if ($img.length) {
-          imageUrl = $img.attr("src") || $img.attr("data-src");
-          if (imageUrl && !/^https?:\/\//i.test(imageUrl)) {
-            // Famous Footwear tends to use absolute URLs, but guard just in case
-            imageUrl = "https://www.famousfootwear.com" +
-              (imageUrl.startsWith("/") ? "" : "/") +
-              imageUrl;
-          }
+        if (!fullUrl.startsWith('http')) {
+          fullUrl = 'https://www.rei.com' + (href.startsWith('/') ? '' : '/') + href;
         }
 
         deals.push({
           title,
           brand,
           model,
-          store: "Famous Footwear",
+          store: "REI Outlet",
           price: salePrice,
           originalPrice: originalPrice || null,
           url: fullUrl,
           image: imageUrl,
-          scrapedAt: new Date().toISOString(),
+          scrapedAt: new Date().toISOString()
         });
       });
 
-      // Be polite between Famous Footwear pages
-      await randomDelay()
-;
+      await randomDelay();
     }
 
-    console.log(`[SCRAPER] Famous Footwear scrape complete. Found ${deals.length} deals.`);
+    console.log(`[SCRAPER] REI Outlet scrape complete. Found ${deals.length} deals.`);
     return deals;
+
   } catch (error) {
-    console.error("[SCRAPER] Famous Footwear error:", error.message);
+    console.error("[SCRAPER] REI Outlet error:", error.message);
     throw error;
   }
 }
+
 /**
  * Helper: Parse brand and model from title
  */
@@ -777,4 +796,3 @@ function randomDelay(min = 3000, max = 5000) {
   const wait = Math.floor(Math.random() * (max - min + 1)) + min;
   return new Promise(resolve => setTimeout(resolve, wait));
 }
-
