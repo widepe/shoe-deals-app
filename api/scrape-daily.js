@@ -433,6 +433,11 @@ async function scrapeLukesLocker() {
     throw error;
   }
 }
+/**
+ * Scrape Marathon Sports
+ */
+
+
 async function scrapeMarathonSports() {
   console.log("[SCRAPER] Starting Marathon Sports scrape...");
 
