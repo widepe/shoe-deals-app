@@ -587,8 +587,7 @@ function parseBrandModel(title) {
   }
 
   // Clean up common suffixes
-  model = model.replace(/\s*-?\s*(Men's|Women's|Mens|Womens|Running|Shoes|Race|Trail|Walking)\s*$/gi, '');
-  model = model.replace(/\s+/g, ' ').trim();
+model = model.replace(/\s*-?\s*(Clearance|Sale|Running|Shoes|Race|Trail|Walking)\s*$/gi, '');  model = model.replace(/\s+/g, ' ').trim();
 
   return { brand, model };
 }
