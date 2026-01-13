@@ -436,105 +436,120 @@ async function scrapeLukesLocker() {
 /**
  * Scrape Marathon Sports
  */
-
-
 async function scrapeMarathonSports() {
   console.log("[SCRAPER] Starting Marathon Sports scrape...");
 
-  const url = "https://www.marathonsports.com/shop/shoes?sale=1";
+  const urls = [
+    "https://www.marathonsports.com/shop/mens/shoes?sale=1",              // Men's sale shoes
+    "https://www.marathonsports.com/shop/womens/shoes?sale=1",            // Women's sale shoes
+    "https://www.marathonsports.com/shop?q=running%20shoes&sort=discount" // All running shoes sorted by discount
+  ];
+
   const deals = [];
+  const seenUrls = new Set(); // Track unique products to avoid duplicates across pages
 
   try {
-    console.log(`[SCRAPER] Fetching Marathon Sports page: ${url}`);
+    for (const url of urls) {
+      console.log(`[SCRAPER] Fetching Marathon Sports page: ${url}`);
 
-    const response = await axios.get(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9'
-      },
-      timeout: 30000
-    });
-
-    const $ = cheerio.load(response.data);
-
-    // Marathon Sports: product links are /products/... 
-    // But title and price are in parent/sibling elements
-    $('a[href^="/products/"]').each((_, el) => {
-      const $link = $(el);
-      const href = $link.attr('href');
-
-      if (!href) return;
-
-      // Find the parent container that holds all product info
-      const $container = $link.closest('div, article, li').filter(function() {
-        // Make sure this container has price info
-        return $(this).text().includes('price');
+      const response = await axios.get(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9'
+        },
+        timeout: 30000
       });
 
-      if (!$container.length) return;
+      const $ = cheerio.load(response.data);
 
-      // Get all text from the container
-      const containerText = $container.text().replace(/\s+/g, ' ').trim();
+      // Marathon Sports: product links are /products/... 
+      // But title and price are in parent/sibling elements
+      $('a[href^="/products/"]').each((_, el) => {
+        const $link = $(el);
+        const href = $link.attr('href');
 
-      // Must have price indicators
-      if (!containerText.includes('$') || !containerText.includes('price')) return;
+        if (!href) return;
 
-      // Extract title from h2, h3, or class containing "title" or "name"
-      let title = '';
-      const $titleEl = $container.find('h2, h3, .product-title, .product-name, [class*="title"]').first();
-      
-      if ($titleEl.length) {
-        title = $titleEl.text().replace(/\s+/g, ' ').trim();
-      } else {
-        // Fallback: look for title pattern before "Men's" or "Women's"
-        const titleMatch = containerText.match(/^(.+?)\s+(Men's|Women's)/i);
-        if (titleMatch) {
-          title = titleMatch[1].trim();
+        // Build full URL first for deduplication
+        let fullUrl = href;
+        if (!fullUrl.startsWith('http')) {
+          fullUrl = 'https://www.marathonsports.com' + (href.startsWith('/') ? '' : '/') + href;
         }
-      }
 
-      // Clean up title
-      title = title.replace(/\s+(Men's|Women's|Shoes)\s*$/gi, '').trim();
+        // Skip if we've already seen this product
+        if (seenUrls.has(fullUrl)) return;
 
-      if (!title || title.length < 5) return;
+        // Find the parent container that holds all product info
+        const $container = $link.closest('div, article, li').filter(function() {
+          // Make sure this container has price info
+          return $(this).text().includes('price');
+        });
 
-      // Parse brand and model
-      const { brand, model } = parseBrandModel(title);
+        if (!$container.length) return;
 
-      // Use UNIVERSAL PRICE PARSER on the container text
-      const { salePrice, originalPrice, valid } = extractPrices($, $container, containerText);
-      
-      if (!valid || !salePrice || salePrice <= 0) return;
+        // Get all text from the container
+        const containerText = $container.text().replace(/\s+/g, ' ').trim();
 
-      // Get image URL from the link
-      let imageUrl = null;
-      const $img = $link.find('img').first();
-      if ($img.length) {
-        imageUrl = $img.attr('src') || $img.attr('data-src');
-        if (imageUrl && !imageUrl.startsWith('http')) {
-          imageUrl = 'https:' + (imageUrl.startsWith('//') ? imageUrl : '//' + imageUrl);
+        // Must have price indicators
+        if (!containerText.includes('$') || !containerText.includes('price')) return;
+
+        // Extract title from h2, h3, or class containing "title" or "name"
+        let title = '';
+        const $titleEl = $container.find('h2, h3, .product-title, .product-name, [class*="title"]').first();
+        
+        if ($titleEl.length) {
+          title = $titleEl.text().replace(/\s+/g, ' ').trim();
+        } else {
+          // Fallback: look for title pattern before "Men's" or "Women's"
+          const titleMatch = containerText.match(/^(.+?)\s+(Men's|Women's)/i);
+          if (titleMatch) {
+            title = titleMatch[1].trim();
+          }
         }
-      }
 
-      // Build full URL
-      let fullUrl = href;
-      if (!fullUrl.startsWith('http')) {
-        fullUrl = 'https://www.marathonsports.com' + (href.startsWith('/') ? '' : '/') + href;
-      }
+        // Clean up title
+        title = title.replace(/\s+(Men's|Women's|Shoes)\s*$/gi, '').trim();
 
-      deals.push({
-        title,
-        brand,
-        model,
-        store: "Marathon Sports",
-        price: salePrice,
-        originalPrice: originalPrice || null,
-        url: fullUrl,
-        image: imageUrl,
-        scrapedAt: new Date().toISOString()
+        if (!title || title.length < 5) return;
+
+        // Parse brand and model
+        const { brand, model } = parseBrandModel(title);
+
+        // Use UNIVERSAL PRICE PARSER on the container text
+        const { salePrice, originalPrice, valid } = extractPrices($, $container, containerText);
+        
+        if (!valid || !salePrice || salePrice <= 0) return;
+
+        // Get image URL from the link
+        let imageUrl = null;
+        const $img = $link.find('img').first();
+        if ($img.length) {
+          imageUrl = $img.attr('src') || $img.attr('data-src');
+          if (imageUrl && !imageUrl.startsWith('http')) {
+            imageUrl = 'https:' + (imageUrl.startsWith('//') ? imageUrl : '//' + imageUrl);
+          }
+        }
+
+        // Mark this URL as seen
+        seenUrls.add(fullUrl);
+
+        deals.push({
+          title,
+          brand,
+          model,
+          store: "Marathon Sports",
+          price: salePrice,
+          originalPrice: originalPrice || null,
+          url: fullUrl,
+          image: imageUrl,
+          scrapedAt: new Date().toISOString()
+        });
       });
-    });
+
+      // Be polite - delay between pages
+      await randomDelay();
+    }
 
     console.log(`[SCRAPER] Marathon Sports scrape complete. Found ${deals.length} deals.`);
     return deals;
