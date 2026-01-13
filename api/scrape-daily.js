@@ -62,6 +62,20 @@ module.exports = async (req, res) => {
       scraperResults["Luke's Locker"] = { success: false, error: error.message };
       console.error("[SCRAPER] Luke's Locker failed:", error.message);
     }
+
+// After Luke's Locker scraping block...
+
+// Scrape Marathon Sports
+try {
+  await randomDelay(); // Be respectful - 2 second delay between sites
+  const marathonDeals = await scrapeMarathonSports();
+  allDeals.push(...marathonDeals);
+  scraperResults["Marathon Sports"] = { success: true, count: marathonDeals.length };
+  console.log(`[SCRAPER] Marathon Sports: ${marathonDeals.length} deals`);
+} catch (error) {
+  scraperResults["Marathon Sports"] = { success: false, error: error.message };
+  console.error("[SCRAPER] Marathon Sports failed:", error.message);
+}
     
     // Calculate statistics
     const dealsByStore = {};
@@ -421,8 +435,106 @@ async function scrapeLukesLocker() {
     throw error;
   }
 }
+/**
+ * Scrape Marathon Sports sale running shoes
+ */
+async function scrapeMarathonSports() {
+  console.log("[SCRAPER] Starting Marathon Sports scrape...");
 
+  const url = "https://www.marathonsports.com/shop/shoes?sale=1";
+  const deals = [];
 
+  try {
+    console.log(`[SCRAPER] Fetching Marathon Sports page: ${url}`);
+
+    const response = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9'
+      },
+      timeout: 30000
+    });
+
+    const $ = cheerio.load(response.data);
+
+    // Marathon Sports product links start with /products/
+    $('a[href^="/products/"]').each((_, el) => {
+      const $link = $(el);
+      const href = $link.attr('href');
+
+      if (!href) return;
+
+      // Get all text from the link and nearby elements
+      const fullText = $link.text().replace(/\s+/g, ' ').trim();
+
+      // Skip if no price indicators or too short
+      if (!fullText.includes('$') || fullText.length < 15) return;
+
+      // Extract title - Marathon Sports format: "Brand Model"
+      // The title appears before "Men's/Women's Shoes price: $XX.XX"
+      let title = '';
+      
+      // Try to extract from the h2 or product name element
+      const $title = $link.find('h2, .product-name, [class*="title"]').first();
+      if ($title.length) {
+        title = $title.text().replace(/\s+/g, ' ').trim();
+      } else {
+        // Fallback: extract from full text before price indicators
+        const titleMatch = fullText.match(/^(.+?)\s*(?:Men's|Women's|Shoes|original price|price:)/i);
+        title = titleMatch ? titleMatch[1].trim() : fullText.split('$')[0].trim();
+      }
+
+      // Clean up title
+      title = title.replace(/\s+(Men's|Women's|Shoes)\s*$/gi, '').trim();
+
+      if (!title || title.length < 3) return;
+
+      // Parse brand and model
+      const { brand, model } = parseBrandModel(title);
+
+      // Use your UNIVERSAL PRICE PARSER
+      const { salePrice, originalPrice, valid } = extractPrices($, $link, fullText);
+      if (!valid || !salePrice || salePrice <= 0) return;
+
+      // Get image URL
+      let imageUrl = null;
+      const $img = $link.find('img').first();
+      if ($img.length) {
+        imageUrl = $img.attr('src') || $img.attr('data-src');
+        // Marathon Sports uses CDN
+        if (imageUrl && !imageUrl.startsWith('http')) {
+          imageUrl = 'https:' + (imageUrl.startsWith('//') ? imageUrl : '//' + imageUrl);
+        }
+      }
+
+      // Build full URL
+      let fullUrl = href;
+      if (!fullUrl.startsWith('http')) {
+        fullUrl = 'https://www.marathonsports.com' + (href.startsWith('/') ? '' : '/') + href;
+      }
+
+      deals.push({
+        title,
+        brand,
+        model,
+        store: "Marathon Sports",
+        price: salePrice,
+        originalPrice: originalPrice || null,
+        url: fullUrl,
+        image: imageUrl,
+        scrapedAt: new Date().toISOString()
+      });
+    });
+
+    console.log(`[SCRAPER] Marathon Sports scrape complete. Found ${deals.length} deals.`);
+    return deals;
+
+  } catch (error) {
+    console.error("[SCRAPER] Marathon Sports error:", error.message);
+    throw error;
+  }
+}
 /**
  * Helper: Parse brand and model from title
  */
