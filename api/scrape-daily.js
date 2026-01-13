@@ -134,8 +134,7 @@ async function scrapeRunningWarehouse() {
   ];
 
   const deals = [];
-
-  try {
+ const seenUrls = new Set();   try {
     for (const url of urls) {
       console.log(`[SCRAPER] Fetching RW page: ${url}`);
 
@@ -217,7 +216,8 @@ async function scrapeRunningWarehouse() {
             }
           }
         }
-
+    if (seenUrls.has(cleanUrl)) return;
+        seenUrls.add(cleanUrl);
         deals.push({
           title,
           brand,
@@ -257,8 +257,7 @@ async function scrapeFleetFeet() {
   ];
 
   const deals = [];
-
-  try {
+const seenUrls = new Set();  try {
     for (const url of urls) {
       console.log(`[SCRAPER] Fetching Fleet Feet page: ${url}`);
 
@@ -306,8 +305,8 @@ async function scrapeFleetFeet() {
         if (!fullUrl.startsWith('http')) {
           fullUrl = 'https://www.fleetfeet.com' + (href.startsWith('/') ? '' : '/') + href;
         }
-
-        deals.push({
+     if (seenUrls.has(fullUrl)) return;
+        seenUrls.add(fullUrl);        deals.push({
           title,
           brand,
           model,
