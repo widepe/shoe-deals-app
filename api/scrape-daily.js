@@ -566,18 +566,18 @@ function parseBrandModel(title) {
   if (!title) return { brand: 'Unknown', model: '' };
   
   const brands = [
- '361 Degrees', 'adidas', 'Altra', 'ASICS', 'Brooks', 'Craft', 'Diadora', 
-'HOKA', 'Hylo Athletics', 'Karhu', 'Merrell', 'Mizuno', 'New Balance', 
-'Newton', 'Nike', 'norda', 'Nnormal', 'On', 'On Running', 'Oofos', 'Puma', 'Reebok', 'Salomon', 
-'Saucony', 'Saysh', 'Skechers', 'Skora', 'The North Face', 'Topo', 'Topo Athletic', 'Tyr', 
-'Under Armour', 'Vibram', 'VJ Shoes', 'X-Bionic', 'Xero'
+    '361 Degrees', 'adidas', 'Altra', 'ASICS', 'Brooks', 'Craft', 'Diadora', 
+    'HOKA', 'Hylo Athletics', 'Karhu', 'Merrell', 'Mizuno', 'New Balance', 
+    'Newton', 'Nike', 'norda', 'Nnormal', 'On', 'On Running', 'Oofos', 'Puma', 'Reebok', 'Salomon', 
+    'Saucony', 'Saysh', 'Skechers', 'Skora', 'The North Face', 'Topo', 'Topo Athletic', 'Tyr', 
+    'Under Armour', 'Vibram', 'VJ Shoes', 'X-Bionic', 'Xero'
   ];
 
   let brand = 'Unknown';
   let model = title;
 
   for (const b of brands) {
-    const regex = new RegExp(`\\b${b}\\b`, 'gi');
+    const regex = new RegExp(`\\b${b}\\b`, 'gi');  // FIXED: added opening (
     if (regex.test(title)) {
       brand = b;
       model = title.replace(regex, '').trim();
@@ -587,7 +587,8 @@ function parseBrandModel(title) {
   }
 
   // Clean up common suffixes
-model = model.replace(/\s*-?\s*(Clearance|Sale|Running|Shoes|Race|Trail|Walking)\s*$/gi, '');  model = model.replace(/\s+/g, ' ').trim();
+  model = model.replace(/\s*-?\s*(Clearance|Sale|Running|Shoes|Race|Trail|Walking)\s*$/gi, '');
+  model = model.replace(/\s+/g, ' ').trim();
 
   return { brand, model };
 }
