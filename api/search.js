@@ -126,6 +126,8 @@ module.exports = async (req, res) => {
       })
       .map((deal) => ({
         title: deal.title,
+            brand: deal.brand,      
+    model: deal.model,     
         price: Number(deal.price),
         originalPrice: deal.originalPrice ? Number(deal.originalPrice) : null,
         discount: deal.discount || null,
