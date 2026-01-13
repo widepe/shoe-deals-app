@@ -1878,11 +1878,7 @@ if (contactLink && contactModal) {
       container.style.display = "block";
     }
 
-    function enableModel() {
-      modelInput.disabled = false;
-      modelInput.classList.remove("model-inactive");
-      modelInput.classList.add("model-active");
-    }
+
 
 function resetModelState() {
   modelInput.value = "";
@@ -1890,26 +1886,6 @@ function resetModelState() {
   modelSuggestions.style.display = "none";
   brandSelected = false;
 }
-
-  
-   
-
-   
-
-      if (brandSelected && !modelInput.disabled) {
-        if (!modelInput.value.trim()) {
-          modelPaw.classList.remove("hidden");
-          modelPaw.classList.add("rock");
-        } else {
-          modelPaw.classList.add("hidden");
-          modelPaw.classList.remove("rock");
-        }
-      } else {
-        modelPaw.classList.add("hidden");
-        modelPaw.classList.remove("rock");
-      }
-
-    }
 
     function updateAlertSubmitButton() {
       const price = alertPriceInput.value.trim();
