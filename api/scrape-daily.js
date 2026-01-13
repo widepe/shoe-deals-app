@@ -63,8 +63,6 @@ module.exports = async (req, res) => {
       console.error("[SCRAPER] Luke's Locker failed:", error.message);
     }
 
-// After Luke's Locker scraping block...
-
 // Scrape Marathon Sports
 try {
   await randomDelay(); // Be respectful - 2 second delay between sites
