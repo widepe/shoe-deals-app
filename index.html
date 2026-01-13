@@ -1009,7 +1009,7 @@
       </div>
 
       <div class="input-wrapper">
-        <input id="model" type="text" placeholder="" autocomplete="off" required class="model-inactive" disabled />
+<input id="model" type="text" placeholder="Enter Shoe Model" autocomplete="off" />    
         <span class="paw hidden" id="modelPaw">🐾</span>
         <div id="modelSuggestions" class="suggestions"></div>
       </div>
@@ -1887,17 +1887,12 @@ if (contactLink && contactModal) {
       modelInput.classList.add("model-active");
     }
 
-    function resetModelState() {
-      modelInput.disabled = true;
-      modelInput.value = "";
-      modelInput.placeholder = "";
-      modelInput.classList.remove("model-active");
-      modelInput.classList.add("model-inactive");
-      modelSuggestions.style.display = "none";
-      modelPaw.classList.add("hidden");
-      modelPaw.classList.remove("rock");
-      brandSelected = false;
-    }
+function resetModelState() {
+  modelInput.value = "";
+  modelInput.placeholder = "Enter Shoe Model";
+  modelSuggestions.style.display = "none";
+  brandSelected = false;
+}
 
     function confirmBrandSelection() {
       if (!modelInput.disabled) {
@@ -1997,14 +1992,10 @@ function showHome() {
 
 brandInput.addEventListener("input", () => {
   const typed = brandInput.value.trim();
-  if (typed) enableModel();
-  else resetModelState();
   const matches = filterStartsWith(brands, typed);
   showSuggestions(brandSuggestions, matches, (value) => {
     brandInput.value = value;
     brandSuggestions.style.display = "none";
-    enableModel();
-    confirmBrandSelection();
     setTimeout(() => modelInput.focus(), 0);
     updatePaws();
   });
