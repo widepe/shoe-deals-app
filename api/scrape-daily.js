@@ -566,11 +566,11 @@ function parseBrandModel(title) {
   if (!title) return { brand: 'Unknown', model: '' };
   
   const brands = [
-    'Nike', 'Adidas', 'adidas', 'New Balance', 'Brooks', 'ASICS', 'Asics',
-    'HOKA', 'Hoka', 'HOKA ONE ONE', 'Saucony', 'On', 'ON RUNNING', 'Altra', 'ALTRA', 'Mizuno',
-    'Salomon', 'Reebok', 'Under Armour', 'Puma', 'PUMA',
-    'Karhu', 'KARHU', 'Topo Athletic', 'Topo', 'Newton', 'Saysh', 'TYR',
-    'Craft', 'OOFOS', 'Skora', 'Diadora', 'DIADORA', 'Hylo Athletics', 'HYLO ATHLETICS'
+ '361 Degrees', 'adidas', 'Altra', 'ASICS', 'Brooks', 'Craft', 'Diadora', 
+'HOKA', 'Hylo Athletics', 'Karhu', 'Merrell', 'Mizuno', 'New Balance', 
+'Newton', 'Nike', 'On', 'On Running', 'Oofos', 'Puma', 'Reebok', 'Salomon', 
+'Saucony', 'Saysh', 'Skechers', 'Skora', 'Topo', 'Topo Athletic', 'Tyr', 
+'Under Armour', 'Vibram', 'Xero'
   ];
 
   let brand = 'Unknown';
