@@ -568,9 +568,9 @@ function parseBrandModel(title) {
   const brands = [
  '361 Degrees', 'adidas', 'Altra', 'ASICS', 'Brooks', 'Craft', 'Diadora', 
 'HOKA', 'Hylo Athletics', 'Karhu', 'Merrell', 'Mizuno', 'New Balance', 
-'Newton', 'Nike', 'On', 'On Running', 'Oofos', 'Puma', 'Reebok', 'Salomon', 
-'Saucony', 'Saysh', 'Skechers', 'Skora', 'Topo', 'Topo Athletic', 'Tyr', 
-'Under Armour', 'Vibram', 'Xero'
+'Newton', 'Nike', 'norda', 'Nnormal', 'On', 'On Running', 'Oofos', 'Puma', 'Reebok', 'Salomon', 
+'Saucony', 'Saysh', 'Skechers', 'Skora', 'The North Face', 'Topo', 'Topo Athletic', 'Tyr', 
+'Under Armour', 'Vibram', 'VJ Shoes', 'X-Bionic', 'Xero'
   ];
 
   let brand = 'Unknown';
