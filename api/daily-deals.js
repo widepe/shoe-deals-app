@@ -198,37 +198,39 @@ module.exports = async (req, res) => {
     }
 
     // 1) TOP 20 BY PERCENTAGE OFF → Pick random 4
-    const top20ByPercent = [...workingPool]
-      .sort((a, b) => {
-        const pctA = a.originalPrice && a.price 
-          ? ((a.originalPrice - a.price) / a.originalPrice) * 100 
-          : 0;
-        const pctB = b.originalPrice && b.price 
-          ? ((b.originalPrice - b.price) / b.originalPrice) * 100 
-          : 0;
-        return pctB - pctA;
-      })
-      .slice(0, Math.min(20, workingPool.length));
-    
-    const byPercent = getRandomSample(top20ByPercent, Math.min(4, top20ByPercent.length));
+const top20ByPercent = [...workingPool]
+  .sort((a, b) => {
+    const pctA = a.originalPrice && a.price 
+      ? ((a.originalPrice - a.price) / a.originalPrice) * 100 
+      : 0;
+    const pctB = b.originalPrice && b.price 
+      ? ((b.originalPrice - b.price) / b.originalPrice) * 100 
+      : 0;
+    return pctB - pctA;
+  })
+  .slice(0, Math.min(20, workingPool.length));
 
-    // 2) TOP 20 BY DOLLAR SAVINGS → Pick random 4 (excluding already picked)
-    const top20ByDollar = [...workingPool]
-      .filter(d => !byPercent.includes(d))
-      .sort((a, b) => {
-        const savingsA = (a.originalPrice || 0) - (a.price || 0);
-        const savingsB = (b.originalPrice || 0) - (b.price || 0);
-        return savingsB - savingsA;
-      })
-      .slice(0, Math.min(20, workingPool.length));
-    
-    const byDollar = getRandomSample(top20ByDollar, Math.min(4, top20ByDollar.length));
+const byPercent = getRandomSample(top20ByPercent, Math.min(4, top20ByPercent.length));
 
-    // 3) 4 RANDOM from remaining (excluding already picked)
-    const remaining = workingPool.filter(
-      d => !byPercent.includes(d) && !byDollar.includes(d)
-    );
-    const randomPicks = getRandomSample(remaining, Math.min(4, remaining.length));
+// 2) TOP 20 BY DOLLAR SAVINGS → Pick random 4 (excluding already picked)
+const alreadyPicked = new Set(byPercent); // Use Set for faster lookups
+
+const top20ByDollar = [...workingPool]
+  .filter(d => !alreadyPicked.has(d))
+  .sort((a, b) => {
+    const savingsA = (a.originalPrice || 0) - (a.price || 0);
+    const savingsB = (b.originalPrice || 0) - (b.price || 0);
+    return savingsB - savingsA;
+  })
+  .slice(0, 20); // Fixed: use actual filtered array length
+
+const byDollar = getRandomSample(top20ByDollar, Math.min(4, top20ByDollar.length));
+
+// 3) 4 RANDOM from remaining (excluding already picked)
+alreadyPicked.add(...byDollar); // Add byDollar picks to set
+
+const remaining = workingPool.filter(d => !alreadyPicked.has(d));
+const randomPicks = getRandomSample(remaining, Math.min(4, remaining.length));
 
     // Combine all deals (might be less than 12 if pool is small)
     const selectedRaw = [...byPercent, ...byDollar, ...randomPicks];
