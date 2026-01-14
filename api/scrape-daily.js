@@ -121,17 +121,17 @@ module.exports = async (req, res) => {
       console.error("[SCRAPER] Luke's Locker failed:", error.message);
     }
 
-// Scrape Marathon Sports
-try {
-  await randomDelay(); // Be respectful - 2 second delay between sites
-  const marathonDeals = await scrapeMarathonSports();
-  allDeals.push(...marathonDeals);
-  scraperResults["Marathon Sports"] = { success: true, count: marathonDeals.length };
-  console.log(`[SCRAPER] Marathon Sports: ${marathonDeals.length} deals`);
-} catch (error) {
-  scraperResults["Marathon Sports"] = { success: false, error: error.message };
-  console.error("[SCRAPER] Marathon Sports failed:", error.message);
-}
+    // Scrape Marathon Sports
+    try {
+      await randomDelay(); // Be respectful - 2 second delay between sites
+      const marathonDeals = await scrapeMarathonSports();
+      allDeals.push(...marathonDeals);
+      scraperResults["Marathon Sports"] = { success: true, count: marathonDeals.length };
+      console.log(`[SCRAPER] Marathon Sports: ${marathonDeals.length} deals`);
+    } catch (error) {
+      scraperResults["Marathon Sports"] = { success: false, error: error.message };
+      console.error("[SCRAPER] Marathon Sports failed:", error.message);
+ }
 
 
     // Scrape Road Runner Sports via Apify
@@ -146,17 +146,11 @@ try {
       console.error('[SCRAPER] Road Runner Sports failed:', error.message);
     }
 
-    // Calculate statistics
-    const dealsByStore = {};
-    allDeals.forEach(deal => {
-      dealsByStore[deal.store] = (dealsByStore[deal.store] || 0) + 1;
-    });
-
 
     
     // Calculate statistics
-    const dealsByStore = {};
-    allDeals.forEach(deal => {
+      const dealsByStore = {};
+      allDeals.forEach(deal => {
       dealsByStore[deal.store] = (dealsByStore[deal.store] || 0) + 1;
     });
 
