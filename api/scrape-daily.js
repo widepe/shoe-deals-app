@@ -5,6 +5,64 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const { put } = require('@vercel/blob');
+const { ApifyClient } = require('apify-client');
+
+// Optional JSDoc to document the shape, not required to work:
+/**
+ * @typedef {Object} Deal
+ * @property {string} title
+ * @property {string} brand
+ * @property {string} model
+ * @property {number|null} price
+ * @property {number|null} originalPrice
+ * @property {string} store
+ * @property {string} url
+ * @property {string|null} image
+ * @property {string|null} discount
+ * @property {string} scrapedAt
+ */
+
+const apifyClient = new ApifyClient({
+  token: process.env.APIFY_TOKEN,
+});
+
+/**
+ * Runs the Road Runner Apify actor and returns its dataset as Deal[].
+ */
+async function fetchRoadRunnerDeals() {
+  if (!process.env.APIFY_ROADRUNNER_ACTOR_ID) {
+    throw new Error('APIFY_ROADRUNNER_ACTOR_ID is not set');
+  }
+
+  // 1. Start a run of your actor and wait for it to finish
+  const run = await apifyClient
+    .actor(process.env.APIFY_ROADRUNNER_ACTOR_ID)
+    .call({});
+
+  // 2. Read all items from default dataset for this run
+  const allItems = [];
+  let offset = 0;
+  const limit = 500; // plenty for Road Runner sale pages
+
+  while (true) {
+    const { items, total } = await apifyClient
+      .dataset(run.defaultDatasetId)
+      .listItems({ offset, limit });
+
+    allItems.push(...items);
+    offset += items.length;
+
+    if (offset >= total || items.length === 0) break;
+  }
+
+  // Safety: ensure store is set
+  for (const d of allItems) {
+    if (!d.store) d.store = 'Road Runner Sports';
+  }
+
+  return allItems;
+}
+
 
 /**
  * Main handler - triggered by Vercel Cron
@@ -74,6 +132,27 @@ try {
   scraperResults["Marathon Sports"] = { success: false, error: error.message };
   console.error("[SCRAPER] Marathon Sports failed:", error.message);
 }
+
+
+    // Scrape Road Runner Sports via Apify
+    try {
+      await randomDelay(); // keep your politeness delay between sites
+      const rrDeals = await fetchRoadRunnerDeals();
+      allDeals.push(...rrDeals);
+      scraperResults['Road Runner Sports'] = { success: true, count: rrDeals.length };
+      console.log(`[SCRAPER] Road Runner Sports: ${rrDeals.length} deals`);
+    } catch (error) {
+      scraperResults['Road Runner Sports'] = { success: false, error: error.message };
+      console.error('[SCRAPER] Road Runner Sports failed:', error.message);
+    }
+
+    // Calculate statistics
+    const dealsByStore = {};
+    allDeals.forEach(deal => {
+      dealsByStore[deal.store] = (dealsByStore[deal.store] || 0) + 1;
+    });
+
+
     
     // Calculate statistics
     const dealsByStore = {};
