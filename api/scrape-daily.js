@@ -289,31 +289,33 @@ module.exports = async (req, res) => {
       console.error('[SCRAPER] Zappos failed:', error.message);
     }
 
-    // === GLOBAL DE-DUPLICATION ACROSS ALL SOURCES ===
-    console.log('[SCRAPER] De-duplicating deals across all sources...');
-    const uniqueDeals = [];
-    const seenGlobal = new Set();
+   // === GLOBAL DE-DUPLICATION BY URL ONLY ===
+console.log('[SCRAPER] De-duplicating deals by URL...');
+const uniqueDeals = [];
+const seenUrls = new Set();
 
-    for (const d of allDeals) {
-      if (!d) continue;
-      const storeKey = (d.store || '').trim().toLowerCase();
-      const urlKey = (d.url || '').trim();
+for (const d of allDeals) {
+  if (!d) continue;
 
-      // If no URL, we can't key it reliably, so just keep it
-      if (!urlKey) {
-        uniqueDeals.push(d);
-        continue;
-      }
+  const urlKey = (d.url || '').trim();
 
-      const key = `${storeKey}::${urlKey}`;
-      if (seenGlobal.has(key)) continue;
-      seenGlobal.add(key);
-      uniqueDeals.push(d);
-    }
+  // If no URL, we can't key it reliably, so just keep it
+  if (!urlKey) {
+    uniqueDeals.push(d);
+    continue;
+  }
 
-    console.log(
-      `[SCRAPER] De-duplication complete. Before: ${allDeals.length}, After: ${uniqueDeals.length}`
-    );
+  // Duplicate if we've already seen this exact URL (any store)
+  if (seenUrls.has(urlKey)) continue;
+
+  seenUrls.add(urlKey);
+  uniqueDeals.push(d);
+}
+
+console.log(
+  `[SCRAPER] De-duplication complete. Before: ${allDeals.length}, After: ${uniqueDeals.length}`
+);
+
 
     // From here on, work with the deduped list
     const dealsToUse = uniqueDeals;
