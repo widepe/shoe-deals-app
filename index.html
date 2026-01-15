@@ -2502,6 +2502,156 @@ statusMessageEl.textContent = `Top ${results.length} deal${results.length === 1 
     const original = item.originalPrice != null ? Number(item.originalPrice) : NaN;
 
     if (
-      Number.isFinite(pric  
+      Number.isFinite(price) &&
+      Number.isFinite(original) &&
+      original > 0 &&
+      price < original
+    ) {
+      const pct = Math.round(((original - price) / original) * 100);
+      return {
+        hasDiscount: true,
+        current: price.toFixed(2),
+        original: original.toFixed(2),
+        percent: pct
+      };
+    }
+
+    if (Number.isFinite(price) && typeof item.discount === "string" && item.discount.includes("%")) {
+      const m = item.discount.match(/(-?\d+(?:\.\d+)?)%/);
+      if (m) {
+        const pct = Math.abs(Number(m[1]));
+        if (Number.isFinite(pct) && pct > 0 && pct < 100) {
+          const origGuess = price / (1 - pct / 100);
+          if (Number.isFinite(origGuess) && origGuess > price) {
+            return {
+              hasDiscount: true,
+              current: price.toFixed(2),
+              original: origGuess.toFixed(2),
+              percent: Math.round(pct)
+            };
+          }
+        }
+      }
+    }
+
+    return { hasDiscount: false };
+  }
+  
+  // Helper: Create deal card (matches your main createDealCard function)
+  function createScannerCard(item) {
+    const discount = getDiscountInfo(item);
+    const isHotDeal = discount.hasDiscount && discount.percent >= 50;
+
+    const card = document.createElement("div");
+    card.className = "scanner-card";
+    if (isHotDeal) {
+      card.classList.add("hot-deal");
+    }
+
+    const link = document.createElement("a");
+    link.className = "scanner-card-link";
+    link.href = item.url || "#";
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+
+    // Image + badge
+    const imgWrapper = document.createElement("div");
+    imgWrapper.className = "scanner-card-image-wrapper";
+
+    const img = document.createElement("img");
+    img.src = item.image || "https://placehold.co/600x400?text=Running+Shoe";
+    img.alt = item.title || "Running shoe deal";
+    imgWrapper.appendChild(img);
+
+    if (discount.hasDiscount) {
+      const badge = document.createElement("div");
+      badge.className = "scanner-discount-badge";
+      if (isHotDeal) {
+        badge.classList.add("hot-badge");
+      }
+      badge.textContent = `${discount.percent}% OFF`;
+      imgWrapper.appendChild(badge);
+    }
+
+    link.appendChild(imgWrapper);
+
+    // Title
+    const titleDiv = document.createElement("div");
+    titleDiv.className = "scanner-card-title";
+    titleDiv.textContent = `${item.brand} ${item.model}`;
+    link.appendChild(titleDiv);
+
+    // Store
+    if (item.store) {
+      const storeDiv = document.createElement("div");
+      storeDiv.className = "scanner-card-store";
+      storeDiv.textContent = item.store;
+      link.appendChild(storeDiv);
+    }
+
+    // Price row
+    const priceRow = document.createElement("div");
+    priceRow.className = "scanner-card-price-row";
+
+    const priceSpan = document.createElement("span");
+    priceSpan.className = "scanner-price";
+    const currentPrice = Number(item.price);
+    if (Number.isFinite(currentPrice)) {
+      priceSpan.textContent = `$${currentPrice.toFixed(2)}`;
+    } else {
+      priceSpan.textContent = item.price ? String(item.price) : "—";
+    }
+    priceRow.appendChild(priceSpan);
+
+    if (discount.hasDiscount) {
+      const origSpan = document.createElement("span");
+      origSpan.className = "scanner-card-original";
+      origSpan.textContent = `$${discount.original}`;
+      priceRow.appendChild(origSpan);
+    }
+
+    link.appendChild(priceRow);
+    card.appendChild(link);
+    return card;
+  }
+  
+  // Store filter change handler
+  storeFilter.addEventListener('change', (e) => {
+    const store = e.target.value;
+    
+    if (!store) {
+      resultsDiv.innerHTML = '';
+      return;
+    }
+    
+    resultsDiv.innerHTML = '<p style="text-align: center; padding: 20px; color: #666;">Filtering...</p>';
+    
+    // Filter by selected store (exact match)
+    const storeDeals = allDeals.filter(deal => deal.store === store);
+    
+    resultsDiv.innerHTML = '';
+    
+    if (!storeDeals.length) {
+      resultsDiv.innerHTML = `<p style="text-align: center; padding: 20px; color: #666;">No deals found for "${store}".<br><br>Check the debug box above to see actual store names in the data.</p>`;
+      return;
+    }
+    
+    // Add header
+    const header = document.createElement('div');
+    header.style.cssText = 'font-weight: 700; font-size: 0.95rem; margin-bottom: 1rem; text-align: center; color: #214478ff;';
+    header.textContent = `${storeDeals.length} deals from ${store}`;
+    resultsDiv.appendChild(header);
+    
+    // Create cards for each deal
+    storeDeals.forEach(deal => {
+      const card = createScannerCard(deal);
+      resultsDiv.appendChild(card);
+    });
+  });
+})();
+</script>
+<!-- ============================================ -->
+<!-- END TEMPORARY STORE SCANNER -->
+<!-- ============================================ -->
 </body>
 </html>
