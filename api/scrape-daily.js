@@ -62,6 +62,7 @@ async function fetchRoadRunnerDeals() {
 
   return allItems;
 }
+
 /**
  * Runs the Zappos Apify actor and returns its dataset as Deal[].
  */
@@ -170,9 +171,6 @@ async function fetchReiDeals() {
   return mapped;
 }
 
-
-
-
 /**
  * Main handler - triggered by Vercel Cron
  */
@@ -240,7 +238,7 @@ module.exports = async (req, res) => {
     } catch (error) {
       scraperResults["Marathon Sports"] = { success: false, error: error.message };
       console.error("[SCRAPER] Marathon Sports failed:", error.message);
- }
+    }
     
     // Scrape Road Runner Sports via Apify
     try {
@@ -279,7 +277,7 @@ module.exports = async (req, res) => {
       console.error('[SCRAPER] REI Outlet failed:', error.message);
     }    
 
-// Scrape Zappos via Apify
+    // Scrape Zappos via Apify
     try {
       await randomDelay(); // keep your politeness delay between sites
       const zapposDeals = await fetchZapposDeals();
@@ -289,15 +287,45 @@ module.exports = async (req, res) => {
     } catch (error) {
       scraperResults['Zappos'] = { success: false, error: error.message };
       console.error('[SCRAPER] Zappos failed:', error.message);
-    }    
+    }
+
+    // === GLOBAL DE-DUPLICATION ACROSS ALL SOURCES ===
+    console.log('[SCRAPER] De-duplicating deals across all sources...');
+    const uniqueDeals = [];
+    const seenGlobal = new Set();
+
+    for (const d of allDeals) {
+      if (!d) continue;
+      const storeKey = (d.store || '').trim().toLowerCase();
+      const urlKey = (d.url || '').trim();
+
+      // If no URL, we can't key it reliably, so just keep it
+      if (!urlKey) {
+        uniqueDeals.push(d);
+        continue;
+      }
+
+      const key = `${storeKey}::${urlKey}`;
+      if (seenGlobal.has(key)) continue;
+      seenGlobal.add(key);
+      uniqueDeals.push(d);
+    }
+
+    console.log(
+      `[SCRAPER] De-duplication complete. Before: ${allDeals.length}, After: ${uniqueDeals.length}`
+    );
+
+    // From here on, work with the deduped list
+    const dealsToUse = uniqueDeals;
+
     // STEP 1: Shuffle all deals to randomize baseline order
     console.log('[SCRAPER] Shuffling deals for fair distribution...');
-    allDeals.sort(() => Math.random() - 0.5);
+    dealsToUse.sort(() => Math.random() - 0.5);
     
     // STEP 2: Sort by discount percentage (highest first)
     // Stable sort preserves random order for items with same discount
     console.log('[SCRAPER] Sorting by discount percentage...');
-    allDeals.sort((a, b) => {
+    dealsToUse.sort((a, b) => {
       const discountA = a.originalPrice && a.price 
         ? ((a.originalPrice - a.price) / a.originalPrice * 100) 
         : 0;
@@ -307,29 +335,34 @@ module.exports = async (req, res) => {
       return discountB - discountA;  // Highest discount first
     });
     
-    console.log('[SCRAPER] Deals shuffled and sorted. Top deal:', 
-      allDeals[0]?.title, 
+    console.log(
+      '[SCRAPER] Deals shuffled and sorted. Top deal:',
+      dealsToUse[0]?.title, 
       'at', 
-      allDeals[0]?.store,
+      dealsToUse[0]?.store,
       '- Discount:', 
-      allDeals[0]?.originalPrice && allDeals[0]?.price 
-        ? Math.round((allDeals[0].originalPrice - allDeals[0].price) / allDeals[0].originalPrice * 100) + '%'
+      dealsToUse[0]?.originalPrice && dealsToUse[0]?.price 
+        ? Math.round(
+            (dealsToUse[0].originalPrice - dealsToUse[0].price) /
+            dealsToUse[0].originalPrice * 100
+          ) + '%'
         : 'N/A'
     );
 
     // Calculate statistics
-      const dealsByStore = {};
-      allDeals.forEach(deal => {
-      dealsByStore[deal.store] = (dealsByStore[deal.store] || 0) + 1;
+    const dealsByStore = {};
+    dealsToUse.forEach(deal => {
+      const storeName = deal.store || 'Unknown';
+      dealsByStore[storeName] = (dealsByStore[storeName] || 0) + 1;
     });
 
     // Prepare output
     const output = {
       lastUpdated: new Date().toISOString(),
-      totalDeals: allDeals.length,
+      totalDeals: dealsToUse.length,
       dealsByStore,
       scraperResults,
-      deals: allDeals
+      deals: dealsToUse
     };
 
     // Save to Vercel Blob Storage (fixed filename, no random suffix)
@@ -341,11 +374,11 @@ module.exports = async (req, res) => {
     console.log('[SCRAPER] Saved to blob:', blob.url);
 
     const duration = Date.now() - startTime;
-    console.log(`[SCRAPER] Complete: ${allDeals.length} deals in ${duration}ms`);
+    console.log(`[SCRAPER] Complete: ${dealsToUse.length} deals in ${duration}ms`);
 
     return res.status(200).json({
       success: true,
-      totalDeals: allDeals.length,
+      totalDeals: dealsToUse.length,
       dealsByStore,
       scraperResults,
       blobUrl: blob.url,
@@ -376,7 +409,9 @@ async function scrapeRunningWarehouse() {
   ];
 
   const deals = [];
- const seenUrls = new Set();   try {
+  const seenUrls = new Set();
+
+  try {
     for (const url of urls) {
       console.log(`[SCRAPER] Fetching RW page: ${url}`);
 
@@ -458,8 +493,10 @@ async function scrapeRunningWarehouse() {
             }
           }
         }
-    if (seenUrls.has(cleanUrl)) return;
+
+        if (seenUrls.has(cleanUrl)) return;
         seenUrls.add(cleanUrl);
+
         deals.push({
           title,
           brand,
@@ -499,7 +536,9 @@ async function scrapeFleetFeet() {
   ];
 
   const deals = [];
-const seenUrls = new Set();  try {
+  const seenUrls = new Set();
+
+  try {
     for (const url of urls) {
       console.log(`[SCRAPER] Fetching Fleet Feet page: ${url}`);
 
@@ -547,8 +586,11 @@ const seenUrls = new Set();  try {
         if (!fullUrl.startsWith('http')) {
           fullUrl = 'https://www.fleetfeet.com' + (href.startsWith('/') ? '' : '/') + href;
         }
-     if (seenUrls.has(fullUrl)) return;
-        seenUrls.add(fullUrl);        deals.push({
+
+        if (seenUrls.has(fullUrl)) return;
+        seenUrls.add(fullUrl);
+
+        deals.push({
           title,
           brand,
           model,
@@ -674,6 +716,7 @@ async function scrapeLukesLocker() {
     throw error;
   }
 }
+
 /**
  * Scrape Marathon Sports
  */
@@ -762,22 +805,22 @@ async function scrapeMarathonSports() {
         
         if (!valid || !salePrice || salePrice <= 0) return;
 
-  // Get image URL - check both link and container
-let imageUrl = null;
-let $img = $link.find('img').first();
+        // Get image URL - check both link and container
+        let imageUrl = null;
+        let $img = $link.find('img').first();
 
-// If not in link, check the container
-if (!$img.length) {
-  $img = $container.find('img').first();
-}
+        // If not in link, check the container
+        if (!$img.length) {
+          $img = $container.find('img').first();
+        }
 
-if ($img.length) {
-  imageUrl = $img.attr('src') || $img.attr('data-src');
-  // Image URLs are already absolute on Marathon Sports
-  if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('//')) {
-    imageUrl = 'https://www.marathonsports.com' + (imageUrl.startsWith('/') ? '' : '/') + imageUrl;
-  }
-}
+        if ($img.length) {
+          imageUrl = $img.attr('src') || $img.attr('data-src');
+          // Image URLs are already absolute on Marathon Sports
+          if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('//')) {
+            imageUrl = 'https://www.marathonsports.com' + (imageUrl.startsWith('/') ? '' : '/') + imageUrl;
+          }
+        }
 
         // Mark this URL as seen
         seenUrls.add(fullUrl);
@@ -807,6 +850,7 @@ if ($img.length) {
     throw error;
   }
 }
+
 /**
  * Helper: Parse brand and model from title
  */
@@ -835,10 +879,9 @@ function parseBrandModel(title) {
   }
 
   // Clean up common suffixes
-
-model = model.replace(/^(Clearance|Sale)\s+/gi, '');
-
-model = model.replace(/\s*-?\s*(Clearance|Sale|Running|Shoes|Race|Trail|Walking)\s*$/gi, '');  model = model.replace(/\s+/g, ' ').trim();
+  model = model.replace(/^(Clearance|Sale)\s+/gi, '');
+  model = model.replace(/\s*-?\s*(Clearance|Sale|Running|Shoes|Race|Trail|Walking)\s*$/gi, '');
+  model = model.replace(/\s+/g, ' ').trim();
 
   return { brand, model };
 }
