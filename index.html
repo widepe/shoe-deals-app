@@ -341,10 +341,16 @@
 }
 
 
-    .card-title {
-      font-size: 0.92rem;
-      font-weight: 600;
-    }
+
+
+.card-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;     /* number of visible lines */
+  -webkit-box-orient: vertical;
+}
 
     .card-store {
       font-size: 0.82rem;
