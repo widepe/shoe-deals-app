@@ -100,7 +100,7 @@ module.exports = async (req, res) => {
 
     // Filter deals - flexible matching based on what's provided
     // NOTE: Deals are already sorted by discount % in the blob (shuffled first, then sorted)
-    // So we just filter and take the first 12 matches
+    // So we just filter and take the first 24 matches
     const results = deals
       .filter((deal) => {
         const dealBrand = normalize(deal.brand);
@@ -138,7 +138,7 @@ module.exports = async (req, res) => {
         image: deal.image || "https://placehold.co/600x400?text=Running+Shoe"
       }))
       // REMOVED: .sort() - deals are already sorted by discount in blob
-      .slice(0, 12);  // Take top 12 best deals (already sorted by discount)
+      .slice(0, 24);  // Take top 24 best deals (already sorted by discount)
 
     // Cache results
     setCache(cacheKey, results);
