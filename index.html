@@ -11,17 +11,11 @@
       position: relative;
     }
 
-   .card-image-wrapper {
-  position: relative;
-  width: 100%;
-  height: 150px;              /* fixed visible height */
-  overflow: hidden;           /* clip anything that overflows */
-  border-radius: 0.6rem;
-  background: white;
-  border: 1px solid #214478ff;
-  box-sizing: border-box;
-}
-
+    /* Wrap the image so we can pin the badge to it */
+    .card-image-wrapper {
+      position: relative;
+      width: 100%;
+    }
 
     /* Discount badge in corner of image */
     .discount-badge {
@@ -345,16 +339,15 @@
       height: 100%;
     }
 
-.card img {
-  width: 100%;
-  height: 100%;        /* fill the wrapper’s 150px */
-  object-fit: cover;   /* fill + crop */
-  object-position: center;
-  display: block;      /* remove inline-img gaps */
-  /* no border/background here – wrapper handles that now */
-}
-
-
+    .card img {
+      width: 100%;
+      border-radius: 0.6rem;
+      object-fit: contain;
+      height: 150px;
+      background: white;
+      border: 1px solid #214478ff;
+      box-sizing: border-box;
+    }
 
 .card-title {
   font-size: 0.92rem;
@@ -1501,7 +1494,7 @@ if (contactLink && contactModal) {
       const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
       const mon = months[d.getMonth()];
       const yy = String(d.getFullYear()).slice(-2);
-      return `${day}-${mon}-${yy}`;
+      return ${day}-${mon}-${yy};
     }
 
     function computeAlertStatus(alert) {
@@ -1519,7 +1512,7 @@ if (contactLink && contactModal) {
     }
 
     function alertKey(brand, model) {
-      return `${normalizeStr(brand)}::${normalizeStr(model)}`;
+      return ${normalizeStr(brand)}::${normalizeStr(model)};
     }
 
     function findActiveAlertFor(brand, model) {
@@ -1679,7 +1672,7 @@ if (contactLink && contactModal) {
         tr.appendChild(tdDate);
 
         const tdShoe = document.createElement("td");
-        const shoeText = `${a.brand} ${a.model}`;
+        const shoeText = ${a.brand} ${a.model};
         tdShoe.textContent = shoeText.length > 30 ? shoeText.substring(0, 30) + '...' : shoeText;
         tdShoe.title = shoeText;
         tr.appendChild(tdShoe);
@@ -1690,7 +1683,7 @@ if (contactLink && contactModal) {
 
         const tdTarget = document.createElement("td");
         tdTarget.className = "target-cell";
-        tdTarget.textContent = `$${Number(a.targetPrice).toFixed(0)}`;
+        tdTarget.textContent = $${Number(a.targetPrice).toFixed(0)};
         tr.appendChild(tdTarget);
 
         const tdStatus = document.createElement("td");
@@ -2026,7 +2019,7 @@ modelInput.addEventListener("click", () => {
 
     function formatPriceValue(value) {
       const num = Number(value);
-      if (Number.isFinite(num)) return `$${num.toFixed(2)}`;
+      if (Number.isFinite(num)) return $${num.toFixed(2)};
       if (typeof value === "string") return value;
       return "—";
     }
@@ -2076,7 +2069,7 @@ modelInput.addEventListener("click", () => {
           badge.classList.add("hot-badge");
         }
 
-        badge.textContent = `${discount.percent}% OFF`;
+        badge.textContent = ${discount.percent}% OFF;
         imgWrapper.appendChild(badge);
       }
 
@@ -2086,7 +2079,7 @@ modelInput.addEventListener("click", () => {
       // --- title & store ---
  const titleDiv = document.createElement("div");
 titleDiv.className = "card-title";
-titleDiv.textContent = `${item.brand} ${item.model}`;
+titleDiv.textContent = ${item.brand} ${item.model};
 link.appendChild(titleDiv);
 
       if (item.store) {
@@ -2105,7 +2098,7 @@ link.appendChild(titleDiv);
 
       const currentPrice = Number(item.price);
       if (Number.isFinite(currentPrice)) {
-        priceSpan.textContent = `$${currentPrice.toFixed(2)}`;
+        priceSpan.textContent = $${currentPrice.toFixed(2)};
       } else {
         priceSpan.textContent = item.price ? String(item.price) : "—";
       }
@@ -2114,7 +2107,7 @@ link.appendChild(titleDiv);
       if (discount.hasDiscount) {
         const origSpan = document.createElement("span");
         origSpan.className = "card-original-price";
-        origSpan.textContent = `$${discount.original}`;
+        origSpan.textContent = $${discount.original};
         priceRow.appendChild(origSpan);
       }
 
@@ -2148,20 +2141,20 @@ async function loadDailyDeals() {
     // UPDATE TAGLINE WITH REAL TOTAL DEAL COUNT FROM BLOB
     try {
       const cacheBuster = Date.now();
-      const resp = await fetch(`https://v3gjlrmpc76mymfc.public.blob.vercel-storage.com/deals.json?t=${cacheBuster}`);
+      const resp = await fetch(https://v3gjlrmpc76mymfc.public.blob.vercel-storage.com/deals.json?t=${cacheBuster});
       const blobData = await resp.json();
       const allDeals = (blobData && Array.isArray(blobData.deals)) ? blobData.deals : [];
 
       if (taglineEl) {
         const count = allDeals.length;
-        taglineEl.textContent = `There are ${count.toLocaleString()} shoe deals today. Let's find yours!`;
+        taglineEl.textContent = There are ${count.toLocaleString()} shoe deals today. Let's find yours!;
       }
     } catch (e) {
       console.error("Error loading total deals for tagline:", e);
       // Fallback: use the 12 daily deals if blob fetch fails
       if (taglineEl) {
         const count = deals.length;
-        taglineEl.textContent = `There are ${count.toLocaleString()} shoe deals today. Let's find yours!`;
+        taglineEl.textContent = There are ${count.toLocaleString()} shoe deals today. Let's find yours!;
       }
     }
 
@@ -2200,20 +2193,20 @@ if (!brandTyped && !modelTyped) {
   if (existingActive) {
     alertPromptBtn.style.display = "none";
     const daysLeft = computeDaysLeft(existingActive);
-    alertExistingInfo.innerHTML = `
+    alertExistingInfo.innerHTML = 
       <strong>You have an active alert set for this shoe.</strong><br><br>
       <strong>Shoe:</strong> ${existingActive.brand} ${existingActive.model}<br>
       <strong>Days Remaining:</strong> ${daysLeft}<br>
       <strong>Target Price:</strong> $${Number(existingActive.targetPrice).toFixed(2)}<br><br>
       Open <strong>My Alerts</strong> to manage it.
-    `;
+    ;
     alertExistingInfo.style.display = "block";
   } else {
     alertPromptBtn.style.display = "block";
     alertExistingInfo.style.display = "none";
   }
   
-  alertProductName.textContent = `${brandTyped} ${modelTyped}`;
+  alertProductName.textContent = ${brandTyped} ${modelTyped};
   
 const params = new URLSearchParams();
 if (brandTyped) params.append('brand', brandTyped);
@@ -2233,11 +2226,11 @@ try {
   const results = (data && data.results) ? data.results : [];
   
   if (!results.length) {
-    statusMessageEl.textContent = `No shoe deals today for ${brandTyped} ${modelTyped} — but check spelling.`;
+    statusMessageEl.textContent = No shoe deals today for ${brandTyped} ${modelTyped} — but check spelling.;
     return;
   }
   
-statusMessageEl.textContent = `Top ${results.length} deal${results.length === 1 ? '' : 's'} found for ${brandTyped} ${modelTyped}`;
+statusMessageEl.textContent = Top ${results.length} deal${results.length === 1 ? '' : 's'} found for ${brandTyped} ${modelTyped};
       resultsEl.innerHTML = "";
   
   results.forEach(item => {
@@ -2249,7 +2242,7 @@ statusMessageEl.textContent = `Top ${results.length} deal${results.length === 1 
     alertPromptBtn.addEventListener("click", () => {
       alertPromptBtn.style.display = "none";
       alertForm.style.display = "flex";
-      alertProductName.textContent = `${currentSearch.brand} ${currentSearch.model}`;
+      alertProductName.textContent = ${currentSearch.brand} ${currentSearch.model};
     });
 
     alertSubmitBtn.addEventListener("click", async () => {
@@ -2271,24 +2264,24 @@ statusMessageEl.textContent = `Top ${results.length} deal${results.length === 1 
       const existingActive = findActiveAlertFor(brand, model);
       if (existingActive) {
         alertForm.style.display = "none";
-        alertConfirmation.innerHTML = `
+        alertConfirmation.innerHTML = 
           <strong>This shoe already has an active alert.</strong><br><br>
           To edit the alert, please manage it in <strong>My Alerts</strong>.
-        `;
+        ;
         alertConfirmation.style.display = "block";
         return;
       }
 
       const isEmail = contact.includes('@');
       const payload = {
-        product: `${brand} ${model}`,
+        product: ${brand} ${model},
         targetPrice: Number(priceNum).toFixed(2),
         email: isEmail ? contact : "",
         phone: isEmail ? "" : contact
       };
 
       const newAlert = {
-        id: `a_${Math.random().toString(36).slice(2)}_${Date.now()}`,
+        id: a_${Math.random().toString(36).slice(2)}_${Date.now()},
         key: alertKey(brand, model),
         setAt: nowMs(),
         brand,
@@ -2307,10 +2300,10 @@ statusMessageEl.textContent = `Top ${results.length} deal${results.length === 1 
         });
 
         alertForm.style.display = "none";
-        alertConfirmation.innerHTML = `
+        alertConfirmation.innerHTML = 
           <strong>Price alert set!</strong><br><br>
           We'll notify you at <strong>${contact}</strong> when <strong>${brand} ${model}</strong> drops below <strong>$${Number(priceNum).toFixed(2)}</strong>.
-        `;
+        ;
         alertConfirmation.style.display = "block";
       } catch (err) {
         console.error("Alert submission error:", err);
