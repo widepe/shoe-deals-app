@@ -99,6 +99,8 @@ module.exports = async (req, res) => {
     console.log("[/api/search] Parsed:", { brand, model });
 
     // Filter deals - flexible matching based on what's provided
+    // NOTE: Deals are already sorted by discount % in the blob (shuffled first, then sorted)
+    // So we just filter and take the first 12 matches
     const results = deals
       .filter((deal) => {
         const dealBrand = normalize(deal.brand);
@@ -126,8 +128,8 @@ module.exports = async (req, res) => {
       })
       .map((deal) => ({
         title: deal.title,
-            brand: deal.brand,      
-    model: deal.model,     
+        brand: deal.brand,      
+        model: deal.model,     
         price: Number(deal.price),
         originalPrice: deal.originalPrice ? Number(deal.originalPrice) : null,
         discount: deal.discount || null,
@@ -135,8 +137,8 @@ module.exports = async (req, res) => {
         url: deal.url,
         image: deal.image || "https://placehold.co/600x400?text=Running+Shoe"
       }))
-      .sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity))
-      .slice(0, 12);
+      // REMOVED: .sort() - deals are already sorted by discount in blob
+      .slice(0, 12);  // Take top 12 best deals (already sorted by discount)
 
     // Cache results
     setCache(cacheKey, results);
