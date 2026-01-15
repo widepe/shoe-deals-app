@@ -14,10 +14,15 @@
      /* Wrap the image so we can pin the badge to it */
 
 .card-image-wrapper {
+  position: relative;
   width: 100%;
-  height: 150px;      /* controls visible region */
-  overflow: hidden;   /* hides top/bottom overflow */
+  height: 150px;     /* visible window */
+  overflow: hidden;  /* crop extra */
+  display: flex;
+  align-items: center;   /* vertical center */
+  justify-content: center; /* horizontal center */
 }
+
 
 
     /* Discount badge in corner of image */
@@ -331,14 +336,15 @@
 
 
 .card img {
+  display: block;
   width: 100%;
-  height: auto;       /* preserves aspect ratio */
-  display: block;     /* prevents weird gaps */
+  height: auto;
   background: white;
   border: 1px solid #214478ff;
   border-radius: 0.6rem;
   box-sizing: border-box;
 }
+
 
 
 
