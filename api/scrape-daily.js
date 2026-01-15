@@ -290,6 +290,33 @@ module.exports = async (req, res) => {
       scraperResults['Zappos'] = { success: false, error: error.message };
       console.error('[SCRAPER] Zappos failed:', error.message);
     }    
+    // STEP 1: Shuffle all deals to randomize baseline order
+    console.log('[SCRAPER] Shuffling deals for fair distribution...');
+    allDeals.sort(() => Math.random() - 0.5);
+    
+    // STEP 2: Sort by discount percentage (highest first)
+    // Stable sort preserves random order for items with same discount
+    console.log('[SCRAPER] Sorting by discount percentage...');
+    allDeals.sort((a, b) => {
+      const discountA = a.originalPrice && a.price 
+        ? ((a.originalPrice - a.price) / a.originalPrice * 100) 
+        : 0;
+      const discountB = b.originalPrice && b.price 
+        ? ((b.originalPrice - b.price) / b.originalPrice * 100) 
+        : 0;
+      return discountB - discountA;  // Highest discount first
+    });
+    
+    console.log('[SCRAPER] Deals shuffled and sorted. Top deal:', 
+      allDeals[0]?.title, 
+      'at', 
+      allDeals[0]?.store,
+      '- Discount:', 
+      allDeals[0]?.originalPrice && allDeals[0]?.price 
+        ? Math.round((allDeals[0].originalPrice - allDeals[0].price) / allDeals[0].originalPrice * 100) + '%'
+        : 'N/A'
+    );
+
     // Calculate statistics
       const dealsByStore = {};
       allDeals.forEach(deal => {
