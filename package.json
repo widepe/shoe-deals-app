@@ -5,5 +5,7 @@
     "cheerio": "^1.0.0-rc.12",
     "axios": "^1.6.0",
     "@vercel/blob": "^0.23.0",
-    "apify-client": "^2.3.0"  }
+    "apify-client": "^2.3.0",
+    "@sendgrid/mail": "^7.7.0"
+  }
 }
