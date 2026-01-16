@@ -6,6 +6,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const { put } = require('@vercel/blob');
 const { ApifyClient } = require('apify-client');
+const { cleanModelName } = require('./modelNameCleaner');
 
 // Optional JSDoc to document the shape, not required to work:
 /**
