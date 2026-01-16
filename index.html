@@ -113,19 +113,19 @@
 
     .brand-logo:hover { opacity: 0.9; }
     
-input[type="text"],
-input[type="search"] {
-  width: 100%;
-  height: 42px;
-  padding: 0 2.1rem 0 0.75rem;
-  border-radius: 0.5rem;
-  border: 1px solid #214478ff;
-  background: #fafdf4;
-  font-size: 1rem;
-  box-sizing: border-box;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
-  color: #444;
-}
+    input[type="text"],
+    input[type="search"] {
+      width: 100%;
+      height: 42px;
+      padding: 0 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid #214478ff;
+      background: #fafdf4;
+      font-size: 1rem;
+      box-sizing: border-box;
+      transition: border-color 0.2s ease, background-color 0.2s ease;
+      color: #444;
+    }
 
     form {
       display: flex;
@@ -144,20 +144,6 @@ input[type="search"] {
       max-width: 220px;
       flex: 1 1 200px;
     }
-
-    /* Paw icon inside inputs */
-    .paw {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 1rem;
-      opacity: 0.75;
-      pointer-events: none;
-      transform-origin: 50% 70%;
-    }
-
-    .paw.hidden { display: none; }
 
     /* Icon rock animations */
     @keyframes iconRock {
@@ -311,11 +297,11 @@ input[type="search"] {
       font-size: 0.92rem;
       font-weight: 600;
       display: -webkit-box;
-      -webkit-line-clamp: 3;    /* allow up to 3 lines */
+      -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
-      overflow: hidden;         /* hide extra text */
-      text-overflow: ellipsis;  /* optional ... */
-      min-height: calc(1.2em * 3);  /* reserve room for 3 lines */
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-height: calc(1.2em * 3);
     }
 
     .card-store {
@@ -365,6 +351,7 @@ input[type="search"] {
       text-align: center;
     }
 
+    .hidden { display: none !important; }
 
     /* Footer */
     .footer {
@@ -406,13 +393,11 @@ input[type="search"] {
     <form id="search-form" method="POST">
       <div class="input-wrapper">
         <input id="brand" type="text" placeholder="Enter Shoe Brand" autocomplete="off"/>
-        <span class="paw rock" id="brandPaw">🐾</span>
         <div id="brandSuggestions" class="suggestions"></div>
       </div>
 
       <div class="input-wrapper">
         <input id="model" type="text" placeholder="Enter Shoe Model" autocomplete="off" class="model-active"/>
-        <span class="paw hidden" id="modelPaw">🐾</span>
         <div id="modelSuggestions" class="suggestions"></div>
       </div>
 
@@ -432,8 +417,6 @@ input[type="search"] {
 
       <div class="results" id="results"></div>
       <p class="disclaimer">Shoe Beagle does not sell products directly and is not responsible for changes in price, availability, or shipping terms on retailer sites.</p>
-
-      
     </div>
 
     <!-- Footer -->
@@ -451,11 +434,12 @@ input[type="search"] {
   <script>
     const form = document.getElementById("search-form");
     // Prevent Enter from submitting the form — only Fetch button should submit
-form.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-  }
-});
+    form.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+      }
+    });
+    
     const statusMessageEl = document.getElementById("statusMessage");
     const resultsEl = document.getElementById("results");
     const dailyDeals = document.getElementById("dailyDeals");
@@ -468,9 +452,6 @@ form.addEventListener("keydown", (e) => {
     const brandSuggestions = document.getElementById("brandSuggestions");
     const modelSuggestions = document.getElementById("modelSuggestions");
 
-    const brandPaw = document.getElementById("brandPaw");
-    const modelPaw = document.getElementById("modelPaw");
-
     const mainContent = document.getElementById("mainContent");
     const logoLink = document.getElementById("logoLink");
 
@@ -478,7 +459,6 @@ form.addEventListener("keydown", (e) => {
 
     let currentSearch = { brand: "", model: "" };
     let brandSelected = false;
-
 
     // Set footer year
     if (footerYear) {
@@ -497,8 +477,6 @@ form.addEventListener("keydown", (e) => {
         return true;
       } catch (e) { return false; }
     }
-
-
 
     function normalizeStr(s) { return String(s || "").trim().toLowerCase(); }
     function nowMs() { return Date.now(); }
@@ -546,45 +524,42 @@ form.addEventListener("keydown", (e) => {
       return { hasDiscount: false };
     }
 
-
-
-
-  const brandModels = {
-    "361°": ["Spire","Fury","Strata","Flame"],
-    "Adidas": ["Adizero Adios","Adizero Boston","Adizero Takumi Sen","Supernova","Ultraboost Light"],
-    "Allbirds": ["Tree Dasher","Tree Flyer","Trail Runner SWT","Tree Dashers Relay"],
-    "Altra": ["Escalante","Torin","Lone Peak","Paradigm","Provision"],
-    "Asics": ["Novablast","Gel-Kayano","Gel-Nimbus","Gel-Cumulus","Metaspeed Sky"],
-    "Atreyu": ["Base Model","Artist","Race Model","Daily Trainer"],
-    "Brooks": ["Ghost","Glycerin","Adrenaline GTS","Launch","Hyperion"],
-    "Craft": ["CTM Ultra","CTM Ultra Carbon","Pro Endur","Nordlite"],
-    "Decathlon Kiprun": ["KD900","KS900","Ultralight","Race Light"],
-    "Diadora": ["Mythos Blushield","Equilibrium","Elite Volo"],
-    "Hoka": ["Clifton","Bondi","Mach","Rincon","Arahi","Carbon X"],
-    "Inov-8": ["Roadfly","Trailfly","Roclite","Mudtalon","X-Talon"],
-    "Joe Nimble": ["Addict","Trail Addict","Ultreya","WanderToes"],
-    "Karhu": ["Fusion","Ikoni","Synchron"],
-    "La Sportiva": ["Jackal","Akasha","Karacal","Mutant","Kaptiva"],
-    "Lems": ["Primal","Primal 2","Trailhead","Mesa"],
-    "Merrell": ["Vapor Glove","Trail Glove","Agility Peak","Long Sky","Morphlite"],
-    "Mizuno": ["Wave Rider","Wave Inspire","Wave Rebellion","Wave Sky"],
-    "New Balance": ["Fresh Foam 1080","FuelCell Rebel","Fresh Foam X 880","Fresh Foam More","RC Elite"],
-    "Newton": ["Gravity","Distance","Motion","Fate","Kismet"],
-    "Nike": ["Pegasus","ZoomX Vaporfly","Alphafly","Infinity Run","Structure"],
-    "Norda": ["001","002","003"],
-    "On": ["Cloudsurfer","Cloudmonster","Cloudflow","Cloudstratus","Cloudboom Echo"],
-    "Pearl Izumi": ["Flow","Floatride","Trail N2","Road N1"],
-    "Puma": ["Deviate Nitro","Velocity Nitro","Magnify Nitro"],
-    "Reebok": ["Floatride Energy","Floatride Run Fast"],
-    "Salomon": ["S/Lab Pulsar","Sense Ride","Ultra Glide"],
-    "Saucony": ["Ride","Endorphin Speed","Endorphin Pro","Kinvara","Triumph","Guide"],
-    "Skechers": ["GOrun Ride","GOrun Razor","MaxRoad"],
-    "Topo Athletic": ["Ultrafly","Phantom","Fly Lite"],
-    "Under Armour": ["HOVR Machina","HOVR Infinite","Charged Assert"],
-    "Vibram FiveFingers": ["V-Run","V-Trail","V-Alpha","KSO EVO","V-Trek"],
-    "Vivobarefoot": ["Primus Lite","Primus Trail","Geo Racer","Stealth","Addis"],
-    "Xero Shoes": ["HFS","Prio","Speed Force","Mesa Trail","Zelen"]
-      };
+    const brandModels = {
+      "361°": ["Spire","Fury","Strata","Flame"],
+      "Adidas": ["Adizero Adios","Adizero Boston","Adizero Takumi Sen","Supernova","Ultraboost Light"],
+      "Allbirds": ["Tree Dasher","Tree Flyer","Trail Runner SWT","Tree Dashers Relay"],
+      "Altra": ["Escalante","Torin","Lone Peak","Paradigm","Provision"],
+      "Asics": ["Novablast","Gel-Kayano","Gel-Nimbus","Gel-Cumulus","Metaspeed Sky"],
+      "Atreyu": ["Base Model","Artist","Race Model","Daily Trainer"],
+      "Brooks": ["Ghost","Glycerin","Adrenaline GTS","Launch","Hyperion"],
+      "Craft": ["CTM Ultra","CTM Ultra Carbon","Pro Endur","Nordlite"],
+      "Decathlon Kiprun": ["KD900","KS900","Ultralight","Race Light"],
+      "Diadora": ["Mythos Blushield","Equilibrium","Elite Volo"],
+      "Hoka": ["Clifton","Bondi","Mach","Rincon","Arahi","Carbon X"],
+      "Inov-8": ["Roadfly","Trailfly","Roclite","Mudtalon","X-Talon"],
+      "Joe Nimble": ["Addict","Trail Addict","Ultreya","WanderToes"],
+      "Karhu": ["Fusion","Ikoni","Synchron"],
+      "La Sportiva": ["Jackal","Akasha","Karacal","Mutant","Kaptiva"],
+      "Lems": ["Primal","Primal 2","Trailhead","Mesa"],
+      "Merrell": ["Vapor Glove","Trail Glove","Agility Peak","Long Sky","Morphlite"],
+      "Mizuno": ["Wave Rider","Wave Inspire","Wave Rebellion","Wave Sky"],
+      "New Balance": ["Fresh Foam 1080","FuelCell Rebel","Fresh Foam X 880","Fresh Foam More","RC Elite"],
+      "Newton": ["Gravity","Distance","Motion","Fate","Kismet"],
+      "Nike": ["Pegasus","ZoomX Vaporfly","Alphafly","Infinity Run","Structure"],
+      "Norda": ["001","002","003"],
+      "On": ["Cloudsurfer","Cloudmonster","Cloudflow","Cloudstratus","Cloudboom Echo"],
+      "Pearl Izumi": ["Flow","Floatride","Trail N2","Road N1"],
+      "Puma": ["Deviate Nitro","Velocity Nitro","Magnify Nitro"],
+      "Reebok": ["Floatride Energy","Floatride Run Fast"],
+      "Salomon": ["S/Lab Pulsar","Sense Ride","Ultra Glide"],
+      "Saucony": ["Ride","Endorphin Speed","Endorphin Pro","Kinvara","Triumph","Guide"],
+      "Skechers": ["GOrun Ride","GOrun Razor","MaxRoad"],
+      "Topo Athletic": ["Ultrafly","Phantom","Fly Lite"],
+      "Under Armour": ["HOVR Machina","HOVR Infinite","Charged Assert"],
+      "Vibram FiveFingers": ["V-Run","V-Trail","V-Alpha","KSO EVO","V-Trek"],
+      "Vivobarefoot": ["Primus Lite","Primus Trail","Geo Racer","Stealth","Addis"],
+      "Xero Shoes": ["HFS","Prio","Speed Force","Mesa Trail","Zelen"]
+    };
 
     const brands = Object.keys(brandModels).sort();
 
@@ -639,7 +614,6 @@ form.addEventListener("keydown", (e) => {
       modelInput.classList.remove("model-active");
       modelInput.classList.add("model-inactive");
       modelSuggestions.style.display = "none";
-      modelPaw.classList.add("hidden");
       brandSelected = false;
     }
 
@@ -647,55 +621,43 @@ form.addEventListener("keydown", (e) => {
       if (!modelInput.disabled) {
         modelInput.placeholder = "Enter Shoe Model";
         brandSelected = true;
-        brandPaw.classList.add("hidden");
-        modelPaw.classList.remove("hidden");
       }
     }
 
-      function updateFetchReady() {
-        const brandHasText = !!brandInput.value.trim();
-        const modelHasText = !!modelInput.value.trim();
-        const ready = brandHasText || modelHasText; // allow either
-        fetchBtn.classList.toggle("ready", ready);
-        }
+    function updateFetchReady() {
+      const brandHasText = !!brandInput.value.trim();
+      const modelHasText = !!modelInput.value.trim();
+      const ready = brandHasText || modelHasText;
+      fetchBtn.classList.toggle("ready", ready);
+    }
 
-
-   function updatePaws() {
-  brandPaw.classList.toggle("hidden", !!brandInput.value.trim());
-  modelPaw.classList.toggle("hidden", !!modelInput.value.trim());
-  updateFetchReady();
-}
-
-// initial
-
-    updatePaws();
+    // Initialize
     dailyDeals.style.display = "block";
 
     brandInput.addEventListener("input", () => {
-  const typed = brandInput.value.trim();
-  const matches = filterStartsWith(brands, typed);
+      const typed = brandInput.value.trim();
+      const matches = filterStartsWith(brands, typed);
 
-  showSuggestions(brandSuggestions, matches, (value) => {
-    brandInput.value = value;
-    brandSuggestions.style.display = "none";
-    setTimeout(() => modelInput.focus(), 0); // optional
-    updatePaws();
-  });
+      showSuggestions(brandSuggestions, matches, (value) => {
+        brandInput.value = value;
+        brandSuggestions.style.display = "none";
+        setTimeout(() => modelInput.focus(), 0);
+        updateFetchReady();
+      });
 
-  updatePaws();
-});
+      updateFetchReady();
+    });
 
-    brandInput.addEventListener("blur", () => setTimeout(() => { brandSuggestions.style.display = "none"; }, 120));
-
-
-
+    brandInput.addEventListener("blur", () => setTimeout(() => { 
+      brandSuggestions.style.display = "none"; 
+    }, 120));
 
     modelInput.addEventListener("input", () => {
       const brandKey = resolveBrand();
       const text = modelInput.value.trim();
       if (!brandKey || !brandModels[brandKey]) {
         modelSuggestions.style.display = "none";
-        updatePaws();
+        updateFetchReady();
         return;
       }
       const models = brandModels[brandKey];
@@ -704,9 +666,9 @@ form.addEventListener("keydown", (e) => {
         modelInput.value = value;
         modelSuggestions.style.display = "none";
         setTimeout(() => fetchBtn.focus(), 0);
-        updatePaws();
+        updateFetchReady();
       });
-      updatePaws();
+      updateFetchReady();
     });
 
     brandInput.addEventListener("click", () => {
@@ -717,11 +679,13 @@ form.addEventListener("keydown", (e) => {
       modelInput.select();
     });
 
-    modelInput.addEventListener("blur", () => setTimeout(() => { modelSuggestions.style.display = "none"; }, 120));
+    modelInput.addEventListener("blur", () => setTimeout(() => { 
+      modelSuggestions.style.display = "none"; 
+    }, 120));
 
     // Helper: create unified deal card (used for search + daily deals)
     function createDealCard(item) {
-      const discount = getDiscountInfo(item); // uses price + originalPrice
+      const discount = getDiscountInfo(item);
 
       const card = document.createElement("div");
       card.className = "card";
@@ -756,21 +720,19 @@ form.addEventListener("keydown", (e) => {
 
       link.appendChild(imgWrapper);
 
-      // --- title & store ---
-     // --- brand + model (instead of title) ---
-const titleDiv = document.createElement("div");
-titleDiv.className = "card-title";
+      // --- brand + model (instead of title) ---
+      const titleDiv = document.createElement("div");
+      titleDiv.className = "card-title";
 
-const brand = (item.brand || "").trim();
-const model = (item.model || "").trim();
+      const brand = (item.brand || "").trim();
+      const model = (item.model || "").trim();
 
-titleDiv.textContent =
-  (brand || model)
-    ? [brand, model].filter(Boolean).join(" ")
-    : (item.title || "Deal");
+      titleDiv.textContent =
+        (brand || model)
+          ? [brand, model].filter(Boolean).join(" ")
+          : (item.title || "Deal");
 
-link.appendChild(titleDiv);
-
+      link.appendChild(titleDiv);
 
       if (item.store) {
         const storeDiv = document.createElement("div");
@@ -841,10 +803,9 @@ link.appendChild(titleDiv);
       const brandTyped = brandInput.value.trim();
       const modelTyped = modelInput.value.trim();
 
-      // ✅ Require at least one of brand/model, not both
+      // Require at least one of brand/model
       if (!brandTyped && !modelTyped) {
         statusMessageEl.textContent = "Please enter a brand or a model.";
-        updatePaws();
         return;
       }
 
@@ -856,8 +817,6 @@ link.appendChild(titleDiv);
       statusMessageEl.textContent = "Searching deals…";
       resultsEl.innerHTML = "";
       dailyDeals.style.display = "none";
-
-
 
       const query = displayQuery;
       let data;
@@ -872,11 +831,12 @@ link.appendChild(titleDiv);
       }
 
       const results = (data && data.results) ? data.results : [];
-if (!results.length) {
-  statusMessageEl.textContent = `No results found for ${displayQuery}.`;
-  dailyDeals.style.display = "block";
-  return;
-}
+      
+      if (!results.length) {
+        statusMessageEl.textContent = `No results found for ${displayQuery}.`;
+        dailyDeals.style.display = "block";
+        return;
+      }
 
       statusMessageEl.textContent =
         `Top ${results.length} deal${results.length === 1 ? '' : 's'} found for ${displayQuery}`;
@@ -887,7 +847,6 @@ if (!results.length) {
         resultsEl.appendChild(card);
       });
     });
-
   </script>
 </body>
 </html>
