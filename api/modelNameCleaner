@@ -9,7 +9,10 @@ function cleanModelName(input) {
   model = model.replace(/^(Clearance|Sale)\s+/gi, "");
 
   // Remove trailing noise words
-  model = model.replace(/\s*-?\s*(Clearance|Sale|Running|Shoes|Race|Trail|Walking)\s*$/gi, "");
+  model = model.replace(/\s*-?\s*(Clearance|Sale|Running|Race|Trail|Walking)\s*$/gi, "");
+
+  // Remove "shoes" anywhere in the model (standalone word)
+  model = model.replace(/\bShoes\b/gi, " ");
 
   // Collapse spaces
   model = model.replace(/\s+/g, " ").trim();
