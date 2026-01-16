@@ -1,58 +1,90 @@
 // api/contact.js
-// Contact form submission endpoint
+// Contact form submission endpoint using SendGrid
+
+const sgMail = require("@sendgrid/mail");
+
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+const CONTACT_EMAIL = process.env.CONTACT_EMAIL;
+const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || CONTACT_EMAIL;
+
+if (SENDGRID_API_KEY) {
+  sgMail.setApiKey(SENDGRID_API_KEY);
+}
 
 module.exports = async (req, res) => {
   // Only allow POST requests
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!SENDGRID_API_KEY || !CONTACT_EMAIL) {
+    console.error("Missing SENDGRID_API_KEY or CONTACT_EMAIL env vars");
+    return res
+      .status(500)
+      .json({ error: "Email service not configured on the server." });
   }
 
   try {
-    const { name, email, message } = req.body;
+    const { name, email, message } = req.body || {};
 
-    // Validate inputs
+    // Validate inputs (keeps your original checks)
     if (!name || !email || !message) {
-      return res.status(400).json({ error: 'All fields are required' });
+      return res.status(400).json({ error: "All fields are required." });
     }
 
-    if (!email.includes('@')) {
-      return res.status(400).json({ error: 'Invalid email address' });
+    if (!email.includes("@")) {
+      return res.status(400).json({ error: "Invalid email address." });
     }
 
     if (message.length < 10) {
-      return res.status(400).json({ error: 'Message must be at least 10 characters' });
+      return res
+        .status(400)
+        .json({ error: "Message must be at least 10 characters." });
     }
 
-    // Your email (hidden from users!)
-    const YOUR_EMAIL = 'widepe@gmail.com';
+    const safeName = String(name).trim();
+    const safeEmail = String(email).trim();
+    const safeMessage = String(message).trim();
 
-    // For now, we'll use a simple webhook approach
-    // You can upgrade to nodemailer later if needed
-    
-    // Log the message (you can set up email later)
-    console.log('Contact form submission:', {
-      from: email,
-      name: name,
-      message: message,
-      timestamp: new Date().toISOString()
-    });
+    const subject = `New contact message from ${safeName || "Shoe Beagle visitor"}`;
 
-    // TODO: Set up actual email sending with:
-    // - Sendgrid (free tier: 100 emails/day)
-    // - Resend (free tier: 100 emails/day)
-    // - Nodemailer with Gmail SMTP
-    
-    // For now, return success
-    // The message is logged and you can check Vercel logs
-    return res.status(200).json({ 
+    const textBody = `
+New contact message from Shoe Beagle:
+
+Name: ${safeName}
+Email: ${safeEmail}
+
+Message:
+${safeMessage}
+    `.trim();
+
+    const htmlBody = `
+      <p><strong>New contact message from Shoe Beagle:</strong></p>
+      <p><strong>Name:</strong> ${safeName}</p>
+      <p><strong>Email:</strong> ${safeEmail}</p>
+      <p><strong>Message:</strong></p>
+      <p style="white-space:pre-line;">${safeMessage}</p>
+    `;
+
+    const msg = {
+      to: CONTACT_EMAIL,
+      from: FROM_EMAIL,     // must be a verified sender in SendGrid
+      replyTo: safeEmail,   // so you can just "Reply" in your inbox
+      subject,
+      text: textBody,
+      html: htmlBody,
+    };
+
+    await sgMail.send(msg);
+
+    return res.status(200).json({
       success: true,
-      message: 'Message received! We\'ll get back to you soon.'
+      message: "Message sent! We'll get back to you soon.",
     });
-
   } catch (error) {
-    console.error('Contact form error:', error);
-    return res.status(500).json({ 
-      error: 'Failed to send message. Please try again.' 
-    });
+    console.error("Contact form error:", error);
+    return res
+      .status(500)
+      .json({ error: "Failed to send message. Please try again." });
   }
 };
