@@ -1,0 +1,20 @@
+// modelNameCleaner.js
+// Cleans promo/noise words from a shoe model name (and optionally from a title string)
+
+function cleanModelName(input) {
+  let model = String(input || "").trim();
+  if (!model) return "";
+
+  // Remove leading promo words
+  model = model.replace(/^(Clearance|Sale)\s+/gi, "");
+
+  // Remove trailing noise words
+  model = model.replace(/\s*-?\s*(Clearance|Sale|Running|Shoes|Race|Trail|Walking)\s*$/gi, "");
+
+  // Collapse spaces
+  model = model.replace(/\s+/g, " ").trim();
+
+  return model;
+}
+
+module.exports = { cleanModelName };
