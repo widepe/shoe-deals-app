@@ -13,8 +13,10 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       color: #2d2d2d;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      align-items: center;
       min-height: 100vh;
+      box-sizing: border-box;
     }
 
     .container {
@@ -23,16 +25,16 @@
       background: #ffffff;
       border-radius: 0.75rem;
       border: 2px solid #214478ff;
-      padding: 1.75rem 2rem 1rem; /* reduced bottom padding */
+      padding: 1.75rem 2rem 1rem; /* snug bottom */
       box-sizing: border-box;
       line-height: 1.6;
     }
 
-    /* LOGO SAME SIZE AS HOME PAGE */
+    /* Logo same size as home page */
     .logo {
       display: block;
-      width: 600px;        /* matches home */
-      max-width: 100%;     /* scales on mobile */
+      width: 600px;
+      max-width: 100%;
       margin: 0 auto 1rem;
       cursor: pointer;
       transition: opacity 0.2s ease;
@@ -60,10 +62,10 @@
       margin: 1.2rem auto 1rem;
     }
 
-    /* BUTTON sits closer (no extra empty space after) */
+    /* Close/Home button */
     .home-btn {
       display: block;
-      margin: 1.5rem auto 0.25rem; /* pulled upward slightly */
+      margin: 1.5rem auto 0.25rem;
       padding: 0.6rem 1.25rem;
       border-radius: 999px;
       border: 1px solid #214478ff;
@@ -77,13 +79,39 @@
       transition: background 0.2s ease;
       width: max-content;
     }
-    .home-btn:hover { background: #1a3661; }
+
+    .home-btn:hover {
+      background: #1a3661;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 1.5rem;
+      padding: 0.75rem 1rem;
+      text-align: center;
+      font-size: 0.82rem;
+      color: #444;
+    }
+
+    .footer a {
+      color: #214478ff;
+      text-decoration: none;
+      font-weight: 600;
+      margin: 0 0.25rem;
+      cursor: pointer;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 
 <body>
+
   <div class="container">
 
+    <!-- Clickable logo → home -->
     <a href="/">
       <img src="/images/logo.svg" alt="Shoe Beagle Logo" class="logo">
     </a>
@@ -100,8 +128,20 @@
 
     <p><strong>Affiliate Disclosure:</strong> Some of the links on Shoe Beagle are affiliate links. This means Shoe Beagle may earn a small commission if you click a link and make a purchase, at no extra cost to you.</p>
 
+    <!-- Close returns home -->
     <a href="/" class="home-btn">Close</a>
 
   </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <a href="/about.html">About</a> |
+    <a href="/contact.html">Contact</a> |
+    <a href="/privacy.html">Privacy</a> |
+    <a href="/terms.html">Terms</a>
+    <br>
+    © 2026 Shoe Beagle. All rights reserved.
+  </div>
+
 </body>
 </html>
