@@ -12,13 +12,10 @@
     }
 
     /* Wrap the image so we can pin the badge to it */
-    /* Wrap the image so we can pin the badge to it */
     .card-image-wrapper {
       position: relative;
       width: 100%;
     }
-
-
 
     /* Discount badge in corner of image */
     .discount-badge {
@@ -296,7 +293,8 @@
 
     .daily-deals-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 200px));      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 200px));
+      gap: 1rem;
       width: 100%;
       justify-content: center;
     }
@@ -331,24 +329,17 @@
       box-sizing: border-box;
     }
 
-
-.card-title {
-  font-size: 0.92rem;
-  font-weight: 600;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;    /* allow up to 4 lines */
-  -webkit-box-orient: vertical;
-  overflow: hidden;         /* hide extra text */
-  text-overflow: ellipsis;  /* optional ... */
-  min-height: calc(1.2em * 4);  /* reserve room for 4 lines */
-}
-
-    /*
     .card-title {
       font-size: 0.92rem;
       font-weight: 600;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;    /* allow up to 4 lines */
+      -webkit-box-orient: vertical;
+      overflow: hidden;         /* hide extra text */
+      text-overflow: ellipsis;  /* optional ... */
+      min-height: calc(1.2em * 4);  /* reserve room for 4 lines */
     }
-*/
+
     .card-store {
       font-size: 0.82rem;
       color: #49543a;
@@ -394,32 +385,6 @@
       max-width: 850px;
       margin: 0.15rem auto 0;
       text-align: center;
-    }
-
-    /* About Section */
-    .about-section {
-      width: 100%;
-      max-width: 850px;
-      background: #ffffffc9;
-      border: 2px solid #214478ff;
-      border-radius: 0.75rem;
-      padding: 1.25rem 2rem 0.9rem;
-      margin-top: 1.0rem;
-      line-height: 1.7;
-      box-sizing: border-box;
-    }
-
-    .about-section h2 {
-      color: #214478ff;
-      font-size: 1.8rem;
-      margin: 0 0 0.85rem;
-      text-align: center;
-    }
-
-    .about-section p {
-      margin-bottom: 1rem;
-      font-size: 1rem;
-      color: #2d2d2d;
     }
 
     /* Alert section styles */
@@ -581,285 +546,6 @@
     .alert-confirmation strong,
     .alert-existing-info strong { color: #214478ff; }
 
-    /* My Alerts dashboard */
-    .alerts-dashboard {
-      width: 100%;
-      max-width: 850px;
-      background: #ffffffc9;
-      border: 2px solid #214478ff;
-      border-radius: 0.75rem;
-      padding: 1.25rem 1.25rem 1.5rem;
-      margin-top: 1.0rem;
-      box-sizing: border-box;
-    }
-
-    .alerts-title {
-      color: #214478ff;
-      font-size: 1.6rem;
-      font-weight: 800;
-      text-align: center;
-      margin: 0.25rem 0 0.3rem;
-    }
-
-    .alerts-instruction {
-      color: #49543a;
-      font-size: 0.88rem;
-      text-align: center;
-      margin: 0 0 0.6rem;
-      font-style: italic;
-    }
-
-    .alerts-table-wrapper {
-      width: 100%;
-      overflow-x: auto;
-    }
-
-    .alerts-table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-    }
-
-    .alerts-table colgroup col:nth-child(1) { width: 12%; }  /* Date Set */
-    .alerts-table colgroup col:nth-child(2) { width: 45%; }  /* Shoe */
-    .alerts-table colgroup col:nth-child(3) { width: 7%; }   /* Days Left - HALF */
-    .alerts-table colgroup col:nth-child(4) { width: 10%; }  /* Target */
-    .alerts-table colgroup col:nth-child(5) { width: 19%; }  /* Status */
-
-    .alerts-table thead th {
-      text-align: left;
-      font-size: 0.78rem;
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
-      color: #214478ff;
-      padding: 0.5rem 0.65rem;
-      border-bottom: 2px solid rgba(33, 68, 120, 0.35);
-      background: rgba(255, 255, 255, 0.55);
-    }
-
-    .alerts-table tbody tr {
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-    }
-
-    .alerts-table tbody tr:hover {
-      background: rgba(33, 68, 120, 0.08);
-    }
-
-    .alerts-table tbody tr.selected {
-      background: rgba(33, 68, 120, 0.15);
-    }
-
-    .alerts-table tbody tr.inactive {
-      background: #e8e8e8;
-    }
-
-    .alerts-table tbody tr.inactive:hover {
-      background: #d8d8d8;
-    }
-
-    .alerts-table tbody td {
-      padding: 0.5rem 0.65rem;
-      border-bottom: 1px solid rgba(33, 68, 120, 0.18);
-      vertical-align: middle;
-      font-size: 0.92rem;
-      color: #2d2d2d;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      line-height: 1.3;
-    }
-
-    .alerts-table tbody td:nth-child(2) {
-      max-width: 0;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .alerts-table td.target-cell {
-      text-align: right;
-    }
-
-    .alerts-muted {
-      text-align: center;
-      padding: 1.25rem 0.5rem;
-      color: #49543a;
-      font-size: 0.95rem;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.25rem 0.55rem;
-      border-radius: 999px;
-      font-weight: 700;
-      font-size: 0.82rem;
-      border: 1px solid rgba(33, 68, 120, 0.25);
-      background: rgba(255, 255, 255, 0.6);
-      color: #214478ff;
-    }
-
-    .pill.active {
-      background: rgba(46, 160, 67, 0.20);
-      border-color: rgba(46, 160, 67, 0.55);
-      color: #1f6a2a;
-    }
-
-    .pill.expired {
-      background: rgba(150, 150, 150, 0.18);
-      border-color: rgba(150, 150, 150, 0.40);
-      color: #555;
-    }
-
-    .pill.cancelled {
-      background: rgba(220, 53, 69, 0.14);
-      border-color: rgba(220, 53, 69, 0.35);
-      color: #8a1f2c;
-    }
-
-    /* Alert action panel */
-    .alert-actions {
-      padding: 0.75rem 1rem;
-      background: rgba(33, 68, 120, 0.05);
-      border-left: 3px solid #214478ff;
-      margin: 0;
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .alert-actions button {
-      padding: 0.5rem 1rem;
-      border-radius: 0.5rem;
-      font-size: 0.88rem;
-      font-weight: 600;
-      border: 1px solid #214478ff;
-      background: #214478ff;
-      color: white;
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
-
-    .alert-actions button:hover {
-      background: #1a3661;
-    }
-
-    .alert-actions button.secondary {
-      background: white;
-      color: #214478ff;
-      border: 1px solid #214478ff;
-    }
-
-    .alert-actions button.secondary:hover {
-      background: rgba(33, 68, 120, 0.1);
-    }
-
-    .alert-actions button.danger {
-      background: #dc3545;
-      border-color: #c82333;
-    }
-
-    .alert-actions button.danger:hover {
-      background: #c82333;
-    }
-
-    .alert-actions button.success {
-      background: #28a745;
-      border-color: #218838;
-    }
-
-    .alert-actions button.success:hover {
-      background: #218838;
-    }
-
-    .alert-actions .confirmation {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-    }
-
-    .alert-actions .confirmation-text {
-      font-size: 0.88rem;
-      color: #2d2d2d;
-      font-weight: 600;
-    }
-
-    .alert-actions .edit-price-label {
-      font-size: 0.88rem;
-      color: #2d2d2d;
-      font-weight: 600;
-    }
-
-    /* Price change input in action panel */
-    .price-change-wrapper {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-    }
-
-    .price-change-input {
-      position: relative;
-      display: inline-block;
-    }
-
-    .price-change-input::before {
-      content: '$';
-      position: absolute;
-      left: 0.5rem;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 0.9rem;
-      color: #444;
-      pointer-events: none;
-      font-weight: 500;
-    }
-
-    .price-change-input input {
-      width: 80px;
-      height: 32px;
-      padding: 0 0.3rem 0 1.5rem;
-      border-radius: 0.5rem;
-      border: 1px solid #214478ff;
-      background: #fafdf4;
-      font-size: 0.9rem;
-      text-align: right;
-    }
-
-    .clear-inactive-wrapper {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      margin-top: 1rem;
-    }
-
-    .clear-inactive-actions {
-      padding: 0.75rem 1rem;
-      background: rgba(220, 53, 69, 0.08);
-      border: 1px solid #dc3545;
-      border-radius: 0.5rem;
-      display: flex;
-      gap: 0.75rem;
-      align-items: center;
-    }
-
-    .clear-inactive-btn {
-      padding: 0.5rem 1rem;
-      border-radius: 0.5rem;
-      background: #dc3545;
-      border: 1px solid #c82333;
-      color: white;
-      font-size: 0.88rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .clear-inactive-btn:hover {
-      background: #c82333;
-    }
-
     .hidden { display: none !important; }
 
     /* Footer */
@@ -884,88 +570,6 @@
     .footer a:hover {
       text-decoration: underline;
     }
-
-    /* Modal styles for Privacy & Terms */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.45);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 200;
-      padding: 1rem;
-    }
-
-    .modal-overlay.active {
-      display: flex;
-    }
-
-    .modal {
-      background: #ffffff;
-      border-radius: 0.75rem;
-      max-width: 720px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25);
-      padding: 1.5rem 2rem 1.75rem;
-      box-sizing: border-box;
-    }
-
-    .modal-header {
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-
-    .modal-header img {
-      width: 140px;
-      height: auto;
-      display: block;
-      margin: 0 auto 0.5rem;
-    }
-
-    .modal-header h2 {
-      margin: 0;
-      font-size: 1.4rem;
-      color: #214478ff;
-    }
-
-    .modal-body {
-      font-size: 0.9rem;
-      line-height: 1.6;
-      color: #333;
-    }
-
-    .modal-body h3 {
-      font-size: 1rem;
-      margin-top: 0.9rem;
-      margin-bottom: 0.3rem;
-      color: #214478ff;
-    }
-
-    .modal-body p {
-      margin: 0.25rem 0 0.4rem;
-    }
-
-    .modal-close-row {
-      text-align: center;
-      margin-top: 1rem;
-    }
-
-    .modal-close-btn {
-      padding: 0.5rem 1.25rem;
-      border-radius: 999px;
-      border: 1px solid #214478ff;
-      background: #214478ff;
-      color: #fff;
-      font-size: 0.9rem;
-      cursor: pointer;
-    }
-
-    .modal-close-btn:hover {
-      background: #1a3661;
-    }
   </style>
 </head>
 
@@ -973,7 +577,7 @@
   <div style="display:none;">Impact-Site-Verification: 484b0fd5-0544-4654-b916-4e921a2e5077</div>
 
   <div class="top-nav">
-    <a id="myAlertsLink">My Alerts</a>
+    <a href="/pages/myalerts.html">My Alerts</a>
   </div>
 
   <div class="app">
@@ -981,17 +585,15 @@
       <img src="/images/logo.svg" class="brand-logo" alt="Shoe Beagle Logo" id="logoLink">
     </div>
 
-  <form id="search-form" method="POST">
-  <div class="input-wrapper">
+    <form id="search-form" method="POST">
+      <div class="input-wrapper">
         <input id="brand" type="text" placeholder="Enter Shoe Brand" autocomplete="off"/>
         <span class="paw rock" id="brandPaw">🐾</span>
         <div id="brandSuggestions" class="suggestions"></div>
       </div>
 
       <div class="input-wrapper">
-        <input id="model" type="text" placeholder="Enter Shoe Model" autocomplete="off" class="model-active"
-/>
-
+        <input id="model" type="text" placeholder="Enter Shoe Model" autocomplete="off" class="model-active"/>
         <span class="paw hidden" id="modelPaw">🐾</span>
         <div id="modelSuggestions" class="suggestions"></div>
       </div>
@@ -1005,7 +607,6 @@
     <div class="status-message" id="statusMessage"></div>
 
     <div id="mainContent">
-
       <div class="daily-deals" id="dailyDeals">
         <div class="daily-deals-header">Marty's Daily Deals</div>
         <div class="daily-deals-grid" id="dailyDealsGrid"></div>
@@ -1049,243 +650,19 @@
       </div>
     </div>
 
-  <!-- About Us Modal -->
-  <div id="aboutModal" class="modal-overlay">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
-      <div class="modal-header">
-<img src="/images/logo.svg" alt="Shoe Beagle Logo" style="width: 300px;">
-        <h2 id="aboutTitle">About Us</h2>
-      </div>
-      <div class="modal-body">
-        <p>Shoe Beagle is a price comparison website dedicated to helping runners find the best deals on running shoes. We provide side-by-side price comparisons across multiple retailers, allowing users to search by brand and model to find the lowest prices.</p>
-        <p>Our platform features price alerts, real-time deal updates, and direct links to merchant sites where users can complete their purchases.</p>
-        <p>We do our best to sniff out the best running shoe deals for you!</p>
-        <div style="text-align: center; margin: 1.2rem 0 0.35rem;">
-          <img src="/images/marty.svg" alt="Marty the Beagle" style="width: 200px; height: auto;">
-        </div>
-        <p><strong>Affiliate Disclosure:</strong> Some of the links on Shoe Beagle are affiliate links. This means Shoe Beagle may earn a small commission if you click a link and make a purchase, at no extra cost to you.</p>
-      </div>
-      <div class="modal-close-row">
-        <button type="button" class="modal-close-btn" data-close="aboutModal">Close</button>
-      </div>
-    </div>
-  </div>
-    <div id="alertsDashboard" class="alerts-dashboard hidden">
-      <div class="alerts-title">My Alerts</div>
-      <div class="alerts-instruction">Tap or Click Row to Manage Alert</div>
-      <!-- NEW: stats summary line -->
-
-      <div class="alerts-table-wrapper">
-        <table class="alerts-table" aria-label="My Alerts Table" id="alertsTable">
-          <colgroup>
-            <col style="width: 12%;">  <!-- Date Set -->
-            <col style="width: 45%;">  <!-- Shoe -->
-            <col style="width: 7%;">   <!-- Days Left - HALF -->
-            <col style="width: 10%;">  <!-- Target -->
-            <col style="width: 19%;">  <!-- Status -->
-          </colgroup>
-          <thead>
-            <tr>
-              <th>Date Set</th>
-              <th>Shoe</th>
-              <th>Days Left</th>
-              <th>Target</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="alertsTbody"></tbody>
-        </table>
-      </div>
-
-      <div id="alertsEmpty" class="alerts-muted hidden">No alerts have been set.</div>
-
-      <div class="clear-inactive-wrapper hidden" id="clearInactiveWrapper"></div>
-    </div>
-
     <!-- Footer -->
     <div class="footer">
-
-        <a href="/pages/about.html">About</a> |
-        <a href="/pages/contact.html">Contact</a> |
-        <a href="/pages/privacy.html">Privacy</a> |
-        <a href="/pages/terms.html">Terms</a> |
-        <br>
-        © <span id="footerYear"></span> Shoe Beagle. All rights reserved.    </div>
-  </div>
-
-  <!-- Privacy Policy Modal -->
-  <div id="privacyModal" class="modal-overlay">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="privacyTitle">
-      <div class="modal-header">
-        <img src="/images/logo.svg" alt="Shoe Beagle Logo" style="width: 300px;">
-        <h2 id="privacyTitle">Privacy Policy</h2>
-      </div>
-      <div class="modal-body">
-        <p>Last Updated: January 6, 2026</p>
-
-        <h3>1. Who we are</h3>
-        <p>Shoe Beagle is a website that helps runners discover and compare prices on running shoes from multiple online retailers.</p>
-
-        <h3>2. What information we collect</h3>
-        <p>We collect only the information we need to operate the the site and provide price alerts:</p>
-        <ul>
-          <li><strong>Search information:</strong> brands and models you search for.</li>
-          <li><strong>Alert information:</strong> the shoe you choose, your target price, and the email address or phone number you provide for that alert.</li>
-          <li><strong>Basic usage data:</strong> standard log data such as browser type, approximate location, and pages visited, typically collected via analytics tools or server logs.</li>
-        </ul>
-
-        <h3>3. How we use your information</h3>
-        <p>We use your information to:</p>
-        <ul>
-          <li>Process your shoe searches and show you deals.</li>
-          <li>Send you price alerts that you have requested.</li>
-          <li>Monitor and improve the performance and reliability of Shoe Beagle.</li>
-        </ul>
-
-        <h3>4. Price alerts and communications</h3>
-        <p>When you set a price alert, we use your email address or phone number only to send you alert-related messages (for example, when a deal meets your target price). We do not sell your contact details to third parties for their own marketing.</p>
-
-        <h3>5. Cookies and similar technologies</h3>
-        <p>Like most websites, Shoe Beagle may use cookies or similar technologies to remember your preferences and understand how visitors use the site. You can usually control cookies through your browser settings.</p>
-
-        <h3>6. Third-party services and links</h3>
-        <p>Our site links to third-party websites (for example, online retailers that sell shoes). When you click a link and leave Shoe Beagle, this Privacy Policy no longer applies and the third party's own policies will govern their use of your information.</p>
-        <p>Some of the links on Shoe Beagle are affiliate links. This means we may earn a small commission if you click a link and make a purchase, at no extra cost to you.</p>
-
-        <h3>7. Data security</h3>
-        <p>We use reasonable technical and organizational measures to help protect the information we collect. However, no website or internet transmission is ever completely secure, and we cannot guarantee absolute security.</p>
-
-        <h3>8. Data retention</h3>
-        <p>We retain alert-related contact information as long as needed to provide your alerts or as required by law. You can request deletion of your alert-related information at any time by contacting us.</p>
-
-        <h3>9. Your choices and rights</h3>
-        <p>You may:</p>
-        <ul>
-          <li>Stop using the site at any time.</li>
-          <li>Cancel or adjust your alerts in the "My Alerts" area.</li>
-          <li>Request that we delete your alert-related information by contacting us.</li>
-        </ul>
-
-        <h3>10. Contact us</h3>
-        <p>Contact us if you have questions about this Privacy Policy or how we handle your data.</p>
-      </div>
-      <div class="modal-close-row">
-        <button type="button" class="modal-close-btn" data-close="privacyModal">Close</button>
-      </div>
+      <a href="/pages/about.html">About</a> |
+      <a href="/pages/contact.html">Contact</a> |
+      <a href="/pages/privacy.html">Privacy</a> |
+      <a href="/pages/terms.html">Terms</a> |
+      <br>
+      © <span id="footerYear"></span> Shoe Beagle. All rights reserved.
     </div>
   </div>
 
-  <!-- Terms of Use Modal -->
-  <div id="termsModal" class="modal-overlay">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="termsTitle">
-      <div class="modal-header">
-        <img src="/images/logo.svg" alt="Shoe Beagle Logo" style="width: 300px;">
-        <h2 id="termsTitle">Terms of Use</h2>
-      </div>
-      <div class="modal-body">
-        <p>Last Updated: January 6, 2026</p>
-
-        <h3>1. Acceptance of these terms</h3>
-        <p>By accessing or using Shoe Beagle, you agree to these Terms of Use. If you do not agree, please do not use the site.</p>
-
-        <h3>2. What Shoe Beagle does</h3>
-        <p>Shoe Beagle helps you discover and compare prices on running shoes from third-party retailers. We do not sell products directly, handle payments, or fulfill orders. When you click a link to a retailer, you leave our site and complete your purchase (if any) on the retailer's website.</p>
-        <p>Some links to retailers on Shoe Beagle may be affiliate links, which means we may earn a small commission if you make a purchase through those links, at no extra cost to you.</p>
-
-        <h3>3. No guarantees on prices or availability</h3>
-        <p>We do our best to show accurate and timely deal information, but prices, discounts, and availability can change quickly. We cannot guarantee that any price or offer listed on Shoe Beagle will still be available when you click through to a retailer.</p>
-
-        <h3>4. Your responsibilities</h3>
-        <p>You are responsible for:</p>
-        <ul>
-          <li>Reviewing the final price, shipping, taxes, and terms on the retailer's website before you complete any purchase.</li>
-          <li>Using Shoe Beagle in compliance with applicable laws and these Terms of Use.</li>
-        </ul>
-
-        <h3>5. Price alerts</h3>
-        <p>When you set a price alert, you agree to receive alert-related messages using the contact details you provide. You can manage or cancel your alerts from the "My Alerts" section of the site. Alerts are provided as a convenience only and we do not guarantee that every qualifying deal will trigger or reach you.</p>
-
-        <h3>6. Intellectual property</h3>
-        <p>The Shoe Beagle name, logo, and overall site design, along with the underlying software and content we create, are owned by us or our licensors and protected by copyright and other laws. You may not copy, modify, or redistribute the site or its content except as allowed by law or with our written permission.</p>
-
-        <h3>7. Third-party sites and services</h3>
-        <p>Any websites or services we link to are operated by third parties, not by Shoe Beagle. We are not responsible for the content, policies, or practices of any third-party website or service, and your use of those sites is at your own risk.</p>
-
-        <h3>8. Disclaimer of warranties</h3>
-        <p>Shoe Beagle is provided "as is" and "as available." To the fullest extent permitted by law, we disclaim all warranties, express or implied, including but not limited to implied warranties of merchantability, fitness for a particular purpose, and non-infringement.</p>
-
-        <h3>9. Limitation of liability</h3>
-        <p>To the fullest extent permitted by law, Shoe Beagle and its owners will not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or related to your use of the site, even if we have been advised of the possibility of such damages.</p>
-
-        <h3>10. Changes to these terms</h3>
-        <p>We may update these Terms of Use from time to time. The "Last Updated" date at the top will tell you when we last made changes. Your continued use of the site after changes are posted means you accept the updated terms.</p>
-
-        <h3>11. Contact us</h3>
-        <p>Contact us if you have questions about these Terms of Use.</p>
-      </div>
-      <div class="modal-close-row">
-        <button type="button" class="modal-close-btn" data-close="termsModal">Close</button>
-      </div>
-    </div>
-  </div>
-<!-- Contact Modal -->
-<div id="contactModal" class="modal-overlay">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
-    <div class="modal-header">
-      <img src="/images/logo.svg" alt="Shoe Beagle Logo" style="width: 300px;">
-      <h2 id="contactTitle">Contact Us</h2>
-    </div>
-    <div class="modal-body">
-      <p>Have a question, suggestion, or issue? We'd love to hear from you!</p>
-      
-      <form id="contactForm" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
-        <div>
-          <label for="contactName" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #214478ff;">Your Name</label>
-          <input 
-            type="text" 
-            id="contactName" 
-            required 
-            style="width: 100%; padding: 0.6rem; border: 1px solid #214478ff; border-radius: 0.5rem; font-size: 0.95rem;"
-          />
-        </div>
-        
-        <div>
-          <label for="contactEmail" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #214478ff;">Your Email</label>
-          <input 
-            type="email" 
-            id="contactEmail" 
-            required 
-            style="width: 100%; padding: 0.6rem; border: 1px solid #214478ff; border-radius: 0.5rem; font-size: 0.95rem;"
-          />
-        </div>
-        
-        <div>
-          <label for="contactMessage" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #214478ff;">Message</label>
-          <textarea 
-            id="contactMessage" 
-            required 
-            rows="5"
-            style="width: 100%; padding: 0.6rem; border: 1px solid #214478ff; border-radius: 0.5rem; font-size: 0.95rem; resize: vertical; font-family: inherit;"
-          ></textarea>
-        </div>
-        
-        <div id="contactStatus" style="display: none; padding: 0.75rem; border-radius: 0.5rem; text-align: center;"></div>
-        
-        <button 
-          type="submit" 
-          id="contactSubmitBtn"
-          style="padding: 0.75rem 1.5rem; background: #214478ff; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; font-weight: 600;"
-        >
-          Send Message
-        </button>
-      </form>
-    </div>
-    <div class="modal-close-row">
-      <button type="button" class="modal-close-btn" data-close="contactModal">Close</button>
-    </div>
-  </div>
-</div>  
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+  <script>
     const form = document.getElementById("search-form");
     const statusMessageEl = document.getElementById("statusMessage");
     const resultsEl = document.getElementById("results");
@@ -1315,31 +692,12 @@
     const modelPaw = document.getElementById("modelPaw");
 
     const mainContent = document.getElementById("mainContent");
-    const alertsDashboard = document.getElementById("alertsDashboard");
-
-    const aboutLink = document.getElementById("aboutLink");
-    const aboutModal = document.getElementById("aboutModal");
-    const myAlertsLink = document.getElementById("myAlertsLink");
     const logoLink = document.getElementById("logoLink");
 
-    const alertsTbody = document.getElementById("alertsTbody");
-    const alertsEmpty = document.getElementById("alertsEmpty");
-    const alertsTable = document.getElementById("alertsTable");
-    const clearInactiveWrapper = document.getElementById("clearInactiveWrapper");
-
     const footerYear = document.getElementById("footerYear");
-    const privacyLink = document.getElementById("privacyLink");
-    const termsLink = document.getElementById("termsLink");
-    const privacyModal = document.getElementById("privacyModal");
-    const termsModal = document.getElementById("termsModal");
-    const contactLink = document.getElementById("contactLink");
-    const contactModal = document.getElementById("contactModal");
-    const contactForm = document.getElementById("contactForm");
-    const contactStatus = document.getElementById("contactStatus");
-    
+
     let currentSearch = { brand: "", model: "" };
     let brandSelected = false;
-    let selectedAlertRow = null;
 
     const ALERTS_KEY = "shoeBeagleAlerts";
     let alertsMemoryFallback = [];
@@ -1349,43 +707,8 @@
       footerYear.textContent = new Date().getFullYear();
     }
 
-    function openModal(el) {
-      el.classList.add("active");
-      document.body.style.overflow = "hidden";
-    }
-
-    function closeModal(el) {
-      el.classList.remove("active");
-      document.body.style.overflow = "";
-    }
-
-if (aboutLink && aboutModal) {
-  aboutLink.addEventListener("click", () => openModal(aboutModal));
-}
-
-if (privacyLink && privacyModal) {
-  privacyLink.addEventListener("click", () => openModal(privacyModal));
-}
-
-if (termsLink && termsModal) {
-  termsLink.addEventListener("click", () => openModal(termsModal));
-}
-if (contactLink && contactModal) {
-  contactLink.addEventListener("click", () => openModal(contactModal));
-}    document.querySelectorAll(".modal-close-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const targetId = btn.getAttribute("data-close");
-        const overlay = document.getElementById(targetId);
-        if (overlay) closeModal(overlay);
-      });
-    });
-
-    document.querySelectorAll(".modal-overlay").forEach(overlay => {
-      overlay.addEventListener("click", (e) => {
-        if (e.target === overlay) {
-          closeModal(overlay);
-        }
-      });
+    logoLink.addEventListener("click", () => {
+      location.reload();
     });
 
     function canUseLocalStorage() {
@@ -1467,15 +790,6 @@ if (contactLink && contactModal) {
       return Math.floor(diff / (1000 * 60 * 60 * 24));
     }
 
-    function formatDateShort(ms) {
-      const d = new Date(ms);
-      const day = d.getDate();
-      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-      const mon = months[d.getMonth()];
-      const yy = String(d.getFullYear()).slice(-2);
-      return `${day}-${mon}-${yy}`;
-    }
-
     function computeAlertStatus(alert) {
       if (alert.cancelledAt) return "Cancelled";
       const ageDays = daysBetween(alert.setAt, nowMs());
@@ -1507,300 +821,6 @@ if (contactLink && contactModal) {
       else list.push(newAlert);
       saveAlerts(list);
     }
-
-    function deleteAlert(alertId) {
-      const list = loadAlerts();
-      const filtered = list.filter(a => a.id !== alertId);
-      saveAlerts(filtered);
-    }
-
-    function pillClassFor(status) {
-      if (status === "Active") return "pill active";
-      if (status === "Expired") return "pill expired";
-      if (status === "Cancelled") return "pill cancelled";
-      return "pill";
-    }
-
-    function clearAllInactive() {
-      const list = loadAlerts();
-      const active = list.filter(a => {
-        const status = computeAlertStatus(a);
-        return status === "Active";
-      });
-      saveAlerts(active);
-      renderAlertsDashboard();
-    }
-
-    function showConfirmation(actionsDiv, message, onYes) {
-      actionsDiv.innerHTML = "";
-
-      const confirmDiv = document.createElement("div");
-      confirmDiv.className = "confirmation";
-
-      const confirmText = document.createElement("span");
-      confirmText.className = "confirmation-text";
-      confirmText.textContent = message;
-
-      const yesBtn = document.createElement("button");
-      yesBtn.textContent = "Yes";
-      yesBtn.className = "success";
-      yesBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        onYes();
-      });
-
-      const noBtn = document.createElement("button");
-      noBtn.textContent = "No";
-      noBtn.className = "secondary";
-      noBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        renderAlertsDashboard();
-      });
-
-      confirmDiv.appendChild(confirmText);
-      confirmDiv.appendChild(yesBtn);
-      confirmDiv.appendChild(noBtn);
-      actionsDiv.appendChild(confirmDiv);
-    }
-
-    function showClearInactiveConfirmation() {
-      clearInactiveWrapper.innerHTML = "";
-
-      const actionsDiv = document.createElement("div");
-      actionsDiv.className = "clear-inactive-actions";
-
-      const confirmText = document.createElement("span");
-      confirmText.className = "confirmation-text";
-      confirmText.textContent = "Clear all inactive alerts?";
-
-      const yesBtn = document.createElement("button");
-      yesBtn.textContent = "Yes";
-      yesBtn.className = "success";
-      yesBtn.addEventListener("click", () => {
-        clearAllInactive();
-      });
-
-      const noBtn = document.createElement("button");
-      noBtn.textContent = "No";
-      noBtn.className = "secondary";
-      noBtn.addEventListener("click", () => {
-        renderAlertsDashboard();
-      });
-
-      actionsDiv.appendChild(confirmText);
-      actionsDiv.appendChild(yesBtn);
-      actionsDiv.appendChild(noBtn);
-      clearInactiveWrapper.appendChild(actionsDiv);
-    }
-
-
-
-    function renderAlertsDashboard() {
-      const list = loadAlerts();
-      alertsTbody.innerHTML = "";
-      selectedAlertRow = null;
-      clearInactiveWrapper.innerHTML = "";
-
-      if (!list.length) {
-        alertsEmpty.classList.remove("hidden");
-        alertsTable.classList.add("hidden");
-        clearInactiveWrapper.classList.add("hidden");
-        return;
-      }
-
-      alertsEmpty.classList.add("hidden");
-      alertsTable.classList.remove("hidden");
-
-      const hasInactive = list.some(a => {
-        const status = computeAlertStatus(a);
-        return status === "Expired" || status === "Cancelled";
-      });
-
-      if (hasInactive) {
-        clearInactiveWrapper.classList.remove("hidden");
-        const clearBtn = document.createElement("button");
-        clearBtn.className = "clear-inactive-btn";
-        clearBtn.textContent = "Clear Inactive Alerts";
-        clearBtn.addEventListener("click", showClearInactiveConfirmation);
-        clearInactiveWrapper.appendChild(clearBtn);
-      } else {
-        clearInactiveWrapper.classList.add("hidden");
-      }
-
-      const order = { "Active": 0, "Expired": 1, "Cancelled": 2 };
-      const sorted = [...list].sort((a, b) => {
-        const sa = computeAlertStatus(a);
-        const sb = computeAlertStatus(b);
-        if (order[sa] !== order[sb]) return order[sa] - order[sb];
-        return (b.setAt || 0) - (a.setAt || 0);
-      });
-
-      sorted.forEach(a => {
-        const status = computeAlertStatus(a);
-        const daysLeft = computeDaysLeft(a);
-
-        const tr = document.createElement("tr");
-        tr.dataset.alertId = a.id;
-
-        if (status !== "Active") {
-          tr.classList.add("inactive");
-        }
-
-        const tdDate = document.createElement("td");
-        tdDate.textContent = formatDateShort(a.setAt);
-        tr.appendChild(tdDate);
-
-        const tdShoe = document.createElement("td");
-        const shoeText = `${a.brand} ${a.model}`;
-        tdShoe.textContent = shoeText.length > 30 ? shoeText.substring(0, 30) + '...' : shoeText;
-        tdShoe.title = shoeText;
-        tr.appendChild(tdShoe);
-
-        const tdDays = document.createElement("td");
-        tdDays.textContent = status === "Active" ? String(daysLeft) : "—";
-        tr.appendChild(tdDays);
-
-        const tdTarget = document.createElement("td");
-        tdTarget.className = "target-cell";
-        tdTarget.textContent = `$${Number(a.targetPrice).toFixed(0)}`;
-        tr.appendChild(tdTarget);
-
-        const tdStatus = document.createElement("td");
-        const pill = document.createElement("span");
-        pill.className = pillClassFor(status);
-        pill.textContent = status;
-        tdStatus.appendChild(pill);
-        tr.appendChild(tdStatus);
-
-        tr.addEventListener("click", (e) => {
-          e.stopPropagation();
-
-          const existingActionRow = document.querySelector(".alert-actions-row");
-          if (existingActionRow) {
-            existingActionRow.remove();
-          }
-
-          const allRows = alertsTbody.querySelectorAll("tr");
-          allRows.forEach(r => r.classList.remove("selected"));
-
-          if (selectedAlertRow === tr) {
-            selectedAlertRow = null;
-            return;
-          }
-
-          tr.classList.add("selected");
-          selectedAlertRow = tr;
-
-          const actionRow = document.createElement("tr");
-          actionRow.className = "alert-actions-row";
-          const actionCell = document.createElement("td");
-          actionCell.colSpan = 5;
-
-          const actionsDiv = document.createElement("div");
-          actionsDiv.className = "alert-actions";
-
-          if (status === "Active") {
-            const priceWrapper = document.createElement("div");
-            priceWrapper.className = "price-change-wrapper";
-
-            const editLabel = document.createElement("span");
-            editLabel.className = "edit-price-label";
-            editLabel.textContent = "Edit Price:";
-            priceWrapper.appendChild(editLabel);
-
-            const priceInputWrapper = document.createElement("span");
-            priceInputWrapper.className = "price-change-input";
-
-            const priceInput = document.createElement("input");
-            priceInput.type = "number";
-            priceInput.step = "1";
-            priceInput.min = "1";
-            priceInput.value = Number(a.targetPrice).toFixed(0);
-
-            priceInputWrapper.appendChild(priceInput);
-            priceWrapper.appendChild(priceInputWrapper);
-
-            const saveBtn = document.createElement("button");
-            saveBtn.textContent = "Save";
-            saveBtn.addEventListener("click", (e) => {
-              e.stopPropagation();
-              const val = Number(priceInput.value);
-              if (!isFinite(val) || val <= 0) {
-                alert("Please enter a valid target price greater than 0.");
-                return;
-              }
-              showConfirmation(actionsDiv, "Save new price?", () => {
-                a.targetPrice = Number(val).toFixed(2);
-                a.setAt = nowMs();
-                upsertAlert(a);
-                renderAlertsDashboard();
-              });
-            });
-
-            priceWrapper.appendChild(saveBtn);
-            actionsDiv.appendChild(priceWrapper);
-
-            const add10Btn = document.createElement("button");
-            add10Btn.textContent = "Add 10 Days";
-            add10Btn.className = "secondary";
-            add10Btn.addEventListener("click", (e) => {
-              e.stopPropagation();
-              showConfirmation(actionsDiv, "Add 10 days to alert?", () => {
-                const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
-                a.setAt = a.setAt - TEN_DAYS_MS;
-                upsertAlert(a);
-                renderAlertsDashboard();
-              });
-            });
-            actionsDiv.appendChild(add10Btn);
-
-            const cancelBtn = document.createElement("button");
-            cancelBtn.textContent = "Cancel Alert";
-            cancelBtn.className = "danger";
-            cancelBtn.addEventListener("click", (e) => {
-              e.stopPropagation();
-              showConfirmation(actionsDiv, "Cancel this alert?", () => {
-                a.cancelledAt = nowMs();
-                upsertAlert(a);
-                renderAlertsDashboard();
-              });
-            });
-            actionsDiv.appendChild(cancelBtn);
-
-          } else {
-            const deleteBtn = document.createElement("button");
-            deleteBtn.textContent = "Delete";
-            deleteBtn.className = "danger";
-            deleteBtn.addEventListener("click", (e) => {
-              e.stopPropagation();
-              showConfirmation(actionsDiv, "Delete this alert?", () => {
-                deleteAlert(a.id);
-                renderAlertsDashboard();
-              });
-            });
-            actionsDiv.appendChild(deleteBtn);
-          }
-
-          actionCell.appendChild(actionsDiv);
-          actionRow.appendChild(actionCell);
-          tr.parentNode.insertBefore(actionRow, tr.nextSibling);
-        });
-
-        alertsTbody.appendChild(tr);
-      });
-    }
-
-    document.addEventListener("click", (e) => {
-      if (!e.target.closest(".alerts-table") && !e.target.closest(".alert-actions")) {
-        const existingActionRow = document.querySelector(".alert-actions-row");
-        if (existingActionRow) {
-          existingActionRow.remove();
-        }
-        const allRows = alertsTbody.querySelectorAll("tr");
-        allRows.forEach(r => r.classList.remove("selected"));
-        selectedAlertRow = null;
-      }
-    });
 
     const brandModels = {
       "Asics": ["Novablast","Gel-Kayano","Gel-Nimbus","Gel-Cumulus","Metaspeed Sky"],
@@ -1885,9 +905,7 @@ if (contactLink && contactModal) {
         modelInput.placeholder = "Enter Shoe Model";
         brandSelected = true;
         brandPaw.classList.add("hidden");
-  
         modelPaw.classList.remove("hidden");
-   
       }
     }
 
@@ -1903,20 +921,16 @@ if (contactLink && contactModal) {
         brandPaw.classList.add("hidden");
       } else if (!brandSelected) {
         brandPaw.classList.remove("hidden");
-    
       }
 
       if (brandSelected && !modelInput.disabled) {
         if (!modelInput.value.trim()) {
           modelPaw.classList.remove("hidden");
-      
         } else {
           modelPaw.classList.add("hidden");
-  
         }
       } else {
         modelPaw.classList.add("hidden");
- 
       }
 
       updateFetchReady();
@@ -1939,100 +953,68 @@ if (contactLink && contactModal) {
       alertPriceInput.value = "";
       alertContactInput.value = "";
       alertPricePaw.classList.remove("hidden");
-   
       updateAlertSubmitButton();
     }
-
-    function hideAllContentBelowStatus() {
-      mainContent.classList.add("hidden");
-      alertsDashboard.classList.add("hidden");
-      resultsEl.innerHTML = "";
-      dailyDeals.style.display = "none";
-      alertWrapper.style.display = "none";
-      resetAlertSection();
-      statusMessageEl.textContent = "";
-    }
-
-function showHome() {
-  alertsDashboard.classList.add("hidden");
-  mainContent.classList.remove("hidden");
-  resultsEl.innerHTML = "";              // Clear search results
-  dailyDeals.style.display = "block";    // Always show daily deals
-  statusMessageEl.textContent = "";      // Clear status message
-  alertWrapper.style.display = "none";   // Hide alert section
-}
-
-
-    function showMyAlerts() {
-      hideAllContentBelowStatus();
-      alertsDashboard.classList.remove("hidden");
-      renderAlertsDashboard();
-    }
-
-    myAlertsLink.addEventListener("click", showMyAlerts);
-    logoLink.addEventListener("click", showHome);
 
     updatePaws();
     dailyDeals.style.display = "block";
 
-brandInput.addEventListener("input", () => {
-  const typed = brandInput.value.trim();
-  const matches = filterStartsWith(brands, typed);
-  showSuggestions(brandSuggestions, matches, (value) => {
-    brandInput.value = value;
-    brandSuggestions.style.display = "none";
-    enableModel();
-    confirmBrandSelection();
-    setTimeout(() => modelInput.focus(), 0);
-    updatePaws();
-  });
-  updatePaws();
-});
-
-
-
-
-brandInput.addEventListener("blur", () => setTimeout(() => { brandSuggestions.style.display = "none"; }, 120));
-
-brandInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    const typed = brandInput.value.trim();
-    if (typed) {
-      e.preventDefault();
-      enableModel();
-      confirmBrandSelection();
-      modelInput.focus();
+    brandInput.addEventListener("input", () => {
+      const typed = brandInput.value.trim();
+      const matches = filterStartsWith(brands, typed);
+      showSuggestions(brandSuggestions, matches, (value) => {
+        brandInput.value = value;
+        brandSuggestions.style.display = "none";
+        enableModel();
+        confirmBrandSelection();
+        setTimeout(() => modelInput.focus(), 0);
+        updatePaws();
+      });
       updatePaws();
-    }
-  }
-});
+    });
 
-modelInput.addEventListener("input", () => {
-  const brandKey = resolveBrand();
-  const text = modelInput.value.trim();
-  if (!brandKey || !brandModels[brandKey]) {
-    modelSuggestions.style.display = "none";
-    updatePaws();
-    return;
-  }
-  const models = brandModels[brandKey];
-  const matches = filterStartsWith(models, text);
-  showSuggestions(modelSuggestions, matches, (value) => {
-    modelInput.value = value;
-    modelSuggestions.style.display = "none";
-    setTimeout(() => fetchBtn.focus(), 0);
-    updatePaws();
-  });
-  updatePaws();
-});
+    brandInput.addEventListener("blur", () => setTimeout(() => { brandSuggestions.style.display = "none"; }, 120));
 
-brandInput.addEventListener("click", () => {
-  brandInput.select();
-});
+    brandInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const typed = brandInput.value.trim();
+        if (typed) {
+          e.preventDefault();
+          enableModel();
+          confirmBrandSelection();
+          modelInput.focus();
+          updatePaws();
+        }
+      }
+    });
 
-modelInput.addEventListener("click", () => {
-  modelInput.select();
-});
+    modelInput.addEventListener("input", () => {
+      const brandKey = resolveBrand();
+      const text = modelInput.value.trim();
+      if (!brandKey || !brandModels[brandKey]) {
+        modelSuggestions.style.display = "none";
+        updatePaws();
+        return;
+      }
+      const models = brandModels[brandKey];
+      const matches = filterStartsWith(models, text);
+      showSuggestions(modelSuggestions, matches, (value) => {
+        modelInput.value = value;
+        modelSuggestions.style.display = "none";
+        setTimeout(() => fetchBtn.focus(), 0);
+        updatePaws();
+      });
+      updatePaws();
+    });
+
+    brandInput.addEventListener("click", () => {
+      brandInput.select();
+    });
+
+    modelInput.addEventListener("click", () => {
+      modelInput.select();
+    });
+
     modelInput.addEventListener("blur", () => setTimeout(() => { modelSuggestions.style.display = "none"; }, 120));
 
     alertPriceInput.addEventListener("input", () => {
@@ -2040,22 +1022,14 @@ modelInput.addEventListener("click", () => {
         alertPricePaw.classList.add("hidden");
       } else {
         alertPricePaw.classList.remove("hidden");
- 
       }
       updateAlertSubmitButton();
     });
 
     alertContactInput.addEventListener("input", updateAlertSubmitButton);
 
-    function formatPriceValue(value) {
-      const num = Number(value);
-      if (Number.isFinite(num)) return `$${num.toFixed(2)}`;
-      if (typeof value === "string") return value;
-      return "—";
-    }
-
     // Helper: create unified deal card (used for search + daily deals)
-        function createDealCard(item) {
+    function createDealCard(item) {
       const discount = getDiscountInfo(item); // uses price + originalPrice
 
       const card = document.createElement("div");
@@ -2077,7 +1051,6 @@ modelInput.addEventListener("click", () => {
         img.alt = item.title || "Running shoe deal";
         imgWrapper.appendChild(img);
       } else {
-        // keep your existing behavior if you prefer, or leave empty
         const img = document.createElement("img");
         img.alt = "Running shoe";
         imgWrapper.appendChild(img);
@@ -2133,7 +1106,6 @@ modelInput.addEventListener("click", () => {
       return card;
     }
 
-
     // Load daily deals from API and render as cards
     async function loadDailyDeals() {
       try {
@@ -2162,81 +1134,78 @@ modelInput.addEventListener("click", () => {
     // Initial daily deals load
     loadDailyDeals();
 
-   form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-  const brandTyped = brandInput.value.trim();
-  const modelTyped = modelInput.value.trim();
+      const brandTyped = brandInput.value.trim();
+      const modelTyped = modelInput.value.trim();
 
-  // ✅ Require at least one of brand/model, not both
-  if (!brandTyped && !modelTyped) {
-    statusMessageEl.textContent = "Please enter a brand or a model.";
-    updatePaws();
-    return;
-  }
+      // ✅ Require at least one of brand/model, not both
+      if (!brandTyped && !modelTyped) {
+        statusMessageEl.textContent = "Please enter a brand or a model.";
+        updatePaws();
+        return;
+      }
 
-  currentSearch = { brand: brandTyped, model: modelTyped };
+      currentSearch = { brand: brandTyped, model: modelTyped };
 
-  // Used for display + query; avoids extra spaces if one is blank
-  const displayQuery = [brandTyped, modelTyped].filter(Boolean).join(" ");
+      // Used for display + query; avoids extra spaces if one is blank
+      const displayQuery = [brandTyped, modelTyped].filter(Boolean).join(" ");
 
-  statusMessageEl.textContent = "Searching deals…";
-  resultsEl.innerHTML = "";
-  dailyDeals.style.display = "none";
+      statusMessageEl.textContent = "Searching deals…";
+      resultsEl.innerHTML = "";
+      dailyDeals.style.display = "none";
 
-  resetAlertSection();
-  alertWrapper.style.display = "flex";
+      resetAlertSection();
+      alertWrapper.style.display = "flex";
 
-  const existingActive = findActiveAlertFor(brandTyped, modelTyped);
-  if (existingActive) {
-    alertPromptBtn.style.display = "none";
-    const daysLeft = computeDaysLeft(existingActive);
-    alertExistingInfo.innerHTML = `
-      <strong>You have an active alert set for this shoe.</strong><br><br>
-      <strong>Shoe:</strong> ${existingActive.brand} ${existingActive.model}<br>
-      <strong>Days Remaining:</strong> ${daysLeft}<br>
-      <strong>Target Price:</strong> $${Number(existingActive.targetPrice).toFixed(2)}<br><br>
-      Open <strong>My Alerts</strong> to manage it.
-    `;
-    alertExistingInfo.style.display = "block";
-  } else {
-    alertPromptBtn.style.display = "block";
-    alertExistingInfo.style.display = "none";
-  }
+      const existingActive = findActiveAlertFor(brandTyped, modelTyped);
+      if (existingActive) {
+        alertPromptBtn.style.display = "none";
+        const daysLeft = computeDaysLeft(existingActive);
+        alertExistingInfo.innerHTML = `
+          <strong>You have an active alert set for this shoe.</strong><br><br>
+          <strong>Shoe:</strong> ${existingActive.brand} ${existingActive.model}<br>
+          <strong>Days Remaining:</strong> ${daysLeft}<br>
+          <strong>Target Price:</strong> $${Number(existingActive.targetPrice).toFixed(2)}<br><br>
+          Open <strong><a href="/pages/myalerts.html">My Alerts</a></strong> to manage it.
+        `;
+        alertExistingInfo.style.display = "block";
+      } else {
+        alertPromptBtn.style.display = "block";
+        alertExistingInfo.style.display = "none";
+      }
 
-  // Show whatever the user actually searched for
-alertProductName.textContent = displayQuery;
+      alertProductName.textContent = displayQuery;
 
+      const query = displayQuery;
+      let data;
 
-  const query = displayQuery;
-  let data;
+      try {
+        const res = await fetch("/api/search?" + new URLSearchParams({ query }));
+        data = await res.json();
+      } catch (err) {
+        console.error("Search error:", err);
+        statusMessageEl.textContent = "Search failed. Please try again.";
+        return;
+      }
 
-  try {
-    const res = await fetch("/api/search?" + new URLSearchParams({ query }));
-    data = await res.json();
-  } catch (err) {
-    console.error("Search error:", err);
-    statusMessageEl.textContent = "Search failed. Please try again.";
-    return;
-  }
+      const results = (data && data.results) ? data.results : [];
 
-  const results = (data && data.results) ? data.results : [];
+      if (!results.length) {
+        statusMessageEl.textContent = `No results found for ${displayQuery} — set a price alert and we'll keep sniffing.`;
+        return;
+      }
 
-  if (!results.length) {
-    statusMessageEl.textContent = `No results found for ${displayQuery} — set a price alert and we'll keep sniffing.`;
-    return;
-  }
+      statusMessageEl.textContent =
+        `Top ${results.length} deal${results.length === 1 ? '' : 's'} found for ${displayQuery}`;
+      resultsEl.innerHTML = "";
 
-  statusMessageEl.textContent =
-    `Top ${results.length} deal${results.length === 1 ? '' : 's'} found for ${displayQuery}`;
-  resultsEl.innerHTML = "";
-
-  results.forEach(item => {
-    const card = createDealCard(item);
-    resultsEl.appendChild(card);
-  });
-});
-
+      results.forEach(item => {
+        const card = createDealCard(item);
+        resultsEl.appendChild(card);
+      });
+    });
 
     alertPromptBtn.addEventListener("click", () => {
       alertPromptBtn.style.display = "none";
@@ -2264,7 +1233,7 @@ alertProductName.textContent = displayQuery;
         alertForm.style.display = "none";
         alertConfirmation.innerHTML = `
           <strong>This shoe already has an active alert.</strong><br><br>
-          To edit the alert, please manage it in <strong>My Alerts</strong>.
+          To edit the alert, please manage it in <strong><a href="/pages/myalerts.html">My Alerts</a></strong>.
         `;
         alertConfirmation.style.display = "block";
         return;
@@ -2314,21 +1283,11 @@ alertProductName.textContent = displayQuery;
         alertPricePaw.classList.add("hidden");
       } else {
         alertPricePaw.classList.remove("hidden");
-    
       }
       updateAlertSubmitButton();
     });
 
     alertContactInput.addEventListener("input", updateAlertSubmitButton);
-        // Contact form submission
-    if (contactForm) {
-      contactForm.addEventListener("submit", async (e) => {
-        // ... all the form handler code ...
-      });
-    }
-
-    function showContactStatus(message, type) {
-      // ... all the status function code ...
-    }  </script>
+  </script>
 </body>
 </html>
