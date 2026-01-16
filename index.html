@@ -475,6 +475,12 @@
   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
   <script>
     const form = document.getElementById("search-form");
+    // Prevent Enter from submitting the form — only Fetch button should submit
+form.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+  }
+});
     const statusMessageEl = document.getElementById("statusMessage");
     const resultsEl = document.getElementById("results");
     const dailyDeals = document.getElementById("dailyDeals");
@@ -727,18 +733,7 @@
 
     brandInput.addEventListener("blur", () => setTimeout(() => { brandSuggestions.style.display = "none"; }, 120));
 
-    brandInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    const typed = brandInput.value.trim();
-    if (typed) {
-      e.preventDefault();
-      enableModel();
-      confirmBrandSelection();
-      modelInput.focus();
-      updatePaws();
-    }
-  }
-});
+
 
 
     modelInput.addEventListener("input", () => {
