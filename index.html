@@ -1066,10 +1066,20 @@
       link.appendChild(imgWrapper);
 
       // --- title & store ---
-      const titleDiv = document.createElement("div");
-      titleDiv.className = "card-title";
-      titleDiv.textContent = item.title || "Deal";
-      link.appendChild(titleDiv);
+     // --- brand + model (instead of title) ---
+const titleDiv = document.createElement("div");
+titleDiv.className = "card-title";
+
+const brand = (item.brand || "").trim();
+const model = (item.model || "").trim();
+
+titleDiv.textContent =
+  (brand || model)
+    ? [brand, model].filter(Boolean).join(" ")
+    : (item.title || "Deal");
+
+link.appendChild(titleDiv);
+
 
       if (item.store) {
         const storeDiv = document.createElement("div");
