@@ -67,6 +67,7 @@ export default async function handler(req, res) {
     `Target Price: $${priceDisplay}`,
     ``,
     `We'll notify you if we detect a deal at or below your target price.`,
+    `To manage or cancel your alert(s) anytime, visit: https://shoebeagle.com/pages/myalerts.html`,
     ``,
     `If you didn't request this alert, you can ignore this email.`
   ].join('\n');
@@ -81,6 +82,13 @@ export default async function handler(req, res) {
     <p style="margin:0 0 8px; font-size:14px;"><strong>Product:</strong> ${product}</p>
     <p style="margin:0 0 8px; font-size:14px;"><strong>Target Price:</strong> $${priceDisplay}</p>
     <p style="margin:16px 0 0; font-size:14px;">We'll notify you immediately if we detect a deal at or below your target price. This alert will remain active for 30 days.</p>
+    <p style="margin:12px 0 0; font-size:13px; color:#374151;">
+      To manage or cancel your alert(s) anytime, click
+      <a href="https://shoebeagle.com/pages/myalerts.html"
+         style="color:#214478ff; font-weight:600; text-decoration:none;">
+        HERE
+      </a>.
+    </p>
   </div>
   <p style="margin-top:16px; font-size:12px; color:#6b7280;">If you didn't request this alert, you can ignore this email.</p>
 </div>
