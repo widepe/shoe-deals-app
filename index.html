@@ -145,14 +145,6 @@
 
     .paw.hidden { display: none; }
 
-    @keyframes pawRock {
-      0%   { transform: translateY(-50%) rotate(-10deg); }
-      50%  { transform: translateY(-50%) rotate(10deg); }
-      100% { transform: translateY(-50%) rotate(-10deg); }
-    }
-
-    .paw.rock { animation: pawRock 1.1s ease-in-out infinite; }
-
     /* Icon rock animations */
     @keyframes iconRock {
       0%   { transform: rotate(-10deg); }
@@ -1883,7 +1875,6 @@ if (contactLink && contactModal) {
       modelInput.classList.add("model-inactive");
       modelSuggestions.style.display = "none";
       modelPaw.classList.add("hidden");
-      modelPaw.classList.remove("rock");
       brandSelected = false;
     }
 
@@ -1892,9 +1883,9 @@ if (contactLink && contactModal) {
         modelInput.placeholder = "Enter Shoe Model";
         brandSelected = true;
         brandPaw.classList.add("hidden");
-        brandPaw.classList.remove("rock");
+  
         modelPaw.classList.remove("hidden");
-        modelPaw.classList.add("rock");
+   
       }
     }
 
@@ -1910,20 +1901,20 @@ if (contactLink && contactModal) {
         brandPaw.classList.add("hidden");
       } else if (!brandSelected) {
         brandPaw.classList.remove("hidden");
-        brandPaw.classList.add("rock");
+    
       }
 
       if (brandSelected && !modelInput.disabled) {
         if (!modelInput.value.trim()) {
           modelPaw.classList.remove("hidden");
-          modelPaw.classList.add("rock");
+      
         } else {
           modelPaw.classList.add("hidden");
-          modelPaw.classList.remove("rock");
+  
         }
       } else {
         modelPaw.classList.add("hidden");
-        modelPaw.classList.remove("rock");
+ 
       }
 
       updateFetchReady();
@@ -1946,7 +1937,7 @@ if (contactLink && contactModal) {
       alertPriceInput.value = "";
       alertContactInput.value = "";
       alertPricePaw.classList.remove("hidden");
-      alertPricePaw.classList.add("rock");
+   
       updateAlertSubmitButton();
     }
 
@@ -2049,7 +2040,7 @@ modelInput.addEventListener("click", () => {
         alertPricePaw.classList.add("hidden");
       } else {
         alertPricePaw.classList.remove("hidden");
-        alertPricePaw.classList.add("rock");
+ 
       }
       updateAlertSubmitButton();
     });
@@ -2317,7 +2308,7 @@ statusMessageEl.textContent = `Top ${results.length} deal${results.length === 1 
         alertPricePaw.classList.add("hidden");
       } else {
         alertPricePaw.classList.remove("hidden");
-        alertPricePaw.classList.add("rock");
+    
       }
       updateAlertSubmitButton();
     });
