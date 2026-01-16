@@ -32,26 +32,42 @@ module.exports = async (req, res) => {
   const startedAt = Date.now();
 
   try {
-    // Accept separate brand and model parameters
+    // OLD style: separate brand / model
     const rawBrand = req.query && req.query.brand ? req.query.brand : "";
     const rawModel = req.query && req.query.model ? req.query.model : "";
-    
+
+    // NEW style: single query string (brand, model, or both)
+    const rawQuery = req.query && req.query.query ? req.query.query : "";
+
     const brand = normalize(rawBrand);
     const model = normalize(rawModel);
-    
-    console.log("[/api/search] Request:", { requestId, rawBrand, rawModel, brand, model });
+    const qNorm = normalize(rawQuery);
 
-    // Require at least one parameter
-    if (!brand && !model) {
+    console.log("[/api/search] Request:", {
+      requestId,
+      rawBrand,
+      rawModel,
+      rawQuery,
+      brand,
+      model,
+      qNorm,
+    });
+
+    // Require at least one of: brand, model, or query
+    if (!brand && !model && !qNorm) {
       return res.status(400).json({
-        error: "Missing parameters - provide brand, model, or both",
-        example: "/api/search?brand=Nike&model=Pegasus",
-        requestId
+        error: "Missing parameters - provide brand, model, query, or a combination",
+        examples: [
+          "/api/search?brand=Nike&model=Pegasus",
+          "/api/search?query=Nike%20Pegasus",
+          "/api/search?query=Pegasus",
+        ],
+        requestId,
       });
     }
 
-    // Check cache
-    const cacheKey = `search:${brand}:${model}`;
+    // Cache key must include all 3 inputs so we don't cross-contaminate
+    const cacheKey = `search:${brand}:${model}:${qNorm}`;
     const cached = getCached(cacheKey);
     if (cached) {
       console.log("[/api/search] Cache hit");
@@ -80,9 +96,9 @@ module.exports = async (req, res) => {
       dealsData = await response.json();
     } catch (blobError) {
       console.error("[/api/search] Error fetching from blob:", blobError.message);
-      return res.status(500).json({ 
+      return res.status(500).json({
         error: "Failed to load deals data",
-        requestId
+        requestId,
       });
     }
 
@@ -93,81 +109,85 @@ module.exports = async (req, res) => {
 
     console.log("[/api/search] Loaded deals:", {
       total: deals.length,
-      lastUpdated: dealsData.lastUpdated || 'unknown'
+      lastUpdated: dealsData.lastUpdated || "unknown",
     });
 
-    console.log("[/api/search] Parsed:", { brand, model });
+    console.log("[/api/search] Parsed:", { brand, model, qNorm });
 
-    // Filter deals - flexible matching based on what's provided
-    // NOTE: Deals are already sorted by discount % in the blob (shuffled first, then sorted)
-    // So we just filter and take the first 24 matches
     const results = deals
       .filter((deal) => {
         const dealBrand = normalize(deal.brand);
         const dealModel = normalize(deal.model);
         const dealTitle = normalize(deal.title);
-        
-        // If both brand and model provided, both must match
-        if (brand && model) {
-          const brandMatch = dealBrand.includes(brand);
-          const modelMatch = dealModel.includes(model) || dealTitle.includes(model);
-          return brandMatch && modelMatch;
+
+        // Mode 1: explicit brand + model (old behavior)
+        if (brand || model) {
+          if (brand && model) {
+            const brandMatch = dealBrand.includes(brand);
+            const modelMatch = dealModel.includes(model) || dealTitle.includes(model);
+            return brandMatch && modelMatch;
+          }
+
+          if (brand && !model) {
+            return dealBrand.includes(brand);
+          }
+
+          if (!brand && model) {
+            return dealModel.includes(model) || dealTitle.includes(model);
+          }
         }
-        
-        // If only brand provided, match brand
-        if (brand && !model) {
-          return dealBrand.includes(brand);
+
+        // Mode 2: free-text query only (new behavior)
+        if (qNorm) {
+          const haystack = `${dealBrand} ${dealModel} ${dealTitle}`;
+          return haystack.includes(qNorm);
         }
-        
-        // If only model provided, search model and title (allows "pegasus" to find Nike Pegasus)
-        if (!brand && model) {
-          return dealModel.includes(model) || dealTitle.includes(model);
-        }
-        
+
         return false;
       })
       .map((deal) => ({
         title: deal.title,
-        brand: deal.brand,      
-        model: deal.model,     
+        brand: deal.brand,
+        model: deal.model,
         price: Number(deal.price),
         originalPrice: deal.originalPrice ? Number(deal.originalPrice) : null,
         discount: deal.discount || null,
         store: deal.store,
         url: deal.url,
-        image: deal.image || "https://placehold.co/600x400?text=Running+Shoe"
+        image: deal.image || "https://placehold.co/600x400?text=Running+Shoe",
       }))
-      // REMOVED: .sort() - deals are already sorted by discount in blob
-      .slice(0, 24);  // Take top 24 best deals (already sorted by discount)
+      // Deals already sorted in blob; just take top N
+      .slice(0, 24);
 
-    // Cache results
     setCache(cacheKey, results);
 
     console.log("[/api/search] Complete:", {
       requestId,
       ms: Date.now() - startedAt,
       count: results.length,
-      dataAge: dealsData.lastUpdated ? `Updated ${new Date(dealsData.lastUpdated).toLocaleString()}` : 'unknown'
+      dataAge: dealsData.lastUpdated
+        ? `Updated ${new Date(dealsData.lastUpdated).toLocaleString()}`
+        : "unknown",
     });
 
-    return res.status(200).json({ 
-      results, 
+    return res.status(200).json({
+      results,
       requestId,
       lastUpdated: dealsData.lastUpdated,
-      cached: false
+      cached: false,
     });
 
   } catch (err) {
     console.error("[/api/search] Fatal error:", {
       requestId,
       message: err?.message || String(err),
-      stack: err?.stack
+      stack: err?.stack,
     });
-    
-    return res.status(500).json({ 
+
+    return res.status(500).json({
       error: "Internal server error",
       details: err?.message,
-      requestId
+      requestId,
     });
   }
 };
