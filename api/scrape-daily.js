@@ -83,12 +83,12 @@ function isValidRunningShoe(deal) {
     'arm warmer', 'leg warmer',
     'headband', 'wristband',
     'sunglasses', 'eyewear',
-    'sleeve', 'sleeves',  // NEW: standalone sleeves
-    'throw',  // NEW: track & field throw shoes
-    'out of stock',  // NEW: out of stock items
-    'kids', 'kid',  // NEW: kids shoes
-    'youth',  // NEW: youth shoes
-    'junior', 'juniors'  // NEW: junior shoes
+    'sleeve', 'sleeves', 
+    'throw',  //  track & field throw shoes
+    'out of stock', 
+    'kids', 'kid',  
+    'youth', 
+    'junior', 'juniors' 
   ];
   
   // Check if title contains any excluded patterns
