@@ -28,6 +28,76 @@ const apifyClient = new ApifyClient({
 });
 
 /**
+ * CENTRALIZED FILTER: Validates that a deal is a legitimate running shoe
+ * @param {Deal} deal - The deal to validate
+ * @returns {boolean} - True if valid running shoe deal, false otherwise
+ */
+function isValidRunningShoe(deal) {
+  // Basic data integrity checks
+  if (!deal || !deal.url || !deal.title) {
+    return false;
+  }
+  
+  // Must have valid prices
+  if (!deal.price || !deal.originalPrice) {
+    return false;
+  }
+  
+  // Sale price must be less than original price
+  if (deal.price >= deal.originalPrice) {
+    return false;
+  }
+  
+  // Price must be in reasonable range for shoes ($10-$1000)
+  if (deal.price < 10 || deal.price > 1000) {
+    return false;
+  }
+  
+  // Discount must be between 5% and 90%
+  const discount = ((deal.originalPrice - deal.price) / deal.originalPrice) * 100;
+  if (discount < 5 || discount > 90) {
+    return false;
+  }
+  
+  // Product type filtering - exclude non-shoe items
+  const title = (deal.title || '').toLowerCase();
+  
+  // List of non-shoe items to exclude
+  const excludePatterns = [
+    'sock', 'socks',
+    'apparel', 'shirt', 'shorts', 'tights', 'pants',
+    'hat', 'cap', 'beanie',
+    'insole', 'insoles',
+    'laces', 'lace',
+    'accessories', 'accessory',
+    'hydration', 'bottle', 'flask',
+    'watch', 'watches',
+    'gear', 'equipment',
+    'bag', 'bags', 'pack', 'backpack',
+    'vest', 'vests',
+    'jacket', 'jackets',
+    'bra', 'bras',
+    'underwear', 'brief',
+    'glove', 'gloves', 'mitt',
+    'compression sleeve',
+    'arm warmer', 'leg warmer',
+    'headband', 'wristband',
+    'sunglasses', 'eyewear'
+  ];
+  
+  // Check if title contains any excluded patterns
+  for (const pattern of excludePatterns) {
+    // Use word boundary to avoid false positives
+    const regex = new RegExp(`\\b${pattern}\\b`, 'i');
+    if (regex.test(title)) {
+      return false;
+    }
+  }
+  
+  return true;
+}
+
+/**
  * Runs the Road Runner Apify actor and returns its dataset as Deal[].
  */
 async function fetchRoadRunnerDeals() {
@@ -290,32 +360,38 @@ module.exports = async (req, res) => {
       console.error('[SCRAPER] Zappos failed:', error.message);
     }
 
-  // === DEDUPLICATION BY STORE + URL so If same URL and store, data is removed ===
-console.log('[SCRAPER] De-duplicating deals by store + URL...');
-const uniqueDeals = [];
-const seenStoreUrls = new Set();
+    console.log(`[SCRAPER] Total deals collected from all sources: ${allDeals.length}`);
 
-for (const d of allDeals) {
-  if (!d) continue;
+    // === CENTRALIZED FILTERING ===
+    console.log('[SCRAPER] Applying centralized filters to remove non-shoes and invalid deals...');
+    const filteredDeals = allDeals.filter(isValidRunningShoe);
+    console.log(`[SCRAPER] Filtering complete. Before: ${allDeals.length}, After: ${filteredDeals.length} (removed ${allDeals.length - filteredDeals.length})`);
 
-  const urlKey = (d.url || '').trim();
+    // === DEDUPLICATION BY STORE + URL ===
+    console.log('[SCRAPER] De-duplicating deals by store + URL...');
+    const uniqueDeals = [];
+    const seenStoreUrls = new Set();
 
-  if (!urlKey) {
-    uniqueDeals.push(d);
-    continue;
-  }
+    for (const d of filteredDeals) {
+      if (!d) continue;
 
-  const compositeKey = `${d.store}|${urlKey}`;
-  if (seenStoreUrls.has(compositeKey)) continue;
+      const urlKey = (d.url || '').trim();
 
-  seenStoreUrls.add(compositeKey);
-  uniqueDeals.push(d);
-}
+      if (!urlKey) {
+        uniqueDeals.push(d);
+        continue;
+      }
 
-console.log(
-  `[SCRAPER] De-duplication complete. Before: ${allDeals.length}, After: ${uniqueDeals.length}`
-);
+      const compositeKey = `${d.store}|${urlKey}`;
+      if (seenStoreUrls.has(compositeKey)) continue;
 
+      seenStoreUrls.add(compositeKey);
+      uniqueDeals.push(d);
+    }
+
+    console.log(
+      `[SCRAPER] De-duplication complete. Before: ${filteredDeals.length}, After: ${uniqueDeals.length} (removed ${filteredDeals.length - uniqueDeals.length} duplicates)`
+    );
 
     // From here on, work with the deduped list
     const dealsToUse = uniqueDeals;
@@ -434,9 +510,6 @@ async function scrapeRunningWarehouse() {
       $("a").each((_, el) => {
         const anchor = $(el);
         let text = anchor.text().replace(/\s+/g, " ").trim();
-
-        if (!text.startsWith("Clearance ")) return;
-        if (!/Shoes\b/i.test(text)) return;
 
         // Remove trailing asterisk
         text = text.replace(/\*\s*$/, "").trim();
@@ -562,9 +635,6 @@ async function scrapeFleetFeet() {
         if (!href || !href.startsWith('/products/')) return;
 
         const fullText = $link.text().replace(/\s+/g, ' ').trim();
-
-        if (!/running|shoes|race|trail|walking|sneakers/i.test(fullText)) return;
-        if (fullText.length < 20) return;
 
         const titleMatch = fullText.match(/^(.+?)\s*(?:original price|sale|discounted|\$)/i);
         const title = titleMatch ? titleMatch[1].trim() : fullText.split('$')[0].trim();
