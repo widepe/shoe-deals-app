@@ -33,12 +33,6 @@
       color: #ffffff;
     }
 
-    /* Price row styling */
-    .card-meta .price {
-      display: inline-flex;
-      align-items: baseline;
-    }
-
     /* Original price with line-through */
     .card-original-price {
       margin-left: 0.35rem;
@@ -162,9 +156,6 @@
 
     input::placeholder { color: #999; opacity: 1; }
 
-    .model-inactive { background: #faf5f2ff; cursor: not-allowed; }
-    .model-active { background: #ffffff; cursor: text; }
-
     .suggestions {
       position: absolute;
       top: 46px;
@@ -243,7 +234,7 @@
     /* Daily Deals Section */
     .daily-deals {
       width: 100%;
-      max-width: 850px;
+      max-width: 900px;
       margin-top: 1.0rem;
     }
 
@@ -255,12 +246,14 @@
       text-align: center;
     }
 
-    .daily-deals-grid {
+    .shoe-grid {
+      margin-top: 1.0rem;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 200px));
-      gap: 1rem;
+      gap: 1.25rem;
       width: 100%;
       justify-content: center;
+      max-width: 900px;
     }
 
     /* Unified card style: search + daily deals */
@@ -283,6 +276,7 @@
       color: inherit;
       height: 100%;
     }
+
     .card img {
       width: 100%;
       border-radius: 0.6rem;
@@ -321,37 +315,13 @@
       color: #214478ff;
     }
 
-    .card-original {
-      text-decoration: line-through;
-      font-size: 0.8rem;
-      color: #777;
-    }
-
-    .card-discount {
-      font-size: 0.8rem;
-      color: #2d3c22;
-      margin-top: 0.05rem;
-    }
-
-    .results {
-      margin-top: 1.0rem;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 200px));
-      gap: 1.25rem;
-      width: 100%;
-      justify-content: center;
-      max-width: 850px;
-    }
-
     .disclaimer {
       font-size: 0.8rem;
       color: #555;
-      max-width: 850px;
+      max-width: 900px;
       margin: 0.15rem auto 0;
       text-align: center;
     }
-
-    .hidden { display: none !important; }
 
     /* Footer */
     .footer {
@@ -397,7 +367,7 @@
       </div>
 
       <div class="input-wrapper">
-        <input id="model" type="text" placeholder="Enter Shoe Model" autocomplete="off" class="model-active"/>
+        <input id="model" type="text" placeholder="Enter Shoe Model" autocomplete="off"/>
         <div id="modelSuggestions" class="suggestions"></div>
       </div>
 
@@ -412,10 +382,10 @@
     <div id="mainContent">
       <div class="daily-deals" id="dailyDeals">
         <div class="daily-deals-header">Marty's Daily Deals</div>
-        <div class="daily-deals-grid" id="dailyDealsGrid"></div>
+        <div class="shoe-grid" id="dailyDealsGrid"></div>
       </div>
 
-      <div class="results" id="results"></div>
+      <div class="shoe-grid" id="results"></div>
       <p class="disclaimer">Shoe Beagle does not sell products directly and is not responsible for changes in price, availability, or shipping terms on retailer sites.</p>
     </div>
 
@@ -444,21 +414,15 @@
     const resultsEl = document.getElementById("results");
     const dailyDeals = document.getElementById("dailyDeals");
     const dailyDealsGrid = document.getElementById("dailyDealsGrid");
-
     const fetchBtn = document.getElementById("fetchBtn");
-
     const brandInput = document.getElementById("brand");
     const modelInput = document.getElementById("model");
     const brandSuggestions = document.getElementById("brandSuggestions");
     const modelSuggestions = document.getElementById("modelSuggestions");
-
-    const mainContent = document.getElementById("mainContent");
     const logoLink = document.getElementById("logoLink");
-
     const footerYear = document.getElementById("footerYear");
 
     let currentSearch = { brand: "", model: "" };
-    let brandSelected = false;
 
     // Set footer year
     if (footerYear) {
@@ -469,17 +433,9 @@
       location.reload();
     });
 
-    function canUseLocalStorage() {
-      try {
-        const k = "__sb_test__";
-        localStorage.setItem(k, "1");
-        localStorage.removeItem(k);
-        return true;
-      } catch (e) { return false; }
+    function normalizeStr(s) { 
+      return String(s || "").trim().toLowerCase(); 
     }
-
-    function normalizeStr(s) { return String(s || "").trim().toLowerCase(); }
-    function nowMs() { return Date.now(); }
 
     // Shared discount helper used by cards
     function getDiscountInfo(item) {
@@ -568,15 +524,8 @@
       return brands.find(b => normalizeStr(b) === normalized) || "";
     }
 
-    function resolveBrand() { return resolveBrandKey(brandInput.value.trim()); }
-
-    function resolveModelKey(brandKey, modelTyped) {
-      const typed = String(modelTyped || "").trim();
-      if (!typed) return "";
-      if (!brandKey || !brandModels[brandKey]) return typed;
-      const normalized = normalizeStr(typed);
-      const canonical = brandModels[brandKey].find(m => normalizeStr(m) === normalized);
-      return canonical || typed;
+    function resolveBrand() { 
+      return resolveBrandKey(brandInput.value.trim()); 
     }
 
     function filterStartsWith(list, text) {
@@ -587,7 +536,10 @@
 
     function showSuggestions(container, items, onClickItem) {
       container.innerHTML = "";
-      if (!items.length) { container.style.display = "none"; return; }
+      if (!items.length) { 
+        container.style.display = "none"; 
+        return; 
+      }
       items.forEach(value => {
         const div = document.createElement("div");
         div.className = "suggestion-item";
@@ -599,29 +551,6 @@
         container.appendChild(div);
       });
       container.style.display = "block";
-    }
-
-    function enableModel() {
-      modelInput.disabled = false;
-      modelInput.classList.remove("model-inactive");
-      modelInput.classList.add("model-active");
-    }
-
-    function resetModelState() {
-      modelInput.disabled = true;
-      modelInput.value = "";
-      modelInput.placeholder = "";
-      modelInput.classList.remove("model-active");
-      modelInput.classList.add("model-inactive");
-      modelSuggestions.style.display = "none";
-      brandSelected = false;
-    }
-
-    function confirmBrandSelection() {
-      if (!modelInput.disabled) {
-        modelInput.placeholder = "Enter Shoe Model";
-        brandSelected = true;
-      }
     }
 
     function updateFetchReady() {
@@ -794,9 +723,29 @@
       }
     }
 
+    // Load total deals count and update tagline
+async function dailyDealCount() {
+  const taglineEl = document.querySelector('.tagline');
+  
+  try {
+    const blobUrl = "https://v3gjlrmpc76mymfc.public.blob.vercel-storage.com/deals.json";
+    const res = await fetch(blobUrl);
+    const data = await res.json();
+    
+    const totalDeals = data.totalDeals || 0;
+    
+    if (taglineEl && totalDeals > 0) {
+      taglineEl.textContent = `There are ${totalDeals.toLocaleString()} running shoe deals today, let's find yours!`;
+    }
+  } catch (err) {
+    console.error("Error loading total deals count:", err);
+    // Keep default tagline if fetch fails
+  }
+}
     // Initial daily deals load
     loadDailyDeals();
-
+    dailyDealCount();
+    
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -818,11 +767,10 @@
       resultsEl.innerHTML = "";
       dailyDeals.style.display = "none";
 
-      const query = displayQuery;
       let data;
 
       try {
-        const res = await fetch("/api/search?" + new URLSearchParams({ query }));
+        const res = await fetch("/api/search?" + new URLSearchParams({ query: displayQuery }));
         data = await res.json();
       } catch (err) {
         console.error("Search error:", err);
