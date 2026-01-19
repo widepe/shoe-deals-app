@@ -735,7 +735,7 @@ async function dailyDealCount() {
     const totalDeals = data.totalDeals || 0;
     
     if (taglineEl && totalDeals > 0) {
-      taglineEl.textContent = `There are ${totalDeals} running shoe deals today, let's find yours!`;
+      taglineEl.textContent = `There are ${totalDeals.toLocaleString()} running shoe deals today, let's find yours!`;
     }
   } catch (err) {
     console.error("Error loading total deals count:", err);
