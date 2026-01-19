@@ -63,7 +63,7 @@ function isValidRunningShoe(deal) {
   const title = (deal.title || '').toLowerCase();
   
   // List of non-shoe items to exclude
-  const excludePatterns = [
+   const excludePatterns = [
     'sock', 'socks',
     'apparel', 'shirt', 'shorts', 'tights', 'pants',
     'hat', 'cap', 'beanie',
@@ -82,7 +82,13 @@ function isValidRunningShoe(deal) {
     'compression sleeve',
     'arm warmer', 'leg warmer',
     'headband', 'wristband',
-    'sunglasses', 'eyewear'
+    'sunglasses', 'eyewear',
+    'sleeve', 'sleeves',  // NEW: standalone sleeves
+    'throw',  // NEW: track & field throw shoes
+    'out of stock',  // NEW: out of stock items
+    'kids', 'kid',  // NEW: kids shoes
+    'youth',  // NEW: youth shoes
+    'junior', 'juniors'  // NEW: junior shoes
   ];
   
   // Check if title contains any excluded patterns
@@ -525,12 +531,7 @@ async function scrapeRunningWarehouse() {
         const hasValidOriginal =
           Number.isFinite(originalPrice) && originalPrice > price;
 
-        // Clean title (remove prices and normalize spaces)
-        const titleWithoutPrices = text
-          .replace(/\$\s*\d[\d,]*\.?\d*/g, "")
-          .replace(/\s+/g, " ")
-          .trim();
-        const title = titleWithoutPrices;
+      const title = text.trim();
 
         // Parse brand and model
         const { brand, model } = parseBrandModel(title);
@@ -636,8 +637,7 @@ async function scrapeFleetFeet() {
 
         const fullText = $link.text().replace(/\s+/g, ' ').trim();
 
-        const titleMatch = fullText.match(/^(.+?)\s*(?:original price|sale|discounted|\$)/i);
-        const title = titleMatch ? titleMatch[1].trim() : fullText.split('$')[0].trim();
+        const title = fullText.trim();
 
         const { brand, model } = parseBrandModel(title);
 
@@ -727,21 +727,8 @@ async function scrapeLukesLocker() {
 
       // Look for price indicators - Luke's shows "Sale price" and "Regular price"
       if (!fullText.includes('$')) return;
-
-      // Extract title - usually the first line before "Sale price"
-      // Example: "ALTRA WOMEN'S TORIN 7 ALTRA Sale price $99.99 Regular price $150.00"
-      const titleMatch = fullText.match(/^(.+?)\s+(?:Sale price|Regular price|\$)/i);
-      let title = titleMatch ? titleMatch[1].trim() : '';
-
-      // If title extraction failed, try splitting on brand names
-      if (!title || title.length < 5) {
-        // Try to find brand name and extract everything before "Sale price"
-        const beforePrice = fullText.split(/Sale price|Regular price/i)[0];
-        title = beforePrice.replace(/\s+/g, ' ').trim();
-      }
-
-      // Skip if we couldn't get a reasonable title
-      if (!title || title.length < 5) return;
+    
+      const title = fullText.trim();
 
       // Parse brand and model
       const { brand, model } = parseBrandModel(title);
@@ -864,8 +851,6 @@ async function scrapeMarathonSports() {
           }
         }
 
-        // Clean up title
-        title = title.replace(/\s+(Men's|Women's|Shoes)\s*$/gi, '').trim();
 
         if (!title || title.length < 5) return;
 
