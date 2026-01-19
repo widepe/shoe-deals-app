@@ -13,7 +13,10 @@ function cleanModelName(input) {
   
   // Remove "shoes" anywhere
   model = model.replace(/\bShoes?\b/gi, " ");
-  
+
+  //  Remove dollar amounts (prices) anywhere in the model
+  model = model.replace(/\$\s*[\d,]+(?:\.\d{1,2})?/g, "");
+
   // Remove marketing phrases (anywhere in text)
   model = model.replace(/\b(all sales? final|no returns?|final sale|non-returnable|as-is)\b/gi, "");
   model = model.replace(/\b(free (shipping|returns)|ships? free|fast shipping)\b/gi, "");
