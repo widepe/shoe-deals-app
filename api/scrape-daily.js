@@ -956,45 +956,57 @@ async function scrapeHolabirdSports() {
         });
 
         console.log(`[SCRAPER] Response status: ${response.status}`);
-        console.log(`[SCRAPER] Response length: ${response.data.length} characters`);
 
         const $ = cheerio.load(response.data);
         
-        // Count ALL links with /products/
         const allProductLinks = $('a[href*="/products/"]').length;
         console.log(`[SCRAPER] Total product links found: ${allProductLinks}`);
         
         let foundProducts = 0;
-        let skippedNoPrices = 0;
-        let skippedDuplicates = 0;
         
+        // Find product containers instead of just links
         $('a[href*="/products/"]').each((_, el) => {
           const $link = $(el);
           const href = $link.attr('href');
 
           if (!href || !href.includes('/products/')) return;
 
-          const fullText = $link.text().replace(/\s+/g, ' ').trim();
-          
-          if (!fullText.includes('$')) {
-            skippedNoPrices++;
-            return;
-          }
-
           const productUrl = href.startsWith('http') 
             ? href 
             : `https://www.holabirdsports.com${href.startsWith('/') ? '' : '/'}${href}`;
 
-          if (seenUrls.has(productUrl)) {
-            skippedDuplicates++;
+          if (seenUrls.has(productUrl)) return;
+
+          // Find the parent container that has all the product info
+          const $container = $link.closest('div, article, li').filter(function() {
+            const text = $(this).text();
+            return text.includes('$') && text.includes('price');
+          });
+
+          if (!$container.length) {
+            console.log(`[SCRAPER] No container with price for: ${productUrl}`);
             return;
           }
 
-          const title = fullText.trim();
-          if (!title || title.length < 5) return;
+          const containerText = $container.text().replace(/\s+/g, ' ').trim();
+
+          // Get title - look in the link first, then container
+          let title = $link.text().replace(/\s+/g, ' ').trim();
+          if (!title || title.length < 5) {
+            // Try to find title in container
+            const $titleEl = $container.find('h2, h3, .product-title, [class*="title"]').first();
+            if ($titleEl.length) {
+              title = $titleEl.text().replace(/\s+/g, ' ').trim();
+            }
+          }
+
+          if (!title || title.length < 5) {
+            console.log(`[SCRAPER] No title for: ${productUrl}`);
+            return;
+          }
 
           const { brand, model } = parseBrandModel(title);
-          const { salePrice, originalPrice, valid } = extractPrices($, $link, fullText);
+          const { salePrice, originalPrice, valid } = extractPrices($, $container, containerText);
           
           if (!valid || !salePrice || salePrice <= 0) {
             console.log(`[SCRAPER] Invalid pricing for: ${title.substring(0, 50)}`);
@@ -1008,6 +1020,9 @@ async function scrapeHolabirdSports() {
 
           let imageUrl = null;
           const $img = $link.find('img').first();
+          if (!$img.length) {
+            $img = $container.find('img').first();
+          }
           if ($img.length) {
             imageUrl = $img.attr('src') || $img.attr('data-src');
             if (imageUrl && !imageUrl.startsWith('http')) {
@@ -1035,9 +1050,15 @@ async function scrapeHolabirdSports() {
           });
         });
 
-        console.log(`[SCRAPER] Page ${page} summary: ${foundProducts} valid, ${skippedNoPrices} no prices, ${skippedDuplicates} duplicates`);
+        console.log(`[SCRAPER] Page ${page} summary: found ${foundProducts} valid products`);
 
-        if (foundProducts === 0) {
+        if (foundProducts === 0 && page === 1) {
+          console.log(`[SCRAPER] No products found on first page, stopping`);
+          hasMore = false;
+          break;
+        }
+
+        if (allProductLinks === 0) {
           hasMore = false;
           break;
         }
@@ -1056,7 +1077,6 @@ async function scrapeHolabirdSports() {
     throw error;
   }
 }
-
 
 function escapeRegExp(str) {
   return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
