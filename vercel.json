@@ -6,19 +6,19 @@
     },
     {
       "path": "/api/scrapers/holabird-womens-road",
-      "schedule": "8 9 * * *"
-    },
-    {
-      "path": "/api/scrapers/holabird-trail-unisex",
-      "schedule": "13 9 * * *"
-    },
-    {
-      "path": "/api/scrape-daily",
       "schedule": "18 9 * * *"
     },
     {
+      "path": "/api/scrapers/holabird-trail-unisex",
+      "schedule": "33 9 * * *"
+    },
+    {
+      "path": "/api/scrape-daily",
+      "schedule": "48 9 * * *"
+    },
+    {
       "path": "/api/merge-deals",
-      "schedule": "27 9 * * *"
+      "schedule": "8 10 * * *"
     }
   ]
 }
