@@ -955,16 +955,11 @@ async function scrapeHolabirdSports() {
           timeout: 30000
         });
 
-        console.log(`[SCRAPER] Response status: ${response.status}`);
-
         const $ = cheerio.load(response.data);
-        
-        const allProductLinks = $('a[href*="/products/"]').length;
-        console.log(`[SCRAPER] Total product links found: ${allProductLinks}`);
         
         let foundProducts = 0;
         
-        // Find product containers instead of just links
+        // Look for product cards/containers
         $('a[href*="/products/"]').each((_, el) => {
           const $link = $(el);
           const href = $link.attr('href');
@@ -977,24 +972,26 @@ async function scrapeHolabirdSports() {
 
           if (seenUrls.has(productUrl)) return;
 
-          // Find the parent container that has all the product info
+          // Find the parent product card
           const $container = $link.closest('div, article, li').filter(function() {
             const text = $(this).text();
-            return text.includes('$') && text.includes('price');
+            return text.includes('$') && (text.includes('Sale') || text.includes('Regular'));
           });
 
-          if (!$container.length) {
-            console.log(`[SCRAPER] No container with price for: ${productUrl}`);
-            return;
-          }
+          if (!$container.length) return;
 
           const containerText = $container.text().replace(/\s+/g, ' ').trim();
 
-          // Get title - look in the link first, then container
-          let title = $link.text().replace(/\s+/g, ' ').trim();
+          // Get title from the image alt attribute (most reliable on Shopify)
+          let title = '';
+          const $img = $link.find('img').first();
+          if ($img.length) {
+            title = $img.attr('alt') || '';
+          }
+          
+          // If no alt text, try to find a heading or title class
           if (!title || title.length < 5) {
-            // Try to find title in container
-            const $titleEl = $container.find('h2, h3, .product-title, [class*="title"]').first();
+            const $titleEl = $container.find('h2, h3, .product-title, .product-card__title, [class*="title"]').first();
             if ($titleEl.length) {
               title = $titleEl.text().replace(/\s+/g, ' ').trim();
             }
@@ -1008,22 +1005,11 @@ async function scrapeHolabirdSports() {
           const { brand, model } = parseBrandModel(title);
           const { salePrice, originalPrice, valid } = extractPrices($, $container, containerText);
           
-          if (!valid || !salePrice || salePrice <= 0) {
-            console.log(`[SCRAPER] Invalid pricing for: ${title.substring(0, 50)}`);
-            return;
-          }
-          
-          if (!originalPrice || originalPrice <= salePrice) {
-            console.log(`[SCRAPER] No discount for: ${title.substring(0, 50)} - sale: ${salePrice}, orig: ${originalPrice}`);
-            return;
-          }
+          if (!valid || !salePrice || salePrice <= 0) return;
+          if (!originalPrice || originalPrice <= salePrice) return;
 
-       let imageUrl = null;
-let $img = $link.find('img').first();  // ✅ Change const to let
-if (!$img.length) {
-  $img = $container.find('img').first();
-}
-          if ($img.length) {
+          let imageUrl = null;
+          if ($img && $img.length) {
             imageUrl = $img.attr('src') || $img.attr('data-src');
             if (imageUrl && !imageUrl.startsWith('http')) {
               imageUrl = imageUrl.startsWith('//') 
@@ -1034,8 +1020,6 @@ if (!$img.length) {
 
           seenUrls.add(productUrl);
           foundProducts++;
-
-          console.log(`[SCRAPER] Added product: ${title.substring(0, 50)} - $${salePrice} (was $${originalPrice})`);
 
           deals.push({
             title,
@@ -1050,15 +1034,9 @@ if (!$img.length) {
           });
         });
 
-        console.log(`[SCRAPER] Page ${page} summary: found ${foundProducts} valid products`);
+        console.log(`[SCRAPER] Page ${page}: found ${foundProducts} products`);
 
         if (foundProducts === 0 && page === 1) {
-          console.log(`[SCRAPER] No products found on first page, stopping`);
-          hasMore = false;
-          break;
-        }
-
-        if (allProductLinks === 0) {
           hasMore = false;
           break;
         }
@@ -1073,7 +1051,6 @@ if (!$img.length) {
 
   } catch (error) {
     console.error("[SCRAPER] Holabird Sports error:", error.message);
-    console.error("[SCRAPER] Error stack:", error.stack);
     throw error;
   }
 }
