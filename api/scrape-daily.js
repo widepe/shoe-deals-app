@@ -1018,11 +1018,11 @@ async function scrapeHolabirdSports() {
             return;
           }
 
-          let imageUrl = null;
-          const $img = $link.find('img').first();
-          if (!$img.length) {
-            $img = $container.find('img').first();
-          }
+       let imageUrl = null;
+let $img = $link.find('img').first();  // ✅ Change const to let
+if (!$img.length) {
+  $img = $container.find('img').first();
+}
           if ($img.length) {
             imageUrl = $img.attr('src') || $img.attr('data-src');
             if (imageUrl && !imageUrl.startsWith('http')) {
