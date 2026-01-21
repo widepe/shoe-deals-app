@@ -944,7 +944,7 @@ async function scrapeHolabirdSports() {
 
       while (hasMore && page <= 3) {
         // Build the JSON API URL
-        const jsonUrl = `https://www.holabirdsports.com/collections/${collectionPath}products.json?page=${page}`;
+        const jsonUrl = `https://www.holabirdsports.com/collections/${collectionPath}/products.json?page=${page}`;
         
         console.log(`[SCRAPER] Fetching page ${page}: ${jsonUrl}`);
 
