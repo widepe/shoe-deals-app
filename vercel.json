@@ -13,8 +13,12 @@
       "schedule": "13 9 * * *"
     },
     {
+      "path": "/api/scrape-daily",
+      "schedule": "18 9 * * *"
+    },
+    {
       "path": "/api/build-deals",
-      "schedule": "20 9 * * *"
+      "schedule": "27 9 * * *"
     }
   ]
 }
