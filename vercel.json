@@ -17,7 +17,7 @@
       "schedule": "18 9 * * *"
     },
     {
-      "path": "/api/build-deals",
+      "path": "/api/merge-deals",
       "schedule": "27 9 * * *"
     }
   ]
