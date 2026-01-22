@@ -83,11 +83,30 @@ function extractAsicsProducts(html, sourceUrl) {
       url = `https://www.asics.com${url}`;
     }
     
-    // Get image
+    // Get image - check multiple attributes for lazy loading
     const $img = $product.find('img').first();
-    let image = $img.attr('src') || $img.attr('data-src');
+    let image = (
+      $img.attr('src') || 
+      $img.attr('data-src') || 
+      $img.attr('data-lazy-src') ||
+      $img.attr('data-original') ||
+      null
+    );
+    
+    // Make image URL absolute
     if (image && !image.startsWith('http')) {
-      image = image.startsWith('//') ? `https:${image}` : `https://www.asics.com${image}`;
+      if (image.startsWith('//')) {
+        image = `https:${image}`;
+      } else if (image.startsWith('/')) {
+        image = `https://www.asics.com${image}`;
+      } else {
+        image = `https://www.asics.com/${image}`;
+      }
+    }
+    
+    // Skip data URIs and placeholders
+    if (image && (image.startsWith('data:') || image.includes('placeholder'))) {
+      image = null;
     }
     
     // Calculate discount
@@ -108,7 +127,7 @@ function extractAsicsProducts(html, sourceUrl) {
         originalPrice,
         discount: discount ? `${discount}%` : null,
         url,
-        image,
+        image: image || null, // Always include image field, even if null
         scrapedAt: new Date().toISOString()
       });
     }
