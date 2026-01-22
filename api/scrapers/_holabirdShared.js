@@ -7,12 +7,17 @@ function sanitizeText(input) {
   let s = String(input).trim();
   if (!s) return "";
 
-  // Nuke obvious CSS blocks / injected style text
+  // Strip injected CSS blocks instead of nuking the whole string
   if (
     /{[^}]*}/.test(s) &&
     /(margin|display|font-size|padding|color|background|line-height)\s*:/i.test(s)
   ) {
-    return "";
+    // remove common widget/css blocks that leak into text()
+    s = s.replace(/#[A-Za-z0-9_-]+\s*\{[^}]*\}/g, " ");
+    s = s.replace(/\.[A-Za-z0-9_-]+\s*\{[^}]*\}/g, " ");
+    s = s.replace(/#review-stars-[^}]*\}/gi, " ");
+    s = s.replace(/oke-sr-count[^}]*\}/gi, " ");
+    s = s.replace(/\s+/g, " ").trim();
   }
 
   // Strip tags if any (sometimes you end up with markup-like strings)
@@ -201,6 +206,9 @@ async function scrapeHolabirdCollection({ collectionUrl, maxPages = 50, stopAfte
       const $link = $(el);
       const href = $link.attr("href");
       if (!href || !href.includes("/products/")) return;
+
+      // Skip anchors like #product-reviews-anchor (they create fake "products")
+      if (href.includes("#")) return;
 
       const productUrl = absolutizeUrl(href);
       if (!productUrl || seen.has(productUrl)) return;
