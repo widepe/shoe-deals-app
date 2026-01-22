@@ -21,8 +21,14 @@ function sanitizeText(input) {
 
   // Strip tags if any
   if (s.includes("<")) {
-    s = s.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, " ");
-    s = s.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, " ");
+    s = s.replace(
+      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+      " "
+    );
+    s = s.replace(
+      /<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi,
+      " "
+    );
     s = s.replace(/<[^>]+>/g, " ");
   }
 
@@ -38,12 +44,7 @@ function sanitizeText(input) {
   s = s.replace(/\s+/g, " ").trim();
 
   // Kill known review/widget junk
-  if (
-    !s ||
-    s.length < 4 ||
-    /^#review-stars-/i.test(s) ||
-    /oke-sr-count/i.test(s)
-  ) {
+  if (!s || s.length < 4 || /^#review-stars-/i.test(s) || /oke-sr-count/i.test(s)) {
     return "";
   }
 
@@ -52,7 +53,7 @@ function sanitizeText(input) {
 
 function absolutizeUrl(url, base = "https://www.holabirdsports.com") {
   if (!url) return null;
-  let u = String(url).trim();
+  const u = String(url).trim();
   if (!u) return null;
 
   if (/^https?:\/\//i.test(u)) return u;
@@ -100,14 +101,9 @@ function findBestImageUrl($, $link, $container) {
     if (!$img || !$img.length) return;
 
     const src =
-      $img.attr("data-src") ||
-      $img.attr("data-original") ||
-      $img.attr("src");
+      $img.attr("data-src") || $img.attr("data-original") || $img.attr("src");
 
-    const srcset =
-      $img.attr("data-srcset") ||
-      $img.attr("srcset");
-
+    const srcset = $img.attr("data-srcset") || $img.attr("srcset");
     const picked = pickLargestFromSrcset(srcset);
 
     if (picked) candidates.push(picked);
@@ -123,7 +119,7 @@ function findBestImageUrl($, $link, $container) {
 
   return (
     candidates
-      .map((c) => (c ? absolutizeUrl(c.trim()) : null))
+      .map((c) => (c ? absolutizeUrl(String(c).trim()) : null))
       .filter(Boolean)[0] || null
   );
 }
@@ -139,14 +135,11 @@ function extractDollarAmounts(text) {
 }
 
 function extractPricesFromText(fullText) {
-  let prices = extractDollarAmounts(fullText)
-    .filter((p) => p >= 10 && p < 1000);
+  let prices = extractDollarAmounts(fullText).filter((p) => p >= 10 && p < 1000);
 
   prices = [...new Set(prices.map((p) => p.toFixed(2)))].map(Number);
 
-  if (prices.length < 2 || prices.length > 4) {
-    return { valid: false };
-  }
+  if (prices.length < 2 || prices.length > 4) return { valid: false };
 
   prices.sort((a, b) => b - a);
 
@@ -166,7 +159,11 @@ function randomDelay(min = 250, max = 700) {
   return new Promise((r) => setTimeout(r, wait));
 }
 
-async function scrapeHolabirdCollection({ collectionUrl, maxPages = 50, stopAfterEmptyPages = 1 }) {
+async function scrapeHolabirdCollection({
+  collectionUrl,
+  maxPages = 50,
+  stopAfterEmptyPages = 1,
+}) {
   const deals = [];
   const seen = new Set();
   let emptyPages = 0;
@@ -198,28 +195,39 @@ async function scrapeHolabirdCollection({ collectionUrl, maxPages = 50, stopAfte
       if (!productUrl || seen.has(productUrl)) return;
 
       const $container = $link.closest("li, article, div").first();
-      const containerText = sanitizeText($container.text());
-      if (!containerText.includes("$")) return;
 
+      const containerText = sanitizeText($container.text());
+      if (!containerText || !containerText.includes("$")) return;
+
+      // ✅ Title strategy: ONLY look for title-like text nodes first
       let title =
         sanitizeText(
           $container
             .find(
-              "h1,h2,h3," +
-              "a[href*='/products/']," +
-              "a[class*='title'],a[class*='name'],a[class*='heading']," +
-              "[class*='product-title'],[class*='product_name'],[class*='product-name']," +
-              "[class*='card__heading'],[class*='full-unstyled-link']," +
-              "[class*='grid-product__title'],[class*='product-item__title']"
+              [
+                "h1",
+                "h2",
+                "h3",
+                "[class*='product-title']",
+                "[class*='product_title']",
+                "[class*='product-name']",
+                "[class*='product_name']",
+                "[class*='card__heading']",
+                "a.full-unstyled-link",
+                "[class*='grid-product__title']",
+                "[class*='product-item__title']",
+              ].join(",")
             )
             .first()
             .text()
         ) ||
         sanitizeText($link.attr("title")) ||
         sanitizeText($link.text()) ||
-        sanitizeText($link.find("img").first().attr("alt"));
+        sanitizeText($link.find("img").first().attr("alt")); // last resort only
 
+      // Hard guard: never accept markup/css as a "title"
       if (!title) return;
+      if (title.includes("<") || title.includes("{") || title.includes("}")) return;
 
       const prices = extractPricesFromText(containerText);
       if (!prices.valid) return;
