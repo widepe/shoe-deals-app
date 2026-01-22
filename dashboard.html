@@ -852,7 +852,10 @@ function buildStoreDropdown(deals) {
   const stores = [...new Set(deals.map(d => d.store).filter(Boolean))].sort();
 
   // Reset options (keep All Stores)
-  select.innerHTML = `<option value="__all__">All Stores</option>`;
+  select.innerHTML =
+  `<option value="__none__" selected>Select a store…</option>` +
+  `<option value="__all__">All Stores</option>`;
+
   stores.forEach(store => {
     const opt = document.createElement("option");
     opt.value = store;
@@ -871,10 +874,16 @@ function renderDealsForSelectedStore() {
 
   const chosen = select.value;
 
-  const filtered =
-    chosen === "__all__"
-      ? ALL_DEALS
-      : ALL_DEALS.filter(d => (d.store || "") === chosen);
+  let filtered = [];
+
+if (chosen === "__none__") {
+  filtered = [];
+} else if (chosen === "__all__") {
+  filtered = ALL_DEALS;
+} else {
+  filtered = ALL_DEALS.filter(d => (d.store || "") === chosen);
+}
+
 
   // Show count
   if (countEl) {
