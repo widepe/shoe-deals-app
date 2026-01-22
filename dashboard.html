@@ -254,7 +254,7 @@
 
     .refresh-btn {
       display: block;
-      margin: 0 auto 30px;
+      margin: 0;
       padding: 12px 30px;
       background: #214478ff;
       color: white;
@@ -274,13 +274,13 @@
   background: #256428;
 }
     
- .button-row {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 6px;              /* tighter spacing */
-  margin: 0 auto 24px;
-  flex-wrap: wrap;
+.button-row .refresh-btn{
+  min-width: 0;          /* stop forcing big widths */
+  padding: 8px 14px;     /* smaller */
+  font-size: 0.92rem;    /* slightly smaller text */
+  margin: 0;             /* no extra spacing */
+  border-radius: 8px;
+  line-height: 1.1;
 }
 
 
@@ -289,9 +289,7 @@
   text-align: center;
 }
     .refresh-btn:hover { background: #1a3661; }
-    .button-row .refresh-btn:first-child {
-  background: #1a3661;
-}
+ 
 
     .bar-chart { margin-top: 20px; }
     .bar-row { margin-bottom: 12px; }
