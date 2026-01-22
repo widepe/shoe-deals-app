@@ -20,27 +20,67 @@ function extractBrooksProducts(html) {
     
     if (!title) return; // Skip if no title
     
-    // Get prices from the actual price display elements
-    const $priceContainer = $product.find('.m-product-tile__price-container, [class*="price"]');
-    const priceText = $priceContainer.find('.price-sales, .sales, [class*="sales"]').text().trim();
-    const originalPriceText = $priceContainer.find('.price-list, [class*="price-list"]').text().trim();
-    
-    // Parse prices
+    // Get prices - try multiple methods
     let price = null;
     let originalPrice = null;
     
-    if (priceText) {
-      const priceMatch = priceText.match(/\$?\s*(\d+(?:\.\d{2})?)/);
-      if (priceMatch) price = parseFloat(priceMatch[1]);
+    // Method 1: Try standard price classes
+    const $priceContainer = $product.find('.m-product-tile__price-container, .price-container, [class*="price"]');
+    
+    // Look for sale/current price in multiple places
+    const salePriceText = (
+      $priceContainer.find('.price-sales').text().trim() ||
+      $priceContainer.find('.sales').text().trim() ||
+      $priceContainer.find('[class*="sale"]').text().trim() ||
+      $product.find('.price-sales, .sales, [class*="sale-price"]').text().trim()
+    );
+    
+    // Look for original/list price
+    const origPriceText = (
+      $priceContainer.find('.price-list').text().trim() ||
+      $priceContainer.find('[class*="list"]').text().trim() ||
+      $priceContainer.find('[class*="original"]').text().trim() ||
+      $product.find('.price-list, [class*="original-price"]').text().trim()
+    );
+    
+    // Method 2: Parse from all price-related text if Method 1 failed
+    if (!salePriceText && !origPriceText) {
+      const allPriceText = $product.find('[class*="price"]').text();
+      const allPrices = allPriceText.match(/\$(\d+(?:\.\d{2})?)/g);
+      
+      if (allPrices && allPrices.length >= 2) {
+        // Multiple prices found - assume first is original, second is sale
+        originalPrice = parseFloat(allPrices[0].replace('$', ''));
+        price = parseFloat(allPrices[1].replace('$', ''));
+      } else if (allPrices && allPrices.length === 1) {
+        // Only one price - treat as current price
+        price = parseFloat(allPrices[0].replace('$', ''));
+      }
+    } else {
+      // Parse prices from the text we found
+      if (salePriceText) {
+        const priceMatch = salePriceText.match(/\$?\s*(\d+(?:\.\d{2})?)/);
+        if (priceMatch) price = parseFloat(priceMatch[1]);
+      }
+      
+      if (origPriceText) {
+        const origMatch = origPriceText.match(/\$?\s*(\d+(?:\.\d{2})?)/);
+        if (origMatch) originalPrice = parseFloat(origMatch[1]);
+      }
     }
     
-    if (originalPriceText) {
-      const origMatch = originalPriceText.match(/\$?\s*(\d+(?:\.\d{2})?)/);
-      if (origMatch) originalPrice = parseFloat(origMatch[1]);
+    // Ensure prices make sense (sale should be lower than original)
+    if (price && originalPrice && price > originalPrice) {
+      [price, originalPrice] = [originalPrice, price];
     }
     
-    // Get URL - look for the main product link
-    let url = $product.find('a.m-product-tile__link, a[href*="/products/"]').first().attr('href');
+    // Get URL - try multiple selectors
+    let url = (
+      $product.find('a.m-product-tile__link').first().attr('href') ||
+      $product.find('a[href*="/products/"]').first().attr('href') ||
+      $product.find('a[href*="/p/"]').first().attr('href') ||
+      $product.find('a').first().attr('href')
+    );
     
     // Get image
     const image = (
