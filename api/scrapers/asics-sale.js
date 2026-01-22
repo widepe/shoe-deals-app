@@ -13,15 +13,20 @@ function extractAsicsProducts(html, sourceUrl) {
   const $ = cheerio.load(html);
   const products = [];
   
-  // Determine gender from URL
+  // Determine gender from URL - normalize URL first to handle query params
+  const normalizedUrl = sourceUrl.toLowerCase();
   let gender = 'Unisex';
-  if (sourceUrl.includes('mens-clearance')) {
+  
+  // Check for gender in URL path (aa10106000 = mens, aa20106000 = womens)
+  if (normalizedUrl.includes('aa10106000') || normalizedUrl.includes('mens-clearance')) {
     gender = 'Men';
-  } else if (sourceUrl.includes('womens-clearance')) {
+  } else if (normalizedUrl.includes('aa20106000') || normalizedUrl.includes('womens-clearance')) {
     gender = 'Women';
-  } else if (sourceUrl.includes('leaving-asics')) {
+  } else if (normalizedUrl.includes('leaving-asics') || normalizedUrl.includes('aa60400001')) {
     gender = 'Unisex';
   }
+  
+  console.log(`[ASICS] Processing URL: ${sourceUrl} -> Gender: ${gender}`);
   
   // CORRECT SELECTOR: productTile__root
   const $products = $('.productTile__root');
