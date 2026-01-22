@@ -154,6 +154,40 @@ function extractPricesFromText(fullText) {
   return { salePrice: sale, originalPrice: original, valid: true };
 }
 
+function extractBrandAndModel(title) {
+  if (!title) return { brand: "Unknown", model: title || "" };
+  
+  // Common shoe brands at Holabird Sports
+  const brands = [
+    "Mizuno", "Saucony", "HOKA", "Brooks", "ASICS", "New Balance", 
+    "On", "Altra", "adidas", "Nike", "Puma", "Salomon", "Diadora",
+    "K-Swiss", "Wilson", "Babolat", "HEAD", "Yonex", "Under Armour",
+    "VEJA", "APL", "Merrell", "Teva", "Reebok", "Skechers", "Mount to Coast",
+    "norda", "inov8", "OOFOS", "Birkenstock", "Kane Footwear", "LANE EIGHT"
+  ];
+  
+  // Try to find brand at the start of the title (case-insensitive)
+  for (const brand of brands) {
+    const regex = new RegExp(`^${brand}\\s+(.+)$`, "i");
+    const match = title.match(regex);
+    if (match) {
+      const model = match[1].trim();
+      return { brand, model };
+    }
+  }
+  
+  // If no brand match, split at first space and assume first word is brand
+  const parts = title.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return {
+      brand: parts[0],
+      model: parts.slice(1).join(" ")
+    };
+  }
+  
+  return { brand: "Unknown", model: title };
+}
+
 function randomDelay(min = 250, max = 700) {
   const wait = Math.floor(Math.random() * (max - min + 1)) + min;
   return new Promise((r) => setTimeout(r, wait));
@@ -199,41 +233,47 @@ async function scrapeHolabirdCollection({
       const containerText = sanitizeText($container.text());
       if (!containerText || !containerText.includes("$")) return;
 
-      // ✅ Title strategy: ONLY look for title-like text nodes first
-      let title =
-        sanitizeText(
-          $container
-            .find(
-              [
-                "h1",
-                "h2",
-                "h3",
-                "[class*='product-title']",
-                "[class*='product_title']",
-                "[class*='product-name']",
-                "[class*='product_name']",
-                "[class*='card__heading']",
-                "a.full-unstyled-link",
-                "[class*='grid-product__title']",
-                "[class*='product-item__title']",
-              ].join(",")
-            )
-            .first()
-            .text()
-        ) ||
-        sanitizeText($link.attr("title")) ||
-        sanitizeText($link.text()) ||
-        sanitizeText($link.find("img").first().attr("alt")); // last resort only
+      // FIXED: Better title extraction strategy
+      // The title appears in the link's text content or the image alt text
+      let title = "";
+      
+      // Strategy 1: Get from the link text itself (most reliable for Holabird)
+      const linkText = sanitizeText($link.text());
+      if (linkText && !linkText.includes("<") && !linkText.includes("{")) {
+        title = linkText;
+      }
+      
+      // Strategy 2: If link text is empty, try the img alt attribute
+      if (!title) {
+        const imgAlt = $link.find("img").first().attr("alt");
+        if (imgAlt) {
+          title = sanitizeText(imgAlt);
+        }
+      }
+      
+      // Strategy 3: Try title attribute on the link
+      if (!title) {
+        const titleAttr = $link.attr("title");
+        if (titleAttr) {
+          title = sanitizeText(titleAttr);
+        }
+      }
 
       // Hard guard: never accept markup/css as a "title"
       if (!title) return;
       if (title.includes("<") || title.includes("{") || title.includes("}")) return;
+      if (title.length < 5) return; // Too short to be a real product title
 
       const prices = extractPricesFromText(containerText);
       if (!prices.valid) return;
 
+      // Extract brand and model from title
+      const { brand, model } = extractBrandAndModel(title);
+
       deals.push({
         title,
+        brand,
+        model,
         store: "Holabird Sports",
         price: prices.salePrice,
         originalPrice: prices.originalPrice,
