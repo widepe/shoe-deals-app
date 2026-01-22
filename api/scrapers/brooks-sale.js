@@ -93,13 +93,16 @@ function extractBrooksProducts(html) {
     const discount = originalPrice && price && originalPrice > price ?
       Math.round(((originalPrice - price) / originalPrice) * 100) : null;
     
-    // Extract model from title (remove "Brooks" if present)
+    // Extract model from title (the title from data attribute is just the model name)
     const model = title.replace(/^Brooks\s+/i, '').trim();
     
+    // Create full title: Brand + Model (to match other scrapers like "ASICS GEL-NIMBUS 27")
+    const fullTitle = `Brooks ${model}`;
+    
     products.push({
-      title,
+      title: fullTitle,  // "Brooks Glycerin 22"
       brand: 'Brooks',
-      model,
+      model: model,      // "Glycerin 22"
       store: 'Brooks Running',
       price,
       originalPrice,
