@@ -219,11 +219,25 @@ async function scrapeHolabirdCollection({ collectionUrl, maxPages = 50, stopAfte
       const containerText = sanitizeText($container.text());
       if (!containerText || !containerText.includes("$")) return;
 
-      // Title strategy (don’t use $container.text() for title)
-      let title =
-        sanitizeText($link.find("img").first().attr("alt")) ||
-        sanitizeText($container.find("h2,h3,[class*='title'],[class*='name']").first().text()) ||
-        sanitizeText($link.text());
+     // Title strategy: prefer real title text on the card, NOT image info
+let title =
+  sanitizeText(
+    $container
+      .find(
+        // common Shopify/theme title patterns
+        "h1,h2,h3," +
+          "a[class*='title'],a[class*='name'],a[class*='heading']," +
+          "[class*='product-title'],[class*='product_name'],[class*='product-name']," +
+          "[class*='card__heading'],[class*='full-unstyled-link']," +
+          "[class*='grid-product__title'],[class*='product-item__title']"
+      )
+      .first()
+      .text()
+  ) ||
+  sanitizeText($link.attr("title")) ||
+  sanitizeText($link.text()) ||
+  sanitizeText($link.find("img").first().attr("alt")); // LAST resort only
+
 
       if (!title) return;
       if (/review-stars|oke-sr-count/i.test(title)) return;
