@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
-  <link rel="alternate icon" type="image/png" href="/images/favicon.png">  
+ <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.png">
+
   <title>ShoeBeagle - Deal Statistics Dashboard</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -263,6 +264,9 @@
       cursor: pointer;
       font-weight: 600;
       transition: background 0.2s;
+      text-align: center;
+      justify-content: center;
+      align-items: center;
     }
 /* Primary action: Refresh */
 .button-row .refresh-btn:first-child {
@@ -288,7 +292,15 @@
   text-align: center;
 }
     .refresh-btn:hover { background: #1a3661; }
- 
+
+    .button-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
 
     .bar-chart { margin-top: 20px; }
     .bar-row { margin-bottom: 12px; }
