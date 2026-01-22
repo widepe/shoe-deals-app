@@ -1,5 +1,5 @@
 // /api/merge-deals.js
-// Merges: (1) your daily deals scraper output + (2) the 3 Holabird scraper outputs + (3) Brooks sale scraper
+// Merges: (1) your daily deals scraper output + (2) the 3 Holabird scraper outputs + (3) Brooks sale scraper + (4) ASICS sale scraper
 // Writes the final canonical blob: deals.json
 //
 // Env vars (recommended):
@@ -7,7 +7,8 @@
 //   HOLABIRD_MENS_ROAD_BLOB_URL
 //   HOLABIRD_WOMENS_ROAD_BLOB_URL
 //   HOLABIRD_TRAIL_UNISEX_BLOB_URL
-//   BROOKS_SALE_BLOB_URL              ← NEW: Added for Brooks Running integration
+//   BROOKS_SALE_BLOB_URL              ← Brooks Running integration
+//   ASICS_SALE_BLOB_URL               ← NEW: ASICS integration (3 pages)
 //
 // Optional fallback (if you do NOT set blob URLs):
 //   Calls scraper endpoints directly:
@@ -15,7 +16,8 @@
 //     /api/scrapers/holabird-mens-road
 //     /api/scrapers/holabird-womens-road
 //     /api/scrapers/holabird-trail-unisex
-//     /api/scrapers/brooks-sale         ← NEW: Added for Brooks Running integration
+//     /api/scrapers/brooks-sale         ← Brooks Running integration
+//     /api/scrapers/asics-sale          ← NEW: ASICS integration (3 pages)
 
 const axios = require("axios");
 const { put } = require("@vercel/blob");
@@ -111,7 +113,8 @@ function storeBaseUrl(store) {
   // IMPORTANT: these are just for absolutizing relative URLs/images,
   // not for scraping.
   if (s.includes("holabird")) return "https://www.holabirdsports.com";
-  if (s.includes("brooks")) return "https://www.brooksrunning.com"; // ← NEW: Added Brooks support
+  if (s.includes("brooks")) return "https://www.brooksrunning.com";
+  if (s.includes("asics")) return "https://www.asics.com"; // ← NEW: Added ASICS support
   if (s.includes("running warehouse")) return "https://www.runningwarehouse.com";
   if (s.includes("fleet feet")) return "https://www.fleetfeet.com";
   if (s.includes("luke")) return "https://lukeslocker.com";
@@ -320,7 +323,8 @@ module.exports = async (req, res) => {
   const HOLABIRD_MENS_ROAD_BLOB_URL = process.env.HOLABIRD_MENS_ROAD_BLOB_URL || "";
   const HOLABIRD_WOMENS_ROAD_BLOB_URL = process.env.HOLABIRD_WOMENS_ROAD_BLOB_URL || "";
   const HOLABIRD_TRAIL_UNISEX_BLOB_URL = process.env.HOLABIRD_TRAIL_UNISEX_BLOB_URL || "";
-  const BROOKS_SALE_BLOB_URL = process.env.BROOKS_SALE_BLOB_URL || ""; // ← NEW: Brooks Running
+  const BROOKS_SALE_BLOB_URL = process.env.BROOKS_SALE_BLOB_URL || "";
+  const ASICS_SALE_BLOB_URL = process.env.ASICS_SALE_BLOB_URL || ""; // ← NEW: ASICS (3 pages)
 
   // ============================================================================
   // ENDPOINT FALLBACKS (only used if blob URLs are missing)
@@ -329,7 +333,8 @@ module.exports = async (req, res) => {
   const HOLABIRD_MENS_ROAD_ENDPOINT = `${baseUrl}/api/scrapers/holabird-mens-road`;
   const HOLABIRD_WOMENS_ROAD_ENDPOINT = `${baseUrl}/api/scrapers/holabird-womens-road`;
   const HOLABIRD_TRAIL_UNISEX_ENDPOINT = `${baseUrl}/api/scrapers/holabird-trail-unisex`;
-  const BROOKS_SALE_ENDPOINT = `${baseUrl}/api/scrapers/brooks-sale`; // ← NEW: Brooks Running
+  const BROOKS_SALE_ENDPOINT = `${baseUrl}/api/scrapers/brooks-sale`;
+  const ASICS_SALE_ENDPOINT = `${baseUrl}/api/scrapers/asics-sale`; // ← NEW: ASICS (3 pages)
 
   try {
     console.log("[MERGE] Starting merge:", new Date().toISOString());
@@ -360,12 +365,20 @@ module.exports = async (req, res) => {
         endpointUrl: HOLABIRD_TRAIL_UNISEX_BLOB_URL ? null : HOLABIRD_TRAIL_UNISEX_ENDPOINT,
       },
       // ============================================================================
-      // NEW: Brooks Running Sale - Uses Firecrawl to scrape JavaScript-rendered site
+      // Brooks Running Sale - Uses Firecrawl to scrape JavaScript-rendered site
       // ============================================================================
       {
         name: "Brooks Sale",
         blobUrl: BROOKS_SALE_BLOB_URL || null,
         endpointUrl: BROOKS_SALE_BLOB_URL ? null : BROOKS_SALE_ENDPOINT,
+      },
+      // ============================================================================
+      // NEW: ASICS Sale - Uses Firecrawl to scrape 3 pages (mens, womens, last chance)
+      // ============================================================================
+      {
+        name: "ASICS Sale",
+        blobUrl: ASICS_SALE_BLOB_URL || null,
+        endpointUrl: ASICS_SALE_BLOB_URL ? null : ASICS_SALE_ENDPOINT,
       },
     ];
 
@@ -397,7 +410,7 @@ module.exports = async (req, res) => {
     // 2) Filter (running shoes only, strict discount requirements)
     const filtered = normalized.filter(isValidRunningShoe);
 
-    // 3) Dedupe across ALL sources (including Brooks)
+    // 3) Dedupe across ALL sources (including Brooks + ASICS)
     const unique = dedupeDeals(filtered);
 
     // 4) Shuffle then sort by discount %
