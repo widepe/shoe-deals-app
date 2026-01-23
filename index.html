@@ -249,11 +249,19 @@
     .shoe-grid {
       margin-top: 1.0rem;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 200px));
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 1.25rem;
       width: 100%;
       justify-content: center;
       max-width: 900px;
+    }
+
+    /* Mobile: single column layout */
+    @media (max-width: 480px) {
+      .shoe-grid {
+        grid-template-columns: 1fr;
+        max-width: 100%;
+      }
     }
 
     /* Unified card style: search + daily deals */
