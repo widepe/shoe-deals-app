@@ -704,7 +704,8 @@
     // Load daily deals from the FINAL merged blob (deals.json) and render as cards
 async function loadDailyDeals() {
   try {
-    const blobUrl = "https://v3gjlrmpc76mymfc.public.blob.vercel-storage.com/deals.json";
+    const blobUrl = "https://v3gjlrmpc76mymfc.public.blob.vercel-storage.com/deals.json?cb=" + Date.now();
+
     const res = await fetch(blobUrl);
     const data = await res.json();
 
@@ -738,7 +739,8 @@ async function dailyDealCount() {
   const taglineEl = document.querySelector('.tagline');
   
   try {
-    const blobUrl = "https://v3gjlrmpc76mymfc.public.blob.vercel-storage.com/deals.json";
+    const blobUrl = "https://v3gjlrmpc76mymfc.public.blob.vercel-storage.com/deals.json?cb=" + Date.now();
+
     const res = await fetch(blobUrl);
     const data = await res.json();
     
