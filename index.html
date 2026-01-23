@@ -249,14 +249,14 @@
     .shoe-grid {
       margin-top: 1.0rem;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 1.25rem;
       width: 100%;
       justify-content: center;
       max-width: 900px;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
     }
 
-    /* Mobile: single column layout */
+    /* Mobile portrait: single column layout */
     @media (max-width: 480px) {
       .shoe-grid {
         grid-template-columns: 1fr;
