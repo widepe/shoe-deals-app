@@ -770,6 +770,14 @@
 
     brandInput.addEventListener("input", () => {
       const typed = brandInput.value.trim();
+      
+      // Only show suggestions after 2 characters
+      if (typed.length < 2) {
+        brandSuggestions.style.display = "none";
+        updateFetchReady();
+        return;
+      }
+      
       const matches = filterStartsWith(brands, typed);
 
       showSuggestions(brandSuggestions, matches, (value) => {
@@ -789,6 +797,14 @@
     modelInput.addEventListener("input", () => {
       const brandKey = resolveBrand();
       const text = modelInput.value.trim();
+      
+      // Only show suggestions after 2 characters
+      if (text.length < 2) {
+        modelSuggestions.style.display = "none";
+        updateFetchReady();
+        return;
+      }
+      
       if (!brandKey || !brandModels[brandKey]) {
         modelSuggestions.style.display = "none";
         updateFetchReady();
