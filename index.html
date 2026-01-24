@@ -5,6 +5,14 @@
   <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
   <link rel="icon" type="image/png" href="/images/favicon.png">
   <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self'; 
+                 script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://v3gjlrmpc76mymfc.public.blob.vercel-storage.com; 
+                 img-src * data: https:; 
+                 style-src 'self' 'unsafe-inline'; 
+                 connect-src 'self' https://v3gjlrmpc76mymfc.public.blob.vercel-storage.com; 
+                 font-src 'self'; 
+                 frame-src 'none';">
   <title>Shoe Beagle--The Running Shoe Deal Finder</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -642,6 +650,72 @@
       return String(s || "").trim().toLowerCase(); 
     }
 
+    // Sanitize user input to prevent injection attacks
+    function sanitizeInput(str) {
+      return String(str || "")
+        .replace(/[<>'"]/g, '')        // Remove dangerous HTML characters
+        .replace(/script/gi, '')        // Remove "script" (case insensitive)
+        .replace(/javascript:/gi, '')   // Remove javascript: protocol
+        .replace(/on\w+=/gi, '')        // Remove event handlers like onclick=
+        .trim()
+        .slice(0, 100);                 // Max 100 characters
+    }
+
+    // Whitelist of trusted retailer domains
+    const allowedRetailerDomains = [
+      'nike.com',
+      'amazon.com',
+      'zappos.com',
+      'runningwarehouse.com',
+      'dickssportinggoods.com',
+      'roadrunnersports.com',
+      'adidas.com',
+      'brooksrunning.com',
+      'hokaoneone.com',
+      'on-running.com',
+      'saucony.com',
+      'asics.com',
+      'newbalance.com',
+      'rei.com',
+      'backcountry.com',
+      'eastbay.com',
+      'footlocker.com',
+      'finishline.com',
+      'academy.com',
+      'runrepeat.com',
+      'altrarunning.com',
+      'mizunousa.com',
+      'topo-athletic.com',
+      'karhu.com',
+      'joesnewbalanceoutlet.com',
+      'fleetfeet.com',
+      'jackrabbit.com',
+      'shopify.com',        // Many running brands use Shopify
+      'bigcommerce.com',    // Some brands use BigCommerce
+    ];
+
+    // Validate URL is from a trusted retailer
+    function isValidRetailerUrl(url) {
+      if (!url || url === '#') return false;
+      
+      try {
+        const urlObj = new URL(url);
+        const hostname = urlObj.hostname.toLowerCase();
+        
+        // Remove 'www.' prefix for comparison
+        const cleanHostname = hostname.replace(/^www\./, '');
+        
+        // Check if hostname matches or ends with any allowed domain
+        return allowedRetailerDomains.some(domain => {
+          return cleanHostname === domain || cleanHostname.endsWith('.' + domain);
+        });
+      } catch (error) {
+        // Invalid URL format
+        console.warn('Invalid URL format:', url);
+        return false;
+      }
+    }
+
     // Shared discount helper used by cards
     function getDiscountInfo(item) {
       const price = Number(item.price);
@@ -842,7 +916,14 @@
 
       const link = document.createElement("a");
       link.className = "card-link";
-      link.href = item.url || "#";
+      
+      // Validate URL before using it - only allow trusted retailers
+      const safeUrl = isValidRetailerUrl(item.url) ? item.url : '#';
+      if (safeUrl === '#' && item.url) {
+        console.warn('Blocked untrusted retailer URL:', item.url);
+      }
+      
+      link.href = safeUrl;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
 
@@ -986,8 +1067,9 @@ async function dailyDealCount() {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const brandTyped = brandInput.value.trim();
-      const modelTyped = modelInput.value.trim();
+      // Sanitize inputs before using them
+      const brandTyped = sanitizeInput(brandInput.value);
+      const modelTyped = sanitizeInput(modelInput.value);
 
       // Require at least one of brand/model
       if (!brandTyped && !modelTyped) {
