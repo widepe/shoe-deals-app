@@ -54,18 +54,20 @@ function toNumber(x) {
   return Number.isFinite(n) ? n : null;
 }
 
+// UPDATED: Use salePrice and price (not price and originalPrice)
 function computeDiscountPercent(d) {
-  const p = toNumber(d?.price);
-  const o = toNumber(d?.originalPrice);
-  if (!p || !o || o <= 0 || p >= o) return 0;
-  return ((o - p) / o) * 100;
+  const sale = toNumber(d?.salePrice);
+  const orig = toNumber(d?.price);
+  if (!sale || !orig || orig <= 0 || sale >= orig) return 0;
+  return ((orig - sale) / orig) * 100;
 }
 
+// UPDATED: Use salePrice and price
 function computeDollarSavings(d) {
-  const p = toNumber(d?.price);
-  const o = toNumber(d?.originalPrice);
-  if (!p || !o || o <= 0 || p >= o) return 0;
-  return o - p;
+  const sale = toNumber(d?.salePrice);
+  const orig = toNumber(d?.price);
+  if (!sale || !orig || orig <= 0 || sale >= orig) return 0;
+  return orig - sale;
 }
 
 /** ------------ Theme-change-resistant sanitization ------------ **/
@@ -162,19 +164,19 @@ function sanitizeDeal(deal) {
 
 /**
  * Centralized filter (same logic as your current scrape-daily).
- * NOTE: This requires originalPrice; it will drop any deal missing it.
+ * UPDATED: Now uses salePrice and price (not price and originalPrice)
  */
 function isValidRunningShoe(deal) {
   if (!deal || !deal.url || !deal.title) return false;
 
+  const salePrice = toNumber(deal.salePrice);
   const price = toNumber(deal.price);
-  const originalPrice = toNumber(deal.originalPrice);
 
-  if (!price || !originalPrice) return false;
-  if (price >= originalPrice) return false;
-  if (price < 10 || price > 1000) return false;
+  if (!salePrice || !price) return false;
+  if (salePrice >= price) return false;
+  if (salePrice < 10 || salePrice > 1000) return false;
 
-  const discount = ((originalPrice - price) / originalPrice) * 100;
+  const discount = ((price - salePrice) / price) * 100;
   if (discount < 5 || discount > 90) return false;
 
   const title = String(deal.title || "").toLowerCase();
@@ -216,26 +218,27 @@ function isValidRunningShoe(deal) {
   return true;
 }
 
+// UPDATED: Now uses salePrice and price, and includes gender/shoeType
 function normalizeDeal(d) {
   if (!d) return null;
 
   const sanitized = sanitizeDeal(d);
   if (!sanitized) return null;
 
+  const salePrice = toNumber(sanitized.salePrice);
   const price = toNumber(sanitized.price);
-  const originalPrice = toNumber(sanitized.originalPrice);
 
   return {
-    ...sanitized,
-    price,
-    originalPrice,
     title: typeof sanitized.title === "string" ? sanitized.title.trim() : "",
     brand: typeof sanitized.brand === "string" ? sanitized.brand.trim() : "Unknown",
     model: typeof sanitized.model === "string" ? sanitized.model.trim() : "",
+    salePrice,
+    price,
     store: typeof sanitized.store === "string" ? sanitized.store.trim() : "Unknown",
     url: typeof sanitized.url === "string" ? sanitized.url.trim() : "",
     image: typeof sanitized.image === "string" ? sanitized.image.trim() : null,
-    scrapedAt: sanitized.scrapedAt || new Date().toISOString(),
+    gender: typeof sanitized.gender === "string" ? sanitized.gender.trim() : "unknown",
+    shoeType: typeof sanitized.shoeType === "string" ? sanitized.shoeType.trim() : "unknown",
   };
 }
 
@@ -323,20 +326,22 @@ async function loadDealsFromBlobOrEndpoint({ name, blobUrl, endpointUrl }) {
 
 /** ------------ Stats (Phase 1 quick win) ------------ **/
 
-function bucketLabel(price) {
-  if (!Number.isFinite(price)) return null;
-  if (price < 50) return "$0-50";
-  if (price < 75) return "$50-75";
-  if (price < 100) return "$75-100";
-  if (price < 125) return "$100-125";
-  if (price < 150) return "$125-150";
+// UPDATED: Use salePrice (not price)
+function bucketLabel(salePrice) {
+  if (!Number.isFinite(salePrice)) return null;
+  if (salePrice < 50) return "$0-50";
+  if (salePrice < 75) return "$50-75";
+  if (salePrice < 100) return "$75-100";
+  if (salePrice < 125) return "$100-125";
+  if (salePrice < 150) return "$125-150";
   return "$150+";
 }
 
+// UPDATED: Use salePrice and price
 function dealSummary(deal) {
   if (!deal) return null;
+  const salePrice = toNumber(deal.salePrice);
   const price = toNumber(deal.price);
-  const originalPrice = toNumber(deal.originalPrice);
   const percentOff = computeDiscountPercent(deal);
   const dollarSavings = computeDollarSavings(deal);
 
@@ -347,10 +352,12 @@ function dealSummary(deal) {
     store: deal.store || "Unknown",
     url: deal.url || "",
     image: deal.image || null,
+    salePrice,
     price,
-    originalPrice,
     percentOff,
     dollarSavings,
+    gender: deal.gender || "unknown",
+    shoeType: deal.shoeType || "unknown",
   };
 }
 
@@ -358,7 +365,7 @@ function dealSummary(deal) {
  * computeStats(deals, storeMetadata)
  *
  * What it does (and why it helps):
- * - Precomputes the “dashboard math” on the server (once per merge run)
+ * - Precomputes the "dashboard math" on the server (once per merge run)
  *   so your dashboard.html can load fast by fetching a small stats.json.
  *
  * Produces:
@@ -387,7 +394,7 @@ function computeStats(deals, storeMetadata) {
   // Candidates for top deals
   let topPercent = null; // {deal, percentOff}
   let topDollar = null;  // {deal, dollarSavings}
-  let lowestPrice = null;// {deal, price}
+  let lowestPrice = null;// {deal, salePrice}
   let bestValue = null;  // {deal, valueScore}
 
   // Price buckets
@@ -406,8 +413,8 @@ function computeStats(deals, storeMetadata) {
     const brandRaw = (d.brand || "").trim();
     const brand = brandRaw ? brandRaw : "Unknown";
 
+    const salePrice = toNumber(d.salePrice);
     const price = toNumber(d.price);
-    const original = toNumber(d.originalPrice);
 
     uniqueStoreSet.add(store);
     uniqueBrandSet.add(brand);
@@ -443,7 +450,7 @@ function computeStats(deals, storeMetadata) {
     const model = typeof d.model === "string" ? d.model.trim() : "";
     if (!model) s.missingModelCount += 1;
 
-    if (!Number.isFinite(price) || price <= 0) s.missingPriceCount += 1;
+    if (!Number.isFinite(salePrice) || salePrice <= 0) s.missingPriceCount += 1;
 
     // Store rollups (discount/savings)
     const percentOff = computeDiscountPercent(d);
@@ -465,10 +472,10 @@ function computeStats(deals, storeMetadata) {
       if (!topDollar || dollarSavings > topDollar.dollarSavings) {
         topDollar = { deal: d, dollarSavings };
       }
-      // Lowest price among discounted deals
-      if (Number.isFinite(price)) {
-        if (!lowestPrice || price < lowestPrice.price) {
-          lowestPrice = { deal: d, price };
+      // Lowest salePrice among discounted deals
+      if (Number.isFinite(salePrice)) {
+        if (!lowestPrice || salePrice < lowestPrice.salePrice) {
+          lowestPrice = { deal: d, salePrice };
         }
       }
       // Best value: percentOff + (dollarSavings * 0.5)
@@ -478,9 +485,9 @@ function computeStats(deals, storeMetadata) {
       }
     }
 
-    // Price buckets (only valid prices)
-    if (Number.isFinite(price) && price > 0) {
-      const label = bucketLabel(price);
+    // Price buckets (only valid salePrices)
+    if (Number.isFinite(salePrice) && salePrice > 0) {
+      const label = bucketLabel(salePrice);
       if (label) priceBuckets[label] += 1;
     }
 
@@ -501,9 +508,9 @@ function computeStats(deals, storeMetadata) {
       b.discountSum += percentOff;
       b.discountCount += 1;
     }
-    if (Number.isFinite(price) && price > 0) {
-      b.minPrice = Math.min(b.minPrice, price);
-      b.maxPrice = Math.max(b.maxPrice, price);
+    if (Number.isFinite(salePrice) && salePrice > 0) {
+      b.minPrice = Math.min(b.minPrice, salePrice);
+      b.maxPrice = Math.max(b.maxPrice, salePrice);
     }
   }
 
@@ -614,7 +621,7 @@ function computeStats(deals, storeMetadata) {
     totalBrands: uniqueBrandSet.size,
     avgDiscount,
 
-    // Top deal “cards” (ready for dashboard rendering)
+    // Top deal "cards" (ready for dashboard rendering)
     topDeals: {
       topPercent: topPercent ? dealSummary(topPercent.deal) : null,
       topDollar: topDollar ? dealSummary(topDollar.deal) : null,
@@ -640,7 +647,7 @@ function computeStats(deals, storeMetadata) {
       })),
     },
 
-    // Scraper-level metadata (comes from your merge sources; useful for “last scraped” timestamps)
+    // Scraper-level metadata (comes from your merge sources; useful for "last scraped" timestamps)
     scraperMetadata: storeMetadata || {},
   };
 }
