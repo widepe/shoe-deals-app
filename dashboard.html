@@ -751,19 +751,32 @@
         buildStoreDropdown(deals);
         renderDealsForSelectedStore();
         
-        // Debug summary
+        // Debug summary - NOW INCLUDES BLOB URLS
         const unknownBrands = deals.filter(d => (d.brand || '').trim() === 'Unknown' || !(d.brand || '').trim()).length;
         const uniqueBrands = [...new Set(deals.map(d => (d.brand || 'Unknown').trim()))]
           .filter(b => b && b !== 'Unknown')
           .sort();
 
-        const debugHTML = `
+        let debugHTML = `
           <strong>Total deals in array:</strong> ${deals.length}<br>
           <strong>Unknown brands:</strong> ${unknownBrands} (${deals.length ? ((unknownBrands / deals.length) * 100).toFixed(1) : '0.0'}%)<br>
           <strong>Deals by store (from JSON):</strong> ${JSON.stringify(data.dealsByStore)}<br>
           <strong>Unique stores found:</strong> ${[...new Set(deals.map(d => d.store))].join(', ')}<br>
-          <strong>Shoe brands found (${uniqueBrands.length}):</strong> ${uniqueBrands.join(', ')}
+          <strong>Shoe brands found (${uniqueBrands.length}):</strong> ${uniqueBrands.join(', ')}<br><br>
         `;
+
+        // Add blob URLs to debug section
+        if (mergeData && mergeData.storeMetadata) {
+          debugHTML += `<strong>Scraper Blob URLs:</strong><br>`;
+          Object.entries(mergeData.storeMetadata).forEach(([scraperName, meta]) => {
+            if (meta.blobUrl) {
+              debugHTML += `<div style="margin-left: 10px; margin-top: 4px;">
+                <strong>${scraperName}:</strong> <a href="${meta.blobUrl}" target="_blank" style="color: #214478ff; word-break: break-all;">${meta.blobUrl}</a>
+              </div>`;
+            }
+          });
+        }
+
         debugContent.innerHTML = debugHTML;
         debugInfo.style.display = 'block';
 
@@ -793,15 +806,16 @@
       };
 
       deals.forEach(deal => {
+        // UPDATED: Use new field names
+        const salePrice = Number(deal.salePrice) || 0;
         const price = Number(deal.price) || 0;
-        const original = Number(deal.originalPrice) || 0;
 
         const store = (deal.store || 'Unknown').trim() || 'Unknown';
         const brandRaw = (deal.brand || '').trim();
         const brand = brandRaw ? brandRaw : 'Unknown';
 
-        const dollarSavings = original > price ? original - price : 0;
-        const percentOff = original > price ? ((original - price) / original) * 100 : 0;
+        const dollarSavings = price > salePrice ? price - salePrice : 0;
+        const percentOff = price > salePrice ? ((price - salePrice) / price) * 100 : 0;
 
         // Store stats
         if (!stats.stores[store]) {
@@ -829,15 +843,15 @@
           stats.brands[brand] = {
             count: 0,
             totalDiscount: 0,
-            minPrice: price || Infinity,
-            maxPrice: price || 0
+            minPrice: salePrice || Infinity,
+            maxPrice: salePrice || 0
           };
         }
         stats.brands[brand].count++;
         stats.brands[brand].totalDiscount += percentOff;
-        if (price > 0) {
-          stats.brands[brand].minPrice = Math.min(stats.brands[brand].minPrice, price);
-          stats.brands[brand].maxPrice = Math.max(stats.brands[brand].maxPrice, price);
+        if (salePrice > 0) {
+          stats.brands[brand].minPrice = Math.min(stats.brands[brand].minPrice, salePrice);
+          stats.brands[brand].maxPrice = Math.max(stats.brands[brand].maxPrice, salePrice);
         }
 
         if (percentOff > 0) {
@@ -845,12 +859,12 @@
             deal: deal,
             percentOff: percentOff,
             dollarSavings: dollarSavings,
-            price: price,
+            salePrice: salePrice,
             valueScore: percentOff + (dollarSavings * 0.5)
           });
         }
 
-        if (price > 0) stats.prices.push(price);
+        if (salePrice > 0) stats.prices.push(salePrice);
       });
 
       Object.values(stats.brands).forEach(b => {
@@ -885,10 +899,10 @@
           topDollar.dollarSavings
         );
 
-        const lowestPrice = [...stats.discounts].sort((a, b) => a.price - b.price)[0];
+        const lowestPrice = [...stats.discounts].sort((a, b) => a.salePrice - b.salePrice)[0];
         document.getElementById('lowestPriceDeal').innerHTML = formatTopDeal(
           lowestPrice.deal,
-          `Only $${lowestPrice.price.toFixed(2)}`,
+          `Only $${lowestPrice.salePrice.toFixed(2)}`,
           lowestPrice.dollarSavings
         );
 
@@ -907,14 +921,15 @@
     }
 
     function formatTopDeal(deal, highlight) {
+      // UPDATED: Use new field names
+      const salePrice = Number(deal.salePrice) || 0;
       const price = Number(deal.price) || 0;
-      const original = Number(deal.originalPrice) || 0;
       return `
         <div class="top-deal-title">${(deal.brand || 'Unknown')} ${(deal.model || '')}</div>
         <div class="top-deal-store">Store: ${deal.store || 'Unknown'}</div>
         <div class="top-deal-price">
-          $${price.toFixed(2)}
-          ${original > price ? `<span style="color: #999; text-decoration: line-through; font-size: 0.9rem;">$${original.toFixed(2)}</span>` : ''}
+          $${salePrice.toFixed(2)}
+          ${price > salePrice ? `<span style="color: #999; text-decoration: line-through; font-size: 0.9rem;">$${price.toFixed(2)}</span>` : ''}
         </div>
         <div class="top-deal-savings">${highlight}</div>
       `;
@@ -968,10 +983,13 @@
               ? timestamps.sort().reverse()[0] 
               : null;
             
+            // Combine durations if multiple scrapers
+            const durations = scraperMetas.map(m => m.duration).filter(Boolean);
+            const combinedDuration = durations.length > 0 ? durations.join(', ') : null;
+            
             health.metadata = {
-              blobUrl: scraperMetas[0].blobUrl,
               timestamp: mostRecent,
-              duration: scraperMetas[0].duration,
+              duration: combinedDuration,
               count: storeData.count
             };
           }
@@ -980,7 +998,6 @@
           const otherMeta = storeMetadata['Other (scrape-daily)'];
           if (otherMeta) {
             health.metadata = {
-              blobUrl: otherMeta.blobUrl,
               timestamp: otherMeta.timestamp,
               duration: otherMeta.duration,
               count: storeData.count
@@ -1024,7 +1041,8 @@
           if (health.status !== 'critical') health.status = 'warning';
         }
 
-        const missingPrices = storeDeals.filter(d => !d.price || Number(d.price) === 0).length;
+        // UPDATED: Use salePrice instead of price
+        const missingPrices = storeDeals.filter(d => !d.salePrice || Number(d.salePrice) === 0).length;
         if (missingPrices > 0) {
           health.issues.push({ type: 'warning', message: `⚠️ ${missingPrices} Missing Prices` });
           if (health.status !== 'critical') health.status = 'warning';
@@ -1097,20 +1115,13 @@
                   <div class="health-metric-value">${meta.duration}</div>
                 </div>
               ` : ''}
-            </div>
-
-            ${hasMetadata ? `
-              <div style="margin-top: 10px; font-size: 0.85rem; color: #666;">
-                <div style="margin-bottom: 4px;">
-                  <strong>Last Scraped:</strong> ${timestampStr}
+              ${hasMetadata && meta.timestamp ? `
+                <div class="health-metric" style="grid-column: 1 / -1;">
+                  <div class="health-metric-label">Last Scraped</div>
+                  <div class="health-metric-value" style="font-size: 0.85rem;">${timestampStr}</div>
                 </div>
-                ${meta.blobUrl ? `
-                  <div style="word-break: break-all;">
-                    <strong>Blob:</strong> <a href="${meta.blobUrl}" target="_blank" style="color: #214478ff;">${meta.blobUrl.substring(0, 50)}...</a>
-                  </div>
-                ` : ''}
-              </div>
-            ` : ''}
+              ` : ''}
+            </div>
 
             ${health.issues.length > 0 ? `
               <div class="health-issues">
@@ -1169,9 +1180,10 @@
 
         const bestDeal = data.deals
           .map(d => {
-            const o = Number(d.originalPrice) || 0;
-            const p = Number(d.price) || 0;
-            const pct = (o > p && o > 0) ? ((o - p) / o) * 100 : 0;
+            // UPDATED: Use new field names
+            const price = Number(d.price) || 0;
+            const salePrice = Number(d.salePrice) || 0;
+            const pct = (price > salePrice && price > 0) ? ((price - salePrice) / price) * 100 : 0;
             return { deal: d, pct };
           })
           .sort((a, b) => b.pct - a.pct)[0];
@@ -1343,16 +1355,17 @@
         meta.textContent = d.store || "";
         body.appendChild(meta);
 
+        // UPDATED: Use new field names
         const priceRow = document.createElement("div");
         priceRow.className = "deal-price";
-        priceRow.textContent = formatMoney(d.price);
+        priceRow.textContent = formatMoney(d.salePrice);
 
-        const orig = Number(d.originalPrice);
         const price = Number(d.price);
-        if (Number.isFinite(orig) && Number.isFinite(price) && orig > price) {
+        const salePrice = Number(d.salePrice);
+        if (Number.isFinite(price) && Number.isFinite(salePrice) && price > salePrice) {
           const origSpan = document.createElement("span");
           origSpan.className = "deal-orig";
-          origSpan.textContent = formatMoney(orig);
+          origSpan.textContent = formatMoney(price);
           priceRow.appendChild(origSpan);
         }
 
