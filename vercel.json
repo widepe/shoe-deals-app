@@ -9,24 +9,28 @@
       "schedule": "15 9 * * *"
     },
     {
-      "path": "/api/scrapers/holabird-mens-road",
+      "path": "/api/scrapers/shoebacca-clearance",
       "schedule": "30 9 * * *"
     },
     {
-      "path": "/api/scrapers/holabird-womens-road",
+      "path": "/api/scrapers/holabird-mens-road",
       "schedule": "45 9 * * *"
     },
     {
-      "path": "/api/scrapers/holabird-trail-unisex",
+      "path": "/api/scrapers/holabird-womens-road",
       "schedule": "0 10 * * *"
     },
     {
-      "path": "/api/scrape-daily",
+      "path": "/api/scrapers/holabird-trail-unisex",
       "schedule": "15 10 * * *"
     },
     {
+      "path": "/api/scrape-daily",
+      "schedule": "30 10 * * *"
+    },
+    {
       "path": "/api/merge-deals",
-      "schedule": "35 10 * * *"
+      "schedule": "50 10 * * *"
     }
   ]
 }
