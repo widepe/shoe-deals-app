@@ -67,8 +67,29 @@ function buildAsicsImageFromProductUrl(productUrl) {
 }
 
 /**
+ * Detect shoe type from title or model
+ */
+function detectShoeType(title, model) {
+  const combined = ((title || "") + " " + (model || "")).toLowerCase();
+
+  // Trail indicators
+  if (/\b(trail|trabuco|fujitrabuco|fuji)\b/i.test(combined)) {
+    return "trail";
+  }
+
+  // Track/spike indicators
+  if (/\b(track|spike|japan|metaspeed|magic speed)\b/i.test(combined)) {
+    return "track";
+  }
+
+  // Road is default for ASICS running shoes
+  return "road";
+}
+
+/**
  * Extract products from ASICS HTML
  * Uses category codes (aa10106000, aa20106000) for gender detection
+ * UPDATED: Now outputs new 10-field schema
  */
 function extractAsicsProducts(html, sourceUrl) {
   const $ = cheerio.load(html);
@@ -76,15 +97,15 @@ function extractAsicsProducts(html, sourceUrl) {
 
   // Determine gender from URL - normalize URL first to handle query params
   const normalizedUrl = (sourceUrl || '').toLowerCase();
-  let gender = 'Unisex';
+  let gender = 'unisex';
 
   // IMPORTANT: Check women's FIRST since aa20106000 contains aa10106000 as substring!
   if (normalizedUrl.includes('aa20106000') || normalizedUrl.includes('womens-clearance')) {
-    gender = 'Women';
+    gender = 'womens';
   } else if (normalizedUrl.includes('aa10106000') || normalizedUrl.includes('mens-clearance')) {
-    gender = 'Men';
+    gender = 'mens';
   } else if (normalizedUrl.includes('leaving-asics') || normalizedUrl.includes('aa60400001')) {
-    gender = 'Unisex';
+    gender = 'unisex';
   }
 
   console.log(`[ASICS] Processing URL: ${sourceUrl} -> Gender: ${gender}`);
@@ -121,19 +142,19 @@ function extractAsicsProducts(html, sourceUrl) {
     const productText = $product.text();
     const priceMatches = productText.match(/\$(\d+\.\d{2})/g);
 
+    let salePrice = null;
     let price = null;
-    let originalPrice = null;
 
     if (priceMatches && priceMatches.length >= 2) {
-      originalPrice = parseFloat(priceMatches[0].replace('$', ''));
-      price = parseFloat(priceMatches[1].replace('$', ''));
+      price = parseFloat(priceMatches[0].replace('$', '')); // original price (first)
+      salePrice = parseFloat(priceMatches[1].replace('$', '')); // sale price (second)
     } else if (priceMatches && priceMatches.length === 1) {
-      price = parseFloat(priceMatches[0].replace('$', ''));
+      salePrice = parseFloat(priceMatches[0].replace('$', ''));
     }
 
-    // Ensure sale price is lower
-    if (price && originalPrice && price > originalPrice) {
-      [price, originalPrice] = [originalPrice, price];
+    // Ensure sale price is lower than original price
+    if (salePrice && price && salePrice > price) {
+      [salePrice, price] = [price, salePrice];
     }
 
     // Get URL
@@ -217,28 +238,21 @@ function extractAsicsProducts(html, sourceUrl) {
     }
     // ----------------------------
 
-    // Calculate discount
-    const discount =
-      originalPrice && price && originalPrice > price
-        ? Math.round(((originalPrice - price) / originalPrice) * 100)
-        : null;
-
     // Model name
     const model = cleanTitle.replace(/^ASICS\s+/i, '').trim();
 
-    if (cleanTitle && (price || originalPrice) && url) {
+    if (cleanTitle && (salePrice || price) && url) {
       products.push({
         title: cleanTitle,
         brand: 'ASICS',
         model,
+        salePrice,                                  // CHANGED from 'price'
+        price,                                      // CHANGED from 'originalPrice'
         store: 'ASICS',
-        gender,
-        price,
-        originalPrice,
-        discount: discount ? `${discount}%` : null,
         url,
         image: image || null,
-        scrapedAt: new Date().toISOString(),
+        gender,                                     // CHANGED: now lowercase
+        shoeType: detectShoeType(cleanTitle, model), // NEW
       });
     }
   });
@@ -390,9 +404,9 @@ module.exports = async (req, res) => {
       segments: ["Men's Clearance", "Women's Clearance", 'Last Chance Styles'],
       totalDeals: deals.length,
       dealsByGender: {
-        Men: deals.filter(d => d.gender === 'Men').length,
-        Women: deals.filter(d => d.gender === 'Women').length,
-        Unisex: deals.filter(d => d.gender === 'Unisex').length,
+        mens: deals.filter(d => d.gender === 'mens').length,      // CHANGED to lowercase
+        womens: deals.filter(d => d.gender === 'womens').length,  // CHANGED to lowercase
+        unisex: deals.filter(d => d.gender === 'unisex').length,  // CHANGED to lowercase
       },
       pageResults,
       deals,
