@@ -85,16 +85,6 @@ function isDiscounted(deal) {
   return false;
 }
 
-// Calculate discount percentage from prices
-function calculateDiscountPercent(salePrice, price) {
-  const sale = parseMoney(salePrice);
-  const orig = parseMoney(price);
-  if (Number.isFinite(sale) && Number.isFinite(orig) && orig > 0 && orig > sale) {
-    return Math.round(((orig - sale) / orig) * 100);
-  }
-  return null;
-}
-
 module.exports = async (req, res) => {
   const requestId = `${req.headers["x-vercel-id"] || "local"}-${Date.now()}`;
 
@@ -179,7 +169,6 @@ module.exports = async (req, res) => {
       const selected = shuffled.map((deal) => {
         const salePrice = parseMoney(deal.salePrice);
         const price = parseMoney(deal.price);
-        const discountPercent = calculateDiscountPercent(salePrice, price);
         
         return {
           title: deal.title || "Running Shoe Deal",
@@ -187,13 +176,11 @@ module.exports = async (req, res) => {
           model: deal.model || "",
           salePrice: Number.isFinite(salePrice) ? salePrice : 0,
           price: Number.isFinite(price) ? price : null,
-          discountPercent: discountPercent,
           store: deal.store || "Store",
           url: deal.url || "#",
           image: deal.image || "",
           gender: deal.gender || "unknown",
           shoeType: deal.shoeType || "unknown",
-          color: deal.color || null,
         };
       });
 
@@ -262,7 +249,6 @@ module.exports = async (req, res) => {
     const selected = shuffled.map((deal) => {
       const salePrice = parseMoney(deal.salePrice);
       const price = parseMoney(deal.price);
-      const discountPercent = calculateDiscountPercent(salePrice, price);
 
       return {
         title: deal.title || "Running Shoe Deal",
@@ -270,13 +256,11 @@ module.exports = async (req, res) => {
         model: deal.model || "",
         salePrice: Number.isFinite(salePrice) ? salePrice : 0,
         price: Number.isFinite(price) ? price : null,
-        discountPercent: discountPercent,
         store: deal.store || "Store",
         url: deal.url || "#",
         image: deal.image || "",
         gender: deal.gender || "unknown",
         shoeType: deal.shoeType || "unknown",
-        color: deal.color || null,
       };
     });
 
