@@ -102,11 +102,55 @@ function extractGoingGoingGoneProducts(html, gender) {
   const products = [];
 
   console.log(`[Going Going Gone] Parsing HTML for ${gender}...`);
+  console.log(`[Going Going Gone] HTML length: ${html.length}`);
 
-  // Find all product links
-  const $productLinks = $('a[href*="/p/"]');
-  
-  console.log(`[Going Going Gone] Found ${$productLinks.length} product links`);
+  // Debug: Look for any links
+  const allLinks = $('a').length;
+  console.log(`[Going Going Gone] Total <a> tags: ${allLinks}`);
+
+  // Debug: Look for product-like patterns
+  const productsInUrl = $('a[href*="/p/"]').length;
+  console.log(`[Going Going Gone] Links with /p/: ${productsInUrl}`);
+
+  // Debug: Look for prices
+  const pricesFound = (html.match(/\$\d+/g) || []).length;
+  console.log(`[Going Going Gone] Prices found in HTML: ${pricesFound}`);
+
+  // Try broader selectors
+  const possibleSelectors = [
+    'a[href*="/p/"]',
+    'a[href*="running-shoes"]',
+    'a[title*="Running"]',
+    'a[aria-label*="Running"]',
+    '[data-testid*="product"]',
+    '.product-tile a',
+    '.product-card a',
+  ];
+
+  let $productLinks = $();
+  let usedSelector = '';
+
+  for (const selector of possibleSelectors) {
+    const $links = $(selector);
+    if ($links.length > 0) {
+      $productLinks = $links;
+      usedSelector = selector;
+      console.log(`[Going Going Gone] Found ${$links.length} links using: ${selector}`);
+      break;
+    }
+  }
+
+  if ($productLinks.length === 0) {
+    console.log('[Going Going Gone] ❌ No product links found with any selector');
+    
+    // Log a sample of the HTML for debugging
+    const htmlSample = html.substring(0, 2000);
+    console.log('[Going Going Gone] HTML Sample:', htmlSample);
+    
+    return products;
+  }
+
+  console.log(`[Going Going Gone] Using selector: ${usedSelector}`);
 
   const seenUrls = new Set();
 
@@ -136,7 +180,10 @@ function extractGoingGoingGoneProducts(html, gender) {
       $link.text().trim() ||
       '';
 
-    if (!title || title.length < 3) return;
+    if (!title || title.length < 3) {
+      console.log(`[Going Going Gone] Skipping ${url} - no title`);
+      return;
+    }
 
     // Get image
     let image = 
@@ -180,7 +227,10 @@ function extractGoingGoingGoneProducts(html, gender) {
       [salePrice, price] = [price, salePrice];
     }
 
-    if (!salePrice) return;
+    if (!salePrice) {
+      console.log(`[Going Going Gone] Skipping ${title} - no price`);
+      return;
+    }
 
     // Extract brand and model
     const brand = extractBrand(title);
@@ -188,6 +238,8 @@ function extractGoingGoingGoneProducts(html, gender) {
 
     // Detect shoe type
     const shoeType = detectShoeType(title);
+
+    console.log(`[Going Going Gone] ✓ Added: ${title} - $${salePrice}`);
 
     products.push({
       title: title.trim(),
