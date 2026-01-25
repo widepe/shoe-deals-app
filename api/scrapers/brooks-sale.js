@@ -5,6 +5,43 @@ const FirecrawlApp = require('@mendable/firecrawl-js').default;
 const cheerio = require('cheerio');
 const { put } = require('@vercel/blob');
 
+/**
+ * Detect gender from product title or URL
+ */
+function detectGender(title, url) {
+  const titleLower = (title || '').toLowerCase();
+  const urlLower = (url || '').toLowerCase();
+  const combined = titleLower + ' ' + urlLower;
+
+  // Brooks patterns
+  if (/\b(men'?s?|male)\b/i.test(combined)) return 'mens';
+  if (/\b(women'?s?|female|ladies)\b/i.test(combined)) return 'womens';
+  if (/\bunisex\b/i.test(combined)) return 'unisex';
+
+  return 'unknown';
+}
+
+/**
+ * Detect shoe type from title or model
+ */
+function detectShoeType(title, model) {
+  const combined = ((title || '') + ' ' + (model || '')).toLowerCase();
+
+  // Trail indicators
+  if (/\b(trail|cascadia|caldera|catamount)\b/i.test(combined)) {
+    return 'trail';
+  }
+
+  // Track/spike indicators
+  if (/\b(track|spike|hyperion|elite)\b/i.test(combined)) {
+    return 'track';
+  }
+
+  // Road is default for Brooks (most Brooks shoes are road running)
+  // Common models: Ghost, Glycerin, Adrenaline, Launch, Levitate, etc.
+  return 'road';
+}
+
 function extractBrooksProducts(html) {
   const $ = cheerio.load(html);
   const products = [];
@@ -21,8 +58,8 @@ function extractBrooksProducts(html) {
     if (!title) return; // Skip if no title
     
     // Get prices - try multiple methods
+    let salePrice = null;
     let price = null;
-    let originalPrice = null;
     
     // Method 1: Try standard price classes
     const $priceContainer = $product.find('.m-product-tile__price-container, .price-container, [class*="price"]');
@@ -50,28 +87,28 @@ function extractBrooksProducts(html) {
       
       if (allPrices && allPrices.length >= 2) {
         // Multiple prices found - assume first is original, second is sale
-        originalPrice = parseFloat(allPrices[0].replace('$', ''));
-        price = parseFloat(allPrices[1].replace('$', ''));
+        price = parseFloat(allPrices[0].replace('$', ''));
+        salePrice = parseFloat(allPrices[1].replace('$', ''));
       } else if (allPrices && allPrices.length === 1) {
         // Only one price - treat as current price
-        price = parseFloat(allPrices[0].replace('$', ''));
+        salePrice = parseFloat(allPrices[0].replace('$', ''));
       }
     } else {
       // Parse prices from the text we found
       if (salePriceText) {
         const priceMatch = salePriceText.match(/\$?\s*(\d+(?:\.\d{2})?)/);
-        if (priceMatch) price = parseFloat(priceMatch[1]);
+        if (priceMatch) salePrice = parseFloat(priceMatch[1]);
       }
       
       if (origPriceText) {
         const origMatch = origPriceText.match(/\$?\s*(\d+(?:\.\d{2})?)/);
-        if (origMatch) originalPrice = parseFloat(origMatch[1]);
+        if (origMatch) price = parseFloat(origMatch[1]);
       }
     }
     
     // Ensure prices make sense (sale should be lower than original)
-    if (price && originalPrice && price > originalPrice) {
-      [price, originalPrice] = [originalPrice, price];
+    if (salePrice && price && salePrice > price) {
+      [salePrice, price] = [price, salePrice];
     }
     
     // Get URL - try multiple selectors
@@ -89,28 +126,27 @@ function extractBrooksProducts(html) {
       $product.find('img').first().attr('data-src')
     );
     
-    // Calculate discount percentage
-    const discount = originalPrice && price && originalPrice > price ?
-      Math.round(((originalPrice - price) / originalPrice) * 100) : null;
-    
     // Extract model from title (the title from data attribute is just the model name)
     const model = title.replace(/^Brooks\s+/i, '').trim();
     
     // Create full title: Brand + Model (to match other scrapers like "ASICS GEL-NIMBUS 27")
     const fullTitle = `Brooks ${model}`;
     
+    // Absolutize URL and image
+    const absoluteUrl = url ? (url.startsWith('http') ? url : `https://www.brooksrunning.com${url}`) : null;
+    const absoluteImage = image ? (image.startsWith('http') ? image : `https://www.brooksrunning.com${image}`) : null;
+    
     products.push({
-      title: fullTitle,  // "Brooks Glycerin 22"
+      title: fullTitle,                           // "Brooks Glycerin 22"
       brand: 'Brooks',
-      model: model,      // "Glycerin 22"
+      model: model,                               // "Glycerin 22"
+      salePrice,                                  // CHANGED from 'price'
+      price,                                      // CHANGED from 'originalPrice'
       store: 'Brooks Running',
-      price,
-      originalPrice,
-      discount: discount ? `${discount}%` : null,
-      url: url ? (url.startsWith('http') ? url : `https://www.brooksrunning.com${url}`) : null,
-      image: image ? (image.startsWith('http') ? image : `https://www.brooksrunning.com${image}`) : null,
-      productId: productId,
-      scrapedAt: new Date().toISOString()
+      url: absoluteUrl,
+      image: absoluteImage,
+      gender: detectGender(fullTitle, absoluteUrl), // NEW
+      shoeType: detectShoeType(fullTitle, model),   // NEW
     });
   });
   
