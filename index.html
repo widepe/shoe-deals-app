@@ -1160,23 +1160,24 @@
         return;
       }
 
-// Show/hide gender filter row
-const genderRow = document.querySelector('#genderChips').closest('.filter-row');
-if (genderRow) {
-  genderRow.style.display = 'flex'; // Always show gender filter
-}
+// Show/hide gender filter row (always show)
+const genderRow = genderChips ? genderChips.closest(".filter-row") : null;
+if (genderRow) genderRow.style.display = "flex";
 
-// Show/hide shoe type filter row
-const typeRow = document.querySelector('#typeChips').closest('.filter-row');
+// Show/hide shoe type filter row (ONLY on brand-only searches)
+const typeRow = typeChips ? typeChips.closest(".filter-row") : null;
+
+const hasBrand = !!brandTyped.trim();
+const hasModel = !!modelTyped.trim();
+
 if (typeRow) {
   if (hasBrand && !hasModel) {
-    // Brand-only search: show shoe type filter
-    typeRow.style.display = 'flex';
+    typeRow.style.display = "flex";   // brand-only search
   } else {
-    // Brand + Model OR Model-only: hide shoe type filter
-    typeRow.style.display = 'none';
+    typeRow.style.display = "none";   // brand+model OR model-only
   }
 }
+
 
       
       if (filtersEl) filtersEl.style.display = "flex";
