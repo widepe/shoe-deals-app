@@ -177,11 +177,11 @@
     /* Discount badge in corner of image */
     .discount-badge {
       position: absolute;
-      top: 0.35rem;
-      left: 0.35rem;
-      padding: 0.15rem 0.5rem;
+      top: 1.5cqw;
+      left: 1.5cqw;
+      padding: 0.6cqw 2cqw;
       border-radius: 999px;
-      font-size: 0.7rem;
+      font-size: 3cqw;
       font-weight: 700;
       background: rgba(220, 53, 69, 0.9);
       color: #ffffff;
@@ -198,8 +198,8 @@
     }
 
     .card-original-price {
-      margin-left: 0.35rem;
-      font-size: 0.8rem;
+      margin-left: 1.5cqw;
+      font-size: 3.2cqw;
       color: #777;
       text-decoration: line-through;
     }
@@ -540,11 +540,11 @@
     --------------------------------- */
     .card-tags {
       position: absolute;
-      left: 0.35rem;
-      right: 0.35rem;
-      bottom: 0.35rem;
+      left: 1.5cqw;
+      right: 1.5cqw;
+      bottom: 1.5cqw;
       display: flex;
-      gap: 0.35rem;
+      gap: 1.5cqw;
       justify-content: flex-start;
       align-items: center;
       z-index: 2;
@@ -555,9 +555,9 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 0.15rem 0.45rem;
+      padding: 0.6cqw 1.8cqw;
       border-radius: 999px;
-      font-size: 0.68rem;
+      font-size: 2.8cqw;
       font-weight: 700;
       border: 1px solid rgba(33, 68, 120, 0.65);
       background: rgba(250, 253, 244, 0.92);
@@ -599,6 +599,8 @@
       aspect-ratio: 3 / 4;  /* 3 wide by 4 tall */
       display: flex;
       flex-direction: column;
+      container-type: inline-size;  /* Enable container queries */
+      container-name: card;
     }
 
     /* Override grid behavior in device preview containers */
@@ -668,7 +670,7 @@
       background: #d9e1ebff;
       border: 2px solid #214478ff;
       border-radius: 0.75rem;
-      padding: 0.75rem;
+      padding: 3cqw;  /* Padding scales with card width (3% of container width) */
       display: flex;
       flex-direction: column;
       text-align: left;
@@ -679,7 +681,7 @@
     .card-link {
       display: flex;
       flex-direction: column;
-      gap: 0.4rem;
+      gap: 1.5cqw;  /* Gap scales with card width */
       text-decoration: none;
       color: inherit;
       height: 100%;
@@ -696,9 +698,9 @@
     .card img {
       width: 100%;
       height: auto;
-      aspect-ratio: 1 / 1;  /* Square image area */
-      border-radius: 0.6rem;
-      object-fit: contain;
+      aspect-ratio: 4 / 3;  /* Landscape image - clips top/bottom if needed */
+      border-radius: 2.5cqw;  /* Border radius scales */
+      object-fit: cover;  /* Cover mode clips to fit */
       background: white;
       border: 1px solid #214478ff;
       box-sizing: border-box;
@@ -707,13 +709,13 @@
     .card-content {
       display: flex;
       flex-direction: column;
-      gap: 0.3rem;
+      gap: 1cqw;  /* Gap scales with card width */
       flex: 1;
-      min-height: 0;  /* Allow shrinking */
+      min-height: 0;
     }
 
     .card-title {
-      font-size: 0.92rem;
+      font-size: 4cqw;  /* Title scales with card width (4% of container width) */
       font-weight: 600;
       display: -webkit-box;
       -webkit-line-clamp: 3;
@@ -725,7 +727,7 @@
     }
 
     .card-store {
-      font-size: 0.82rem;
+      font-size: 3.5cqw;  /* Store name scales with card width */
       color: #49543a;
       flex-shrink: 0;
     }
@@ -733,8 +735,8 @@
     .card-price-row {
       display: flex;
       align-items: baseline;
-      gap: 0.3rem;
-      font-size: 0.95rem;
+      gap: 1cqw;  /* Gap scales */
+      font-size: 4cqw;  /* Price scales with card width */
       margin-top: auto;
       flex-shrink: 0;
     }
@@ -757,7 +759,7 @@
 
       .card-link {
         flex-direction: column;  /* Keep vertical on mobile */
-        gap: 0.4rem;
+        gap: 1.5cqw;
       }
 
       .card-image-wrapper {
@@ -768,20 +770,8 @@
       .card img {
         width: 100%;
         height: auto;
-        aspect-ratio: 1 / 1;
-        object-fit: contain;
-      }
-
-      /* Tags still work on mobile; keep them inside wrapper */
-      .card-tags {
-        left: 0.25rem;
-        right: 0.25rem;
-        bottom: 0.25rem;
-      }
-
-      .card-tag {
-        font-size: 0.62rem;
-        padding: 0.12rem 0.35rem;
+        aspect-ratio: 4 / 3;  /* Landscape - clips if needed */
+        object-fit: cover;
       }
 
       .card-content {
