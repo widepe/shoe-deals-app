@@ -588,15 +588,17 @@
       width: 100%;
       justify-content: center;
       max-width: 900px;
-      /* Dynamic column count controlled by CSS variable */
-      grid-template-columns: repeat(var(--grid-columns, auto-fit), minmax(min(100%, 180px), 1fr));
+      /* Auto-fit with minimum 180px, proportional growth */
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     }
 
-    /* Max card size constraint */
+    /* Proportional card with aspect ratio */
     .shoe-grid .card {
-      max-width: 240px;
-      margin: 0 auto;
       width: 100%;
+      margin: 0;
+      aspect-ratio: 3 / 4;  /* 3 wide by 4 tall */
+      display: flex;
+      flex-direction: column;
     }
 
     /* Override grid behavior in device preview containers */
@@ -607,7 +609,8 @@
     }
     
     #devicePreview.mobile .shoe-grid .card {
-      max-width: 100%;
+      width: 100%;
+      aspect-ratio: 3 / 4;
     }
 
     #devicePreview.mobile.landscape .shoe-grid {
@@ -617,7 +620,8 @@
     }
 
     #devicePreview.mobile.landscape .shoe-grid .card {
-      max-width: 100%;
+      width: 100%;
+      aspect-ratio: 3 / 4;
     }
 
     #devicePreview.tablet .shoe-grid {
@@ -626,7 +630,8 @@
     }
 
     #devicePreview.tablet .shoe-grid .card {
-      max-width: 100%;
+      width: 100%;
+      aspect-ratio: 3 / 4;
     }
 
     #devicePreview.tablet.landscape .shoe-grid {
@@ -635,7 +640,8 @@
     }
 
     #devicePreview.tablet.landscape .shoe-grid .card {
-      max-width: 100%;
+      width: 100%;
+      aspect-ratio: 3 / 4;
     }
 
     #devicePreview.desktop .shoe-grid {
@@ -643,7 +649,8 @@
     }
 
     #devicePreview.desktop .shoe-grid .card {
-      max-width: 240px;
+      width: 100%;
+      aspect-ratio: 3 / 4;
     }
 
     @media (max-width: 480px) {
@@ -666,6 +673,7 @@
       flex-direction: column;
       text-align: left;
       box-sizing: border-box;
+      position: relative;
     }
 
     .card-link {
@@ -675,17 +683,20 @@
       text-decoration: none;
       color: inherit;
       height: 100%;
+      flex: 1;
     }
 
     .card-image-wrapper {
       width: 100%;
       overflow: hidden;
-      position: relative; /* ensure absolute tags work */
+      position: relative;
+      flex-shrink: 0;
     }
 
     .card img {
       width: 100%;
-      height: 150px;
+      height: auto;
+      aspect-ratio: 1 / 1;  /* Square image area */
       border-radius: 0.6rem;
       object-fit: contain;
       background: white;
@@ -698,6 +709,7 @@
       flex-direction: column;
       gap: 0.3rem;
       flex: 1;
+      min-height: 0;  /* Allow shrinking */
     }
 
     .card-title {
@@ -708,12 +720,14 @@
       -webkit-box-orient: vertical;
       overflow: hidden;
       text-overflow: ellipsis;
-      min-height: calc(1.2em * 3);
+      line-height: 1.2;
+      flex-shrink: 0;
     }
 
     .card-store {
       font-size: 0.82rem;
       color: #49543a;
+      flex-shrink: 0;
     }
 
     .card-price-row {
@@ -721,6 +735,8 @@
       align-items: baseline;
       gap: 0.3rem;
       font-size: 0.95rem;
+      margin-top: auto;
+      flex-shrink: 0;
     }
 
     .price {
@@ -729,22 +745,31 @@
     }
 
     @media (max-width: 480px) {
+      body:not(.testing-mode) .shoe-grid {
+        grid-template-columns: 1fr;
+        max-width: 100%;
+      }
+      
+      body:not(.testing-mode) .shoe-grid .card {
+        width: 100%;
+        aspect-ratio: 3 / 4;  /* Maintain proportion on mobile */
+      }
+
       .card-link {
-        flex-direction: row;
-        gap: 0.75rem;
-        align-items: center;
+        flex-direction: column;  /* Keep vertical on mobile */
+        gap: 0.4rem;
       }
 
       .card-image-wrapper {
-        flex-shrink: 0;
-        width: 100px;
-        height: 80px;
-        overflow: hidden;
+        width: 100%;
+        height: auto;
       }
 
       .card img {
-        height: 80px;
-        object-fit: cover;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1 / 1;
+        object-fit: contain;
       }
 
       /* Tags still work on mobile; keep them inside wrapper */
@@ -760,19 +785,13 @@
       }
 
       .card-content {
-        justify-content: center;
+        justify-content: flex-start;
         min-width: 0;
       }
 
       .card-title {
         -webkit-line-clamp: 2;
-        min-height: auto;
-      }
-    }
-
-    @media (min-width: 481px) and (max-width: 900px) and (orientation: landscape) {
-      .shoe-grid { 
-        grid-template-columns: repeat(var(--grid-columns, 3), minmax(min(100%, 180px), 1fr));
+        line-height: 1.2;
       }
     }
 
