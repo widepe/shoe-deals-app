@@ -17,6 +17,112 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
+    /* ========================================================================
+       TESTING TOOLBAR - DELETE THIS ENTIRE SECTION TO REMOVE
+       ======================================================================== */
+    #testingToolbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #333;
+      color: white;
+      padding: 10px;
+      z-index: 10000;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      font-family: monospace;
+      font-size: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    #testingToolbar button {
+      background: #555;
+      color: white;
+      border: 1px solid #777;
+      padding: 8px 16px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 13px;
+      transition: background 0.2s;
+    }
+
+    #testingToolbar button:hover {
+      background: #666;
+    }
+
+    #testingToolbar button.active {
+      background: #007bff;
+      border-color: #0056b3;
+    }
+
+    #testingToolbar .toolbar-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 0 10px;
+      border-left: 1px solid #555;
+    }
+
+    #testingToolbar .toolbar-group:first-child {
+      border-left: none;
+    }
+
+    #testingToolbar label {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+
+    #testingToolbar input[type="range"] {
+      width: 150px;
+    }
+
+    #testingToolbar .column-value {
+      display: inline-block;
+      min-width: 30px;
+      text-align: center;
+      background: #444;
+      padding: 4px 8px;
+      border-radius: 3px;
+    }
+
+    /* Add padding to body when toolbar is active */
+    body.testing-mode {
+      padding-top: 70px;
+    }
+
+    /* Device preview container */
+    #devicePreview {
+      margin: 0 auto;
+      transition: all 0.3s ease;
+      background: white;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
+
+    #devicePreview.mobile {
+      max-width: 375px;
+      min-height: 667px;
+    }
+
+    #devicePreview.tablet {
+      max-width: 768px;
+      min-height: 1024px;
+    }
+
+    #devicePreview.desktop {
+      max-width: 100%;
+    }
+
+    /* Override for testing mode */
+    body.testing-mode .app {
+      max-width: 100% !important;
+    }
+    /* ======================================================================== */
+
     /* Make cards able to host an overlay */
     .card { position: relative; }
 
@@ -429,12 +535,24 @@
       width: 100%;
       justify-content: center;
       max-width: 900px;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+      /* Dynamic column count controlled by CSS variable */
+      grid-template-columns: repeat(var(--grid-columns, auto-fit), minmax(min(100%, 180px), 1fr));
+    }
+
+    /* Max card size constraint */
+    .shoe-grid .card {
+      max-width: 240px;
+      margin: 0 auto;
+      width: 100%;
     }
 
     @media (max-width: 480px) {
       .shoe-grid {
         grid-template-columns: 1fr;
+        max-width: 100%;
+      }
+      
+      .shoe-grid .card {
         max-width: 100%;
       }
     }
@@ -553,7 +671,9 @@
     }
 
     @media (min-width: 481px) and (max-width: 900px) and (orientation: landscape) {
-      .shoe-grid { grid-template-columns: repeat(3, 1fr); }
+      .shoe-grid { 
+        grid-template-columns: repeat(var(--grid-columns, 3), minmax(min(100%, 180px), 1fr));
+      }
     }
 
     .disclaimer {
@@ -587,86 +707,180 @@
 </head>
 
 <body>
-  <div style="display:none;">Impact-Site-Verification: 484b0fd5-0544-4654-b916-4e921a2e5077</div>
-
-  <div class="app">
-    <div class="brand">
-      <img src="/images/logo.svg" class="brand-logo" alt="Shoe Beagle Logo" id="logoLink">
+  <!-- ========================================================================
+       TESTING TOOLBAR - DELETE THIS ENTIRE SECTION TO REMOVE
+       ======================================================================== -->
+  <div id="testingToolbar">
+    <div class="toolbar-group">
+      <label>Device:</label>
+      <button id="btnMobile" data-device="mobile">Mobile (375px)</button>
+      <button id="btnTablet" data-device="tablet">Tablet (768px)</button>
+      <button id="btnDesktop" data-device="desktop" class="active">Desktop (Full)</button>
     </div>
+    
+    <div class="toolbar-group">
+      <label>Columns:</label>
+      <button id="btnColAuto" data-columns="auto" class="active">Auto</button>
+      <input type="range" id="colSlider" min="1" max="6" value="3" step="1">
+      <span class="column-value" id="colValue">3</span>
+    </div>
+    
+    <div class="toolbar-group">
+      <button id="btnCloseToolbar">✕ Close Toolbar</button>
+    </div>
+  </div>
+  <!-- ======================================================================== -->
 
-    <form id="search-form" method="POST">
-      <div class="input-wrapper">
-        <input id="brand" type="text" placeholder="Enter Shoe Brand" autocomplete="off"/>
-        <button type="button" class="input-clear" aria-label="Clear brand">&times;</button>
-        <div id="brandSuggestions" class="suggestions"></div>
+  <div id="devicePreview" class="desktop">
+    <div style="display:none;">Impact-Site-Verification: 484b0fd5-0544-4654-b916-4e921a2e5077</div>
+
+    <div class="app">
+      <div class="brand">
+        <img src="/images/logo.svg" class="brand-logo" alt="Shoe Beagle Logo" id="logoLink">
       </div>
 
-      <div class="input-wrapper">
-        <input id="model" type="text" placeholder="Enter Shoe Model" autocomplete="off"/>
-        <button type="button" class="input-clear" aria-label="Clear model">&times;</button>
-        <div id="modelSuggestions" class="suggestions"></div>
-      </div>
+      <form id="search-form" method="POST">
+        <div class="input-wrapper">
+          <input id="brand" type="text" placeholder="Enter Shoe Brand" autocomplete="off"/>
+          <button type="button" class="input-clear" aria-label="Clear brand">&times;</button>
+          <div id="brandSuggestions" class="suggestions"></div>
+        </div>
 
-      <div class="button-wrapper">
-        <button id="fetchBtn" type="submit" class="search-btn">Fetch!</button>
-      </div>
+        <div class="input-wrapper">
+          <input id="model" type="text" placeholder="Enter Shoe Model" autocomplete="off"/>
+          <button type="button" class="input-clear" aria-label="Clear model">&times;</button>
+          <div id="modelSuggestions" class="suggestions"></div>
+        </div>
 
-      <div class="menu-wrapper">
-        <button id="menuBtn" type="button" class="menu-btn" aria-label="Menu">
-          <span class="menu-icon">☰</span>
-        </button>
-        <div id="menuDropdown" class="menu-dropdown">
-          <a href="/pages/myalerts.html">My Alerts</a>
+        <div class="button-wrapper">
+          <button id="fetchBtn" type="submit" class="search-btn">Fetch!</button>
+        </div>
+
+        <div class="menu-wrapper">
+          <button id="menuBtn" type="button" class="menu-btn" aria-label="Menu">
+            <span class="menu-icon">☰</span>
+          </button>
+          <div id="menuDropdown" class="menu-dropdown">
+            <a href="/pages/myalerts.html">My Alerts</a>
+          </div>
+        </div>
+      </form>
+
+      <div class="status-message" id="statusMessage">Let's find your running shoes!</div>
+
+      <!-- Filters -->
+      <div class="filters" id="filters" style="display:none;">
+        <div class="filter-row">
+          <div class="filter-label">Gender:</div>
+          <div class="chip-group" id="genderChips">
+            <button type="button" class="chip active" data-gender="" aria-label="Filter off">&times;</button>
+            <button type="button" class="chip" data-gender="mens" aria-label="Mens">M</button>
+            <button type="button" class="chip" data-gender="womens" aria-label="Womens">W</button>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-label">Shoe type:</div>
+          <div class="chip-group" id="typeChips">
+            <button type="button" class="chip active" data-type="" aria-label="Filter off">&times;</button>
+            <button type="button" class="chip" data-type="road" aria-label="Road">R</button>
+            <button type="button" class="chip" data-type="trail" aria-label="Trail">T</button>
+            <button type="button" class="chip" data-type="track" aria-label="Spikes">S</button>
+          </div>
         </div>
       </div>
-    </form>
 
-    <div class="status-message" id="statusMessage">Let's find your running shoes!</div>
-
-    <!-- Filters -->
-    <div class="filters" id="filters" style="display:none;">
-      <div class="filter-row">
-        <div class="filter-label">Gender:</div>
-        <div class="chip-group" id="genderChips">
-          <button type="button" class="chip active" data-gender="" aria-label="Filter off">&times;</button>
-          <button type="button" class="chip" data-gender="mens" aria-label="Mens">M</button>
-          <button type="button" class="chip" data-gender="womens" aria-label="Womens">W</button>
+      <div id="mainContent">
+        <div class="daily-deals" id="dailyDeals">
+          <div class="daily-deals-header">Marty's Daily Deals</div>
+          <div class="shoe-grid" id="dailyDealsGrid"></div>
         </div>
+
+        <div class="shoe-grid" id="results"></div>
+        <p class="disclaimer">Shoe Beagle does not sell products directly and is not responsible for changes in price, availability, or shipping terms on retailer sites.</p>
       </div>
 
-      <div class="filter-row">
-        <div class="filter-label">Shoe type:</div>
-        <div class="chip-group" id="typeChips">
-          <button type="button" class="chip active" data-type="" aria-label="Filter off">&times;</button>
-          <button type="button" class="chip" data-type="road" aria-label="Road">R</button>
-          <button type="button" class="chip" data-type="trail" aria-label="Trail">T</button>
-          <button type="button" class="chip" data-type="track" aria-label="Spikes">S</button>
-        </div>
+      <div class="footer">
+        <a href="/pages/about.html">About</a> |
+        <a href="/pages/contact.html">Contact</a> |
+        <a href="/pages/privacy.html">Privacy</a> |
+        <a href="/pages/terms.html">Terms</a> |
+        <br>
+        © <span id="footerYear"></span> Shoe Beagle. All rights reserved.
       </div>
-    </div>
-
-    <div id="mainContent">
-      <div class="daily-deals" id="dailyDeals">
-        <div class="daily-deals-header">Marty's Daily Deals</div>
-        <div class="shoe-grid" id="dailyDealsGrid"></div>
-      </div>
-
-      <div class="shoe-grid" id="results"></div>
-      <p class="disclaimer">Shoe Beagle does not sell products directly and is not responsible for changes in price, availability, or shipping terms on retailer sites.</p>
-    </div>
-
-    <div class="footer">
-      <a href="/pages/about.html">About</a> |
-      <a href="/pages/contact.html">Contact</a> |
-      <a href="/pages/privacy.html">Privacy</a> |
-      <a href="/pages/terms.html">Terms</a> |
-      <br>
-      © <span id="footerYear"></span> Shoe Beagle. All rights reserved.
     </div>
   </div>
 
   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
   <script>
+    /* ========================================================================
+       TESTING TOOLBAR SCRIPT - DELETE THIS ENTIRE SCRIPT BLOCK TO REMOVE
+       ======================================================================== */
+    (function() {
+      const toolbar = document.getElementById('testingToolbar');
+      const devicePreview = document.getElementById('devicePreview');
+      const body = document.body;
+      
+      const btnMobile = document.getElementById('btnMobile');
+      const btnTablet = document.getElementById('btnTablet');
+      const btnDesktop = document.getElementById('btnDesktop');
+      const btnColAuto = document.getElementById('btnColAuto');
+      const colSlider = document.getElementById('colSlider');
+      const colValue = document.getElementById('colValue');
+      const btnCloseToolbar = document.getElementById('btnCloseToolbar');
+      
+      const shoeGrids = document.querySelectorAll('.shoe-grid');
+      
+      // Add testing mode class
+      body.classList.add('testing-mode');
+      
+      // Device switching
+      function setDevice(device) {
+        devicePreview.className = device;
+        [btnMobile, btnTablet, btnDesktop].forEach(btn => {
+          btn.classList.remove('active');
+          if (btn.dataset.device === device) btn.classList.add('active');
+        });
+      }
+      
+      btnMobile.addEventListener('click', () => setDevice('mobile'));
+      btnTablet.addEventListener('click', () => setDevice('tablet'));
+      btnDesktop.addEventListener('click', () => setDevice('desktop'));
+      
+      // Column control
+      function setColumns(count) {
+        if (count === 'auto') {
+          shoeGrids.forEach(grid => grid.style.setProperty('--grid-columns', 'auto-fit'));
+          colSlider.disabled = true;
+          btnColAuto.classList.add('active');
+        } else {
+          shoeGrids.forEach(grid => grid.style.setProperty('--grid-columns', count));
+          colSlider.disabled = false;
+          colSlider.value = count;
+          colValue.textContent = count;
+          btnColAuto.classList.remove('active');
+        }
+      }
+      
+      btnColAuto.addEventListener('click', () => setColumns('auto'));
+      
+      colSlider.addEventListener('input', (e) => {
+        setColumns(e.target.value);
+      });
+      
+      // Close toolbar
+      btnCloseToolbar.addEventListener('click', () => {
+        toolbar.style.display = 'none';
+        body.classList.remove('testing-mode');
+        devicePreview.className = '';
+        setColumns('auto');
+      });
+      
+      // Initialize
+      setColumns('auto');
+    })();
+    /* ======================================================================== */
+
     const form = document.getElementById("search-form");
     form.addEventListener("keydown", (e) => {
       if (e.key === "Enter") e.preventDefault();
