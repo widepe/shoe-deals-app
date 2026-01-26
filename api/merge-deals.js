@@ -1,11 +1,22 @@
 // /api/merge-deals.js
 //
 // Merges: (1) scrape-daily output + (2) Holabird outputs + (3) Brooks sale + (4) ASICS sale (+ others you add)
-// Writes the canonical blob: deals.json (overwritten each run; addRandomSuffix: false)
+//
+// Writes canonical blob(s) (overwritten each run; addRandomSuffix: false):
+//   1) deals.json                -> sanitized + normalized + filtered + deduped + sorted (SAFE for the app)
+//   2) unaltered-deals.json      -> merged raw deals BEFORE any sanitize/filter/dedupe/sort (DEBUG only)
 //
 // After deals are merged:
-// 1) stats are computed and stored in stats.json (small, fast dashboard payload)
-// 2) daily deals are calculated and stored for the day in twelve_daily_deals.json (12 picks)
+//   1) stats are computed and stored in stats.json (small, fast dashboard payload)
+//   2) daily deals are calculated and stored for the day in twelve_daily_deals.json (12 picks)
+//   3) scraper performance history is updated and stored in scraper-data.json (rolling 30 days)
+//
+// IMPORTANT NOTE ABOUT scraper-data.json HISTORY
+// - To append to a rolling 30-day history, merge-deals must be able to READ the existing scraper-data.json.
+// - Vercel Blob "put" overwrites deterministically (same pathname), but merge-deals still needs the blob URL to fetch it.
+// - Recommended: set SCRAPER_DATA_BLOB_URL once (paste the blob URL returned by merge-deals after the first run).
+// - If SCRAPER_DATA_BLOB_URL is NOT set, merge-deals will still write scraper-data.json, but history will start fresh
+//   each time because it can’t read the previous version without the URL.
 //
 // Env vars (recommended):
 //   OTHER_DEALS_BLOB_URL
@@ -15,6 +26,7 @@
 //   BROOKS_SALE_BLOB_URL
 //   ASICS_SALE_BLOB_URL
 //   SHOEBACCA_CLEARANCE_BLOB_URL
+//   SCRAPER_DATA_BLOB_URL   <-- (recommended) allows rolling 30-day history to persist
 //
 // Optional fallback (if you do NOT set blob URLs):
 //   Calls scraper endpoints directly:
@@ -57,6 +69,36 @@ function extractDealsFromPayload(payload) {
 function toNumber(x) {
   const n = typeof x === "string" ? parseFloat(x) : x;
   return Number.isFinite(n) ? n : null;
+}
+
+function parseDurationMs(dur) {
+  if (dur == null) return null;
+  if (typeof dur === "number" && Number.isFinite(dur)) return dur;
+
+  const s = String(dur).trim();
+  if (!s) return null;
+
+  // "360ms"
+  let m = s.match(/^(\d+(?:\.\d+)?)\s*ms$/i);
+  if (m) return Math.round(parseFloat(m[1]));
+
+  // "6.4s"
+  m = s.match(/^(\d+(?:\.\d+)?)\s*s$/i);
+  if (m) return Math.round(parseFloat(m[1]) * 1000);
+
+  // "00:00:06.123"
+  m = s.match(/^(\d+):(\d+):(\d+(?:\.\d+)?)$/);
+  if (m) {
+    const hh = parseInt(m[1], 10);
+    const mm = parseInt(m[2], 10);
+    const ss = parseFloat(m[3]);
+    if (Number.isFinite(hh) && Number.isFinite(mm) && Number.isFinite(ss)) {
+      return Math.round(hh * 3600000 + mm * 60000 + ss * 1000);
+    }
+  }
+
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? Math.round(n) : null;
 }
 
 // UPDATED: Use salePrice and price
@@ -293,6 +335,7 @@ async function loadDealsFromBlobOrEndpoint({ name, blobUrl, endpointUrl }) {
     blobUrl: null,
     timestamp: null,
     duration: null,
+    payloadMeta: null, // keep top-level metadata for scraper-data.json, if present
   };
 
   if (blobUrl) {
@@ -302,6 +345,8 @@ async function loadDealsFromBlobOrEndpoint({ name, blobUrl, endpointUrl }) {
     metadata.deals = deals;
     metadata.blobUrl = blobUrl;
     metadata.timestamp = payload.lastUpdated || payload.timestamp || null;
+    metadata.duration = payload.duration || null;
+    metadata.payloadMeta = payload;
     return metadata;
   }
 
@@ -315,22 +360,25 @@ async function loadDealsFromBlobOrEndpoint({ name, blobUrl, endpointUrl }) {
       deals = extractDealsFromPayload(payload2);
       metadata.blobUrl = payload.blobUrl;
       metadata.timestamp = payload2.lastUpdated || payload2.timestamp || payload.timestamp || null;
+      metadata.duration = payload.duration || payload2.duration || null;
+      metadata.payloadMeta = payload2; // prefer blob payload if we had to follow it
     } else {
       metadata.blobUrl = payload.blobUrl || null;
       metadata.timestamp = payload.timestamp || payload.lastUpdated || null;
+      metadata.duration = payload.duration || null;
+      metadata.payloadMeta = payload;
     }
 
     metadata.source = "endpoint";
     metadata.deals = deals;
-    metadata.duration = payload.duration || null;
 
     return metadata;
   }
 
-  return { name, source: "none", deals: [] };
+  return { name, source: "none", deals: [], payloadMeta: null };
 }
 
-/** ------------ Stats (Phase 1 quick win) ------------ **/
+/** ------------ Stats ------------ **/
 
 function bucketLabel(salePrice) {
   if (!Number.isFinite(salePrice)) return null;
@@ -760,6 +808,136 @@ function computeTwelveDailyDeals(allDeals, seedStr) {
   return shuffled.map(toDailyDealShape);
 }
 
+/** ------------ scraper-data.json (rolling 30 days) ------------ **/
+
+function toIsoDayUTC(isoOrDate) {
+  const d = isoOrDate ? new Date(isoOrDate) : new Date();
+  if (Number.isNaN(d.getTime())) return getDateSeedStringUTC();
+  return d.toISOString().split("T")[0];
+}
+
+/**
+ * Build scraper performance records for "today".
+ * - For normal single-source scrapers, we record one entry.
+ * - For scrape-daily, we try to explode into individual store scrapers using payload.scraperResults (if present),
+ *   otherwise we fall back to dealsByStore as per-store counts, otherwise a single combined entry.
+ */
+function buildTodayScraperRecords({ sourceName, meta, perSourceOk }) {
+  const payload = meta?.payloadMeta || null;
+  const timestamp = meta?.timestamp || payload?.lastUpdated || payload?.timestamp || null;
+  const durationMs = parseDurationMs(meta?.duration || payload?.duration || null);
+  const via = meta?.source || null;
+  const blobUrl = meta?.blobUrl || null;
+
+  // If the source failed, record a failure entry.
+  if (!perSourceOk) {
+    return [
+      {
+        scraper: sourceName,
+        ok: false,
+        count: 0,
+        durationMs: durationMs,
+        timestamp: timestamp,
+        via,
+        blobUrl,
+        error: meta?.error || "Unknown error",
+      },
+    ];
+  }
+
+  // Special handling: break out scrape-daily into individual scrapers/stores if we can.
+  if (String(sourceName).toLowerCase().includes("scrape-daily")) {
+    const records = [];
+
+    // 1) If scrape-daily includes scraperResults { "Zappos": {count, duration, ...}, ... }
+    if (payload && payload.scraperResults && typeof payload.scraperResults === "object") {
+      for (const [name, r] of Object.entries(payload.scraperResults)) {
+        // r might be {success,count} or {ok,count} etc.
+        const ok = typeof r?.success === "boolean" ? r.success : (typeof r?.ok === "boolean" ? r.ok : true);
+        const count = Number.isFinite(r?.count) ? r.count : (Number.isFinite(r?.totalDeals) ? r.totalDeals : 0);
+        const dMs = parseDurationMs(r?.duration || null) ?? durationMs ?? null;
+        records.push({
+          scraper: name,
+          ok,
+          count: Number.isFinite(count) ? count : 0,
+          durationMs: dMs,
+          timestamp: payload.timestamp || payload.lastUpdated || timestamp || null,
+          via,
+          blobUrl,
+        });
+      }
+      if (records.length) return records;
+    }
+
+    // 2) Else: if scrape-daily includes dealsByStore {storeName: count}
+    if (payload && payload.dealsByStore && typeof payload.dealsByStore === "object") {
+      for (const [store, count] of Object.entries(payload.dealsByStore)) {
+        records.push({
+          scraper: store,
+          ok: true,
+          count: Number.isFinite(count) ? count : 0,
+          durationMs: durationMs,
+          timestamp: payload.timestamp || payload.lastUpdated || timestamp || null,
+          via,
+          blobUrl,
+        });
+      }
+      if (records.length) return records;
+    }
+
+    // 3) Fallback: single combined scrape-daily entry
+    return [
+      {
+        scraper: sourceName,
+        ok: true,
+        count: safeArray(meta?.deals).length,
+        durationMs,
+        timestamp,
+        via,
+        blobUrl,
+      },
+    ];
+  }
+
+  // Normal case: one entry per source
+  return [
+    {
+      scraper: sourceName,
+      ok: true,
+      count: safeArray(meta?.deals).length,
+      durationMs,
+      timestamp,
+      via,
+      blobUrl,
+    },
+  ];
+}
+
+function mergeRollingScraperHistory(existing, todayDayUTC, todayRecords, maxDays = 30) {
+  const history = safeArray(existing?.days).map((d) => d).filter(Boolean);
+
+  // Remove any existing entry for today's date, then append fresh
+  const filtered = history.filter((d) => d?.dayUTC !== todayDayUTC);
+
+  filtered.push({
+    dayUTC: todayDayUTC,
+    generatedAt: new Date().toISOString(),
+    scrapers: safeArray(todayRecords),
+  });
+
+  // Keep last N by day order (sorted ascending by date)
+  filtered.sort((a, b) => String(a.dayUTC).localeCompare(String(b.dayUTC)));
+
+  // Trim to last N
+  const trimmed = filtered.slice(Math.max(0, filtered.length - maxDays));
+
+  return {
+    version: 1,
+    lastUpdated: new Date().toISOString(),
+    days: trimmed,
+  };
+}
+
 /** ------------ Handler ------------ **/
 
 module.exports = async (req, res) => {
@@ -785,6 +963,9 @@ module.exports = async (req, res) => {
   const BROOKS_SALE_BLOB_URL = process.env.BROOKS_SALE_BLOB_URL || "";
   const ASICS_SALE_BLOB_URL = process.env.ASICS_SALE_BLOB_URL || "";
   const SHOEBACCA_CLEARANCE_BLOB_URL = process.env.SHOEBACCA_CLEARANCE_BLOB_URL || "";
+
+  // For rolling history read-back (recommended)
+  const SCRAPER_DATA_BLOB_URL = process.env.SCRAPER_DATA_BLOB_URL || "";
 
   // ============================================================================
   // ENDPOINT FALLBACKS (only used if blob URLs are missing)
@@ -844,12 +1025,13 @@ module.exports = async (req, res) => {
     const perSource = {};
     const storeMetadata = {};
     const allDealsRaw = [];
+    const perSourceMeta = {}; // keep the full meta object per source for scraper-data
 
     for (let i = 0; i < settled.length; i++) {
       const name = sources[i].name;
 
       if (settled[i].status === "fulfilled") {
-        const { source, deals, blobUrl, timestamp, duration } = settled[i].value;
+        const { source, deals, blobUrl, timestamp, duration, payloadMeta } = settled[i].value;
 
         perSource[name] = { ok: true, via: source, count: safeArray(deals).length };
 
@@ -860,16 +1042,39 @@ module.exports = async (req, res) => {
           count: safeArray(deals).length,
         };
 
+        perSourceMeta[name] = {
+          name,
+          source,
+          deals,
+          blobUrl,
+          timestamp,
+          duration,
+          payloadMeta,
+        };
+
         allDealsRaw.push(...safeArray(deals));
       } else {
         const msg = settled[i].reason?.message || String(settled[i].reason);
         perSource[name] = { ok: false, error: msg };
         storeMetadata[name] = { error: msg };
+        perSourceMeta[name] = { name, error: msg, source: "error", deals: [] };
       }
     }
 
     console.log("[MERGE] Source counts:", perSource);
     console.log("[MERGE] Total raw deals:", allDealsRaw.length);
+
+    // ============================================================================
+    // DEBUG BLOB (RAW, UNALTERED)
+    // Save BEFORE any manipulation/sanitization/filtering/deduping/sorting.
+    // ============================================================================
+    const unalteredPayload = {
+      lastUpdated: new Date().toISOString(),
+      totalDealsRaw: allDealsRaw.length,
+      scraperResults: perSource,
+      storeMetadata,
+      deals: allDealsRaw,
+    };
 
     // 1) Normalize + sanitize
     const normalized = allDealsRaw.map(normalizeDeal).filter(Boolean);
@@ -891,7 +1096,7 @@ module.exports = async (req, res) => {
       dealsByStore[s] = (dealsByStore[s] || 0) + 1;
     }
 
-    // 6) Build canonical deals output
+    // 6) Build canonical deals output (SAFE for app)
     const output = {
       lastUpdated: new Date().toISOString(),
       totalDeals: unique.length,
@@ -904,7 +1109,7 @@ module.exports = async (req, res) => {
     const stats = computeStats(unique, storeMetadata);
     stats.lastUpdated = output.lastUpdated;
 
-    // 8) Compute daily deals (12 picks) and write blobs (overwrite each run)
+    // 8) Compute daily deals (12 picks)
     const dailySeedUTC = getDateSeedStringUTC();
     const twelveDailyDeals = computeTwelveDailyDeals(unique, dailySeedUTC);
 
@@ -915,8 +1120,42 @@ module.exports = async (req, res) => {
       deals: twelveDailyDeals,
     };
 
-    const [dealsBlob, statsBlob, dailyDealsBlob] = await Promise.all([
+    // ============================================================================
+    // 9) scraper-data.json (rolling 30 days)
+    // Build today's records (including individual scrape-daily scrapers if present)
+    // ============================================================================
+    const todayDayUTC = toIsoDayUTC(output.lastUpdated);
+
+    const todayRecords = [];
+    for (const src of sources) {
+      const name = src.name;
+      const ok = !!perSource[name]?.ok;
+      const meta = perSourceMeta[name] || null;
+      todayRecords.push(...buildTodayScraperRecords({ sourceName: name, meta, perSourceOk: ok }));
+    }
+
+    // Try to load existing history (only possible if SCRAPER_DATA_BLOB_URL is set)
+    let existingScraperData = null;
+    if (SCRAPER_DATA_BLOB_URL) {
+      try {
+        existingScraperData = await fetchJson(SCRAPER_DATA_BLOB_URL);
+      } catch (e) {
+        console.log("[MERGE] Could not read SCRAPER_DATA_BLOB_URL (starting fresh):", e.message);
+        existingScraperData = null;
+      }
+    }
+
+    const scraperData = mergeRollingScraperHistory(existingScraperData, todayDayUTC, todayRecords, 30);
+
+    // ============================================================================
+    // 10) Write blobs (overwrite each run)
+    // ============================================================================
+    const [dealsBlob, unalteredBlob, statsBlob, dailyDealsBlob, scraperDataBlob] = await Promise.all([
       put("deals.json", JSON.stringify(output, null, 2), {
+        access: "public",
+        addRandomSuffix: false,
+      }),
+      put("unaltered-deals.json", JSON.stringify(unalteredPayload, null, 2), {
         access: "public",
         addRandomSuffix: false,
       }),
@@ -928,27 +1167,46 @@ module.exports = async (req, res) => {
         access: "public",
         addRandomSuffix: false,
       }),
+      put("scraper-data.json", JSON.stringify(scraperData, null, 2), {
+        access: "public",
+        addRandomSuffix: false,
+      }),
     ]);
 
     const durationMs = Date.now() - start;
+
     console.log("[MERGE] Saved deals.json:", dealsBlob.url);
+    console.log("[MERGE] Saved unaltered-deals.json:", unalteredBlob.url);
     console.log("[MERGE] Saved stats.json:", statsBlob.url);
     console.log("[MERGE] Saved twelve_daily_deals.json:", dailyDealsBlob.url);
+    console.log("[MERGE] Saved scraper-data.json:", scraperDataBlob.url);
+
     console.log(
-      `[MERGE] Complete in ${durationMs}ms; totalDeals=${unique.length}; dailyDeals=${twelveDailyDeals.length}`
+      `[MERGE] Complete in ${durationMs}ms; totalRaw=${allDealsRaw.length}; totalDeals=${unique.length}; dailyDeals=${twelveDailyDeals.length}`
     );
 
     return res.status(200).json({
       success: true,
       totalDeals: unique.length,
+      totalRawDeals: allDealsRaw.length,
       dealsByStore,
       scraperResults: perSource,
       storeMetadata,
-      blobUrl: dealsBlob.url,
+
+      dealsBlobUrl: dealsBlob.url,
+      unalteredBlobUrl: unalteredBlob.url,
       statsBlobUrl: statsBlob.url,
       dailyDealsBlobUrl: dailyDealsBlob.url,
+      scraperDataBlobUrl: scraperDataBlob.url,
+
       duration: `${durationMs}ms`,
       timestamp: output.lastUpdated,
+
+      // helpful reminder for you in the response payload:
+      note:
+        SCRAPER_DATA_BLOB_URL
+          ? "scraper-data history appended (SCRAPER_DATA_BLOB_URL was set)"
+          : "scraper-data written, but to persist rolling 30-day history you should set SCRAPER_DATA_BLOB_URL to scraperDataBlobUrl",
     });
   } catch (err) {
     console.error("[MERGE] Fatal error:", err);
