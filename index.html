@@ -1197,7 +1197,7 @@
       selectedGender = "";
       selectedShoeType = "";
       if (genderChips) setActiveChip(genderChips, genderChips.querySelector('.chip[data-gender=""]'));
-      if (typeChips) setActiveChip(typeChips, typeChips.querySelector('.chip[data-type=""]'));
+if (typeChips) setActiveChip(typeChips, typeChips.querySelector('[data-type=""]') || typeChips.querySelector('.chip'));
 
       if (!results.length) {
         statusMessageEl.textContent = `No results found for ${displayQuery}.`;
@@ -1219,7 +1219,7 @@
       if (typeRow) {
   if (hasBrand && !hasModel) {
     typeRow.style.display = "flex";
-    if (typeChips) setActiveChip(typeChips, typeChips.querySelector('.chip[data-type=""]')); // <-- add this
+    if (typeChips) setActiveChip(typeChips, typeChips.querySelector('.chip[data-type=""]'));
   } else {
     typeRow.style.display = "none";
   }
