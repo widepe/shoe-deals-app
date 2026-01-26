@@ -77,19 +77,6 @@
       margin-right: 5px;
     }
 
-    #testingToolbar input[type="range"] {
-      width: 150px;
-    }
-
-    #testingToolbar .column-value {
-      display: inline-block;
-      min-width: 30px;
-      text-align: center;
-      background: #444;
-      padding: 4px 8px;
-      border-radius: 3px;
-    }
-
     /* Add padding to body when toolbar is active */
     body.testing-mode {
       padding-top: 70px;
@@ -111,12 +98,24 @@
       box-shadow: 0 0 20px rgba(0,0,0,0.2);
     }
 
+    #devicePreview.mobile.landscape {
+      max-width: 667px;
+      width: 667px;
+      min-height: 375px;
+    }
+
     #devicePreview.tablet {
       max-width: 768px;
       width: 768px;
       min-height: 1024px;
       background: white;
       box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
+
+    #devicePreview.tablet.landscape {
+      max-width: 1024px;
+      width: 1024px;
+      min-height: 768px;
     }
 
     #devicePreview.desktop {
@@ -136,9 +135,19 @@
       max-width: 375px !important;
       padding: 10px;
     }
+
+    #devicePreview.mobile.landscape .app {
+      max-width: 667px !important;
+      padding: 10px;
+    }
     
     #devicePreview.tablet .app {
       max-width: 768px !important;
+      padding: 15px;
+    }
+
+    #devicePreview.tablet.landscape .app {
+      max-width: 1024px !important;
       padding: 15px;
     }
     /* ======================================================================== */
@@ -576,13 +585,25 @@
       max-width: 100%;
     }
 
+    #devicePreview.mobile.landscape .shoe-grid {
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+      max-width: 100%;
+    }
+
+    #devicePreview.mobile.landscape .shoe-grid .card {
+      max-width: 240px;
+    }
+
     #devicePreview.tablet .shoe-grid {
-      grid-template-columns: repeat(var(--grid-columns, 3), minmax(min(100%, 180px), 1fr)) !important;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+    }
+
+    #devicePreview.tablet.landscape .shoe-grid {
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
     }
 
     #devicePreview.desktop .shoe-grid {
-      /* Use the variable if set, otherwise auto-fit */
-      grid-template-columns: repeat(var(--grid-columns, auto-fit), minmax(min(100%, 180px), 1fr)) !important;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
     }
 
     @media (max-width: 480px) {
@@ -758,10 +779,9 @@
     </div>
     
     <div class="toolbar-group">
-      <label>Columns:</label>
-      <button id="btnColAuto" data-columns="auto" class="active">Auto</button>
-      <input type="range" id="colSlider" min="1" max="6" value="3" step="1">
-      <span class="column-value" id="colValue">3</span>
+      <label>Orientation:</label>
+      <button id="btnPortrait" data-orientation="portrait" class="active">Portrait</button>
+      <button id="btnLandscape" data-orientation="landscape">Landscape</button>
     </div>
     
     <div class="toolbar-group">
@@ -863,71 +883,80 @@
       const btnMobile = document.getElementById('btnMobile');
       const btnTablet = document.getElementById('btnTablet');
       const btnDesktop = document.getElementById('btnDesktop');
-      const btnColAuto = document.getElementById('btnColAuto');
-      const colSlider = document.getElementById('colSlider');
-      const colValue = document.getElementById('colValue');
+      const btnPortrait = document.getElementById('btnPortrait');
+      const btnLandscape = document.getElementById('btnLandscape');
       const btnCloseToolbar = document.getElementById('btnCloseToolbar');
       
-      const shoeGrids = document.querySelectorAll('.shoe-grid');
+      let currentDevice = 'desktop';
+      let currentOrientation = 'portrait';
       
       // Add testing mode class
       body.classList.add('testing-mode');
       
       // Device switching
       function setDevice(device) {
-        devicePreview.className = device;
+        currentDevice = device;
+        updatePreview();
+        
         [btnMobile, btnTablet, btnDesktop].forEach(btn => {
           btn.classList.remove('active');
           if (btn.dataset.device === device) btn.classList.add('active');
         });
+        
+        // Disable orientation controls for desktop
+        if (device === 'desktop') {
+          btnPortrait.disabled = true;
+          btnLandscape.disabled = true;
+          btnPortrait.style.opacity = '0.5';
+          btnLandscape.style.opacity = '0.5';
+          btnPortrait.style.cursor = 'not-allowed';
+          btnLandscape.style.cursor = 'not-allowed';
+        } else {
+          btnPortrait.disabled = false;
+          btnLandscape.disabled = false;
+          btnPortrait.style.opacity = '1';
+          btnLandscape.style.opacity = '1';
+          btnPortrait.style.cursor = 'pointer';
+          btnLandscape.style.cursor = 'pointer';
+        }
+      }
+      
+      // Orientation switching
+      function setOrientation(orientation) {
+        currentOrientation = orientation;
+        updatePreview();
+        
+        [btnPortrait, btnLandscape].forEach(btn => {
+          btn.classList.remove('active');
+          if (btn.dataset.orientation === orientation) btn.classList.add('active');
+        });
+      }
+      
+      // Update preview classes
+      function updatePreview() {
+        if (currentDevice === 'desktop') {
+          devicePreview.className = 'desktop';
+        } else {
+          devicePreview.className = currentDevice + (currentOrientation === 'landscape' ? ' landscape' : '');
+        }
       }
       
       btnMobile.addEventListener('click', () => setDevice('mobile'));
       btnTablet.addEventListener('click', () => setDevice('tablet'));
       btnDesktop.addEventListener('click', () => setDevice('desktop'));
       
-      // Column control
-      function setColumns(count) {
-        if (count === 'auto') {
-          shoeGrids.forEach(grid => {
-            grid.style.removeProperty('--grid-columns');
-          });
-          colSlider.disabled = true;
-          colValue.textContent = 'Auto';
-          btnColAuto.classList.add('active');
-        } else {
-          shoeGrids.forEach(grid => {
-            grid.style.setProperty('--grid-columns', count);
-          });
-          colSlider.disabled = false;
-          colSlider.value = count;
-          colValue.textContent = count;
-          btnColAuto.classList.remove('active');
-        }
-      }
-      
-      btnColAuto.addEventListener('click', () => {
-        setColumns('auto');
-      });
-      
-      colSlider.addEventListener('input', (e) => {
-        setColumns(e.target.value);
-      });
+      btnPortrait.addEventListener('click', () => setOrientation('portrait'));
+      btnLandscape.addEventListener('click', () => setOrientation('landscape'));
       
       // Close toolbar
       btnCloseToolbar.addEventListener('click', () => {
         toolbar.style.display = 'none';
         body.classList.remove('testing-mode');
         devicePreview.className = '';
-        shoeGrids.forEach(grid => {
-          grid.style.removeProperty('--grid-columns');
-        });
       });
       
-      // Initialize with slider at 3 but not active (auto mode)
-      colSlider.value = 3;
-      colValue.textContent = 'Auto';
-      setColumns('auto');
+      // Initialize
+      setDevice('desktop');
     })();
     /* ======================================================================== */
 
