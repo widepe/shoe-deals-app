@@ -99,27 +99,47 @@
     #devicePreview {
       margin: 0 auto;
       transition: all 0.3s ease;
-      background: white;
-      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      background: #f4ede3ff;
+      width: 100%;
     }
 
     #devicePreview.mobile {
       max-width: 375px;
+      width: 375px;
       min-height: 667px;
+      background: white;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
     }
 
     #devicePreview.tablet {
       max-width: 768px;
+      width: 768px;
       min-height: 1024px;
+      background: white;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
     }
 
     #devicePreview.desktop {
       max-width: 100%;
+      width: 100%;
+      background: #f4ede3ff;
+      box-shadow: none;
     }
 
     /* Override for testing mode */
     body.testing-mode .app {
       max-width: 100% !important;
+    }
+    
+    /* Make sure grids respect container width */
+    #devicePreview.mobile .app {
+      max-width: 375px !important;
+      padding: 10px;
+    }
+    
+    #devicePreview.tablet .app {
+      max-width: 768px !important;
+      padding: 15px;
     }
     /* ======================================================================== */
 
@@ -546,13 +566,32 @@
       width: 100%;
     }
 
+    /* Override grid behavior in device preview containers */
+    #devicePreview.mobile .shoe-grid {
+      grid-template-columns: 1fr !important;
+      max-width: 100%;
+    }
+    
+    #devicePreview.mobile .shoe-grid .card {
+      max-width: 100%;
+    }
+
+    #devicePreview.tablet .shoe-grid {
+      grid-template-columns: repeat(var(--grid-columns, 3), minmax(min(100%, 180px), 1fr)) !important;
+    }
+
+    #devicePreview.desktop .shoe-grid {
+      /* Use the variable if set, otherwise auto-fit */
+      grid-template-columns: repeat(var(--grid-columns, auto-fit), minmax(min(100%, 180px), 1fr)) !important;
+    }
+
     @media (max-width: 480px) {
-      .shoe-grid {
+      body:not(.testing-mode) .shoe-grid {
         grid-template-columns: 1fr;
         max-width: 100%;
       }
       
-      .shoe-grid .card {
+      body:not(.testing-mode) .shoe-grid .card {
         max-width: 100%;
       }
     }
@@ -850,11 +889,16 @@
       // Column control
       function setColumns(count) {
         if (count === 'auto') {
-          shoeGrids.forEach(grid => grid.style.setProperty('--grid-columns', 'auto-fit'));
+          shoeGrids.forEach(grid => {
+            grid.style.removeProperty('--grid-columns');
+          });
           colSlider.disabled = true;
+          colValue.textContent = 'Auto';
           btnColAuto.classList.add('active');
         } else {
-          shoeGrids.forEach(grid => grid.style.setProperty('--grid-columns', count));
+          shoeGrids.forEach(grid => {
+            grid.style.setProperty('--grid-columns', count);
+          });
           colSlider.disabled = false;
           colSlider.value = count;
           colValue.textContent = count;
@@ -862,7 +906,9 @@
         }
       }
       
-      btnColAuto.addEventListener('click', () => setColumns('auto'));
+      btnColAuto.addEventListener('click', () => {
+        setColumns('auto');
+      });
       
       colSlider.addEventListener('input', (e) => {
         setColumns(e.target.value);
@@ -873,10 +919,14 @@
         toolbar.style.display = 'none';
         body.classList.remove('testing-mode');
         devicePreview.className = '';
-        setColumns('auto');
+        shoeGrids.forEach(grid => {
+          grid.style.removeProperty('--grid-columns');
+        });
       });
       
-      // Initialize
+      // Initialize with slider at 3 but not active (auto mode)
+      colSlider.value = 3;
+      colValue.textContent = 'Auto';
       setColumns('auto');
     })();
     /* ======================================================================== */
