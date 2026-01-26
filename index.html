@@ -1217,12 +1217,13 @@
       const hasModel = !!modelTyped.trim();
 
       if (typeRow) {
-        if (hasBrand && !hasModel) {
-          typeRow.style.display = "flex";   // brand-only search
-        } else {
-          typeRow.style.display = "none";   // brand+model OR model-only
-        }
-      }
+  if (hasBrand && !hasModel) {
+    typeRow.style.display = "flex";
+    if (typeChips) setActiveChip(typeChips, typeChips.querySelector('.chip[data-type=""]')); // <-- add this
+  } else {
+    typeRow.style.display = "none";
+  }
+}
 
       if (filtersEl) filtersEl.style.display = "flex";
       renderFilteredResults();
