@@ -2,13 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Shoe Beagle – Device Tester</title>
+  <title>Device Preview Tester</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -20,14 +18,17 @@
       flex-direction: column;
     }
 
-    /* Top control bar that appears when cursor is near top */
     .toolbar-wrapper {
       position: fixed;
-      top: -60px; /* hidden by default */
+      top: -80px;    /* hidden by default */
       left: 0;
       right: 0;
       z-index: 1000;
       transition: top 0.25s ease;
+    }
+
+    body.show-toolbar .toolbar-wrapper {
+      top: 0;
     }
 
     .toolbar {
@@ -35,15 +36,26 @@
       border-bottom: 1px solid #333;
       padding: 8px 12px;
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
       align-items: center;
-      justify-content: flex-start;
       font-size: 14px;
     }
 
     .toolbar label {
       font-weight: 600;
       margin-right: 4px;
+    }
+
+    .toolbar input[type="text"] {
+      min-width: 260px;
+      max-width: 420px;
+      padding: 4px 6px;
+      border-radius: 4px;
+      border: 1px solid #444;
+      background: #222;
+      color: #f4ede3;
+      font-size: 13px;
     }
 
     .toolbar select {
@@ -75,12 +87,6 @@
       color: #ccc;
     }
 
-    /* Show toolbar when body gets a class */
-    body.show-toolbar .toolbar-wrapper {
-      top: 0;
-    }
-
-    /* Main preview area */
     .preview-container {
       flex: 1;
       display: flex;
@@ -96,7 +102,7 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.6);
       position: relative;
       display: flex;
-      align-items: stretch;
+      align-items: center;
       justify-content: center;
       padding: 12px;
     }
@@ -118,13 +124,11 @@
       background: white;
     }
 
-    /* Device size presets (we use JS to set these, but keep defaults here) */
     #previewFrame {
       width: 1440px;
       height: 900px;
     }
 
-    /* Small note at bottom */
     .footer-note {
       text-align: center;
       padding: 4px 0 6px;
@@ -133,15 +137,21 @@
     }
 
     @media (max-width: 800px) {
-      .hint {
-        display: none;
-      }
+      .hint { display: none; }
+      .toolbar { justify-content: flex-start; }
     }
   </style>
 </head>
 <body>
   <div class="toolbar-wrapper">
     <div class="toolbar">
+      <label for="urlInput">URL:</label>
+      <input
+        id="urlInput"
+        type="text"
+        placeholder="https://example.com or http://localhost:3000"
+      >
+
       <label for="deviceSelect">Device:</label>
       <select id="deviceSelect">
         <option value="desktop-1440x900">Desktop – 1440 × 900</option>
@@ -157,30 +167,31 @@
         <option value="landscape">Landscape</option>
       </select>
 
-      <button id="reloadBtn" type="button">Reload page</button>
+      <button id="goBtn" type="button">Go</button>
+      <button id="reloadBtn" type="button">Reload</button>
 
-      <span class="hint">Move your mouse near the top edge to show this panel.</span>
+      <span class="hint">Move your mouse to the top edge to show this panel.</span>
     </div>
   </div>
 
   <div class="preview-container">
     <div class="device-frame" id="deviceFrame">
-      <!-- CHANGE src TO MATCH YOUR MAIN PAGE PATH -->
-      <iframe id="previewFrame" src="./index.html"></iframe>
+      <iframe id="previewFrame" src="about:blank"></iframe>
     </div>
   </div>
 
   <div class="footer-note">
-    Device sizes approximate common viewports; use your browser dev tools for full emulation (user agent, touch, etc.).
+    Note: Some websites block being loaded in an iframe (X‑Frame‑Options / CSP), so they may not appear here even if the URL is correct.
   </div>
 
   <script>
     const body = document.body;
-    const toolbarWrapper = document.querySelector('.toolbar-wrapper');
+    const deviceFrame = document.getElementById('deviceFrame');
+    const frame = document.getElementById('previewFrame');
+    const urlInput = document.getElementById('urlInput');
     const deviceSelect = document.getElementById('deviceSelect');
     const orientationSelect = document.getElementById('orientationSelect');
-    const frame = document.getElementById('previewFrame');
-    const deviceFrame = document.getElementById('deviceFrame');
+    const goBtn = document.getElementById('goBtn');
     const reloadBtn = document.getElementById('reloadBtn');
 
     const devicePresets = {
@@ -208,19 +219,37 @@
       frame.style.width = w + 'px';
       frame.style.height = h + 'px';
 
-      // Slight padding margin around the iframe inside the frame
       deviceFrame.style.width = (w + 24) + 'px';
       deviceFrame.style.height = (h + 24) + 'px';
     }
 
+    function normalizeUrl(raw) {
+      if (!raw) return '';
+      raw = raw.trim();
+      if (!raw) return '';
+      if (!/^https?:\/\//i.test(raw)) {
+        return 'https://' + raw;
+      }
+      return raw;
+    }
+
+    goBtn.addEventListener('click', () => {
+      const raw = urlInput.value;
+      const url = normalizeUrl(raw);
+      if (!url) return;
+      frame.src = url;
+    });
+
+    reloadBtn.addEventListener('click', () => {
+      if (frame.src) {
+        frame.contentWindow.location.reload();
+      }
+    });
+
     deviceSelect.addEventListener('change', applySize);
     orientationSelect.addEventListener('change', applySize);
 
-    reloadBtn.addEventListener('click', () => {
-      frame.contentWindow.location.reload();
-    });
-
-    // Show toolbar when mouse near top
+    // Show/hide toolbar based on mouse position
     document.addEventListener('mousemove', (e) => {
       if (e.clientY <= 20) {
         body.classList.add('show-toolbar');
@@ -229,7 +258,15 @@
       }
     });
 
-    // Initial size
+    // Allow Enter key in URL box to navigate
+    urlInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        goBtn.click();
+      }
+    });
+
+    // Initial sizing
     applySize();
   </script>
 </body>
