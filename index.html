@@ -834,10 +834,6 @@
 // - keyboard navigation (↑ ↓ Enter Esc)
 // ------------------------------
 
-function normalizeStr(s) {
-  return String(s || "").trim().toLowerCase();
-}
-
 function squashStr(s) {
   // removes spaces + punctuation so gt2000 matches gt-2000 / gt 2000
   return String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -1146,38 +1142,6 @@ document.addEventListener("click", (e) => {
   if (!insideModel) closeSuggestions("model");
 });
 
-
-    modelInput.addEventListener("input", () => {
-      const brandKey = resolveBrand();
-      const text = modelInput.value.trim();
-
-      if (text.length < 2) {
-        modelSuggestions.style.display = "none";
-        updateFetchReady();
-        return;
-      }
-      if (!brandKey || !brandModels[brandKey]) {
-        modelSuggestions.style.display = "none";
-        updateFetchReady();
-        return;
-      }
-
-      const models = brandModels[brandKey];
-      const matches = filterStartsWith(models, text);
-
-      showSuggestions(modelSuggestions, matches, (value) => {
-        modelInput.value = value;
-        modelSuggestions.style.display = "none";
-        setTimeout(() => fetchBtn.focus(), 0);
-        updateFetchReady();
-      });
-
-      updateFetchReady();
-    });
-
-    brandInput.addEventListener("click", () => brandInput.select());
-    modelInput.addEventListener("click", () => modelInput.select());
-    modelInput.addEventListener("blur", () => setTimeout(() => { modelSuggestions.style.display = "none"; }, 120));
 
     function setActiveChip(groupEl, activeBtn) {
       if (!groupEl) return;
