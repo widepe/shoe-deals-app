@@ -896,6 +896,17 @@ function filterSuggestions(list, typed, limit = 10) {
     return Array.from(new Set(ranked));
   }
 
+  function resolveClosestBrand(input) {
+  if (!input) return "";
+
+  const scored = brands
+    .map(b => ({ b, s: scoreSuggestion(b, input) }))
+    .filter(x => x.s >= 100) // strong match only
+    .sort((a, b) => b.s - a.s);
+
+  return scored.length ? scored[0].b : input;
+}
+
   // Pass 2 (fallback): contains/squash scoring if no prefix matches exist
   const scored = list
     .map(v => ({ v, s: scoreSuggestion(v, q) }))
@@ -1389,7 +1400,10 @@ document.addEventListener("click", (e) => {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const brandTyped = sanitizeInput(brandInput.value);
+      let brandTyped = sanitizeInput(brandInput.value);
+brandTyped = resolveClosestBrand(brandTyped);
+brandInput.value = brandTyped; // optional: visibly correct it
+
       const modelTyped = sanitizeInput(modelInput.value);
 
       if (!brandTyped && !modelTyped) {
