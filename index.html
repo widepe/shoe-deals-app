@@ -7,180 +7,23 @@
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy"
         content="default-src 'self';
-                 script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://v3gjlrmpc76mymfc.public.blob.vercel-storage.com;
+                 script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://v3gjlrmpc.public.blob.vercel-storage.com;
                  img-src * data: https:;
                  style-src 'self' 'unsafe-inline';
-                 connect-src 'self' https://v3gjlrmpc76mymfc.public.blob.vercel-storage.com;
+                 connect-src 'self' https://v3gjlrmpc.public.blob.vercel-storage.com;
                  font-src 'self';
                  frame-src 'none';">
   <title>Shoe Beagle--The Running Shoe Deal Finder</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
-    /* ========================================================================
-       TESTING TOOLBAR - DELETE THIS ENTIRE SECTION TO REMOVE
-       ======================================================================== */
-    #testingToolbar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: #333;
-      color: white;
-      padding: 10px;
-      z-index: 10000;
-      display: flex;
-      gap: 15px;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-      font-family: monospace;
-      font-size: 14px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
-
-    #testingToolbar button {
-      background: #555;
-      color: white;
-      border: 1px solid #777;
-      padding: 8px 16px;
-      cursor: pointer;
-      border-radius: 4px;
-      font-family: monospace;
-      font-size: 13px;
-      transition: background 0.2s;
-    }
-
-    #testingToolbar button:hover {
-      background: #666;
-    }
-
-    #testingToolbar button.active {
-      background: #007bff;
-      border-color: #0056b3;
-    }
-
-    #testingToolbar .toolbar-group {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      padding: 0 10px;
-      border-left: 1px solid #555;
-    }
-
-    #testingToolbar .toolbar-group:first-child {
-      border-left: none;
-    }
-
-    #testingToolbar label {
-      font-weight: bold;
-      margin-right: 5px;
-    }
-
-    /* Add padding to body when toolbar is active */
-    body.testing-mode {
-      padding-top: 70px;
-    }
-
-    /* Device preview container */
-    #devicePreview {
-      margin: 0 auto;
-      transition: all 0.3s ease;
-      background: #f4ede3ff;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-    }
-
-    #devicePreview > * {
-      width: 100%;
-    }
-
-    #devicePreview.mobile {
-      max-width: 375px;
-      width: 375px;
-      min-height: 667px;
-      background: transparent;
-      border: 2px solid #333;
-      box-sizing: border-box;
-    }
-
-    #devicePreview.mobile.landscape {
-      max-width: 667px;
-      width: 667px;
-      min-height: 375px;
-    }
-
-    #devicePreview.tablet {
-      max-width: 768px;
-      width: 768px;
-      min-height: 1024px;
-      background: transparent;
-      border: 2px solid #333;
-      box-sizing: border-box;
-    }
-
-    #devicePreview.tablet.landscape {
-      max-width: 1024px;
-      width: 1024px;
-      min-height: 768px;
-    }
-
-    #devicePreview.desktop {
-      max-width: 100%;
-      width: 100%;
-      background: #f4ede3ff;
-      border: none;
-    }
-
-    /* Override for testing mode */
-    body.testing-mode .app {
-      max-width: 100% !important;
-    }
-    
-    /* Make sure grids respect container width */
-    #devicePreview.mobile .app {
-      max-width: 100% !important;
-      width: 100%;
-      padding: 10px;
-      box-sizing: border-box;
-    }
-
-    #devicePreview.mobile.landscape .app {
-      max-width: 100% !important;
-      width: 100%;
-      padding: 10px;
-      box-sizing: border-box;
-    }
-    
-    #devicePreview.tablet .app {
-      max-width: 100% !important;
-      width: 100%;
-      padding: 15px;
-      box-sizing: border-box;
-    }
-
-    #devicePreview.tablet.landscape .app {
-      max-width: 100% !important;
-      width: 100%;
-      padding: 15px;
-      box-sizing: border-box;
-    }
-    /* ======================================================================== */
-
-    /* Make cards able to host an overlay */
     .card { position: relative; }
 
-    /* Wrap the image so we can pin the badge to it */
-    .card-image-wrapper { 
-      position: relative; 
-      width: 40%;       /* image column */
-      max-width: 45%;
-      flex-shrink: 0;
-      overflow: hidden;
+    .card-image-wrapper {
+      position: relative;
+      width: 100%;
     }
 
-    /* Discount badge in corner of image */
     .discount-badge {
       position: absolute;
       top: 0.35rem;
@@ -222,13 +65,6 @@
       min-height: 100vh;
     }
 
-    /* Wrapper to keep content centered */
-    #devicePreview {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-    }
-
     .app {
       width: 100%;
       max-width: 900px;
@@ -263,7 +99,7 @@
       padding: 0 0.75rem;
       border-radius: 0.5rem;
       border: 1px solid #214478ff;
-      background: #fafdf4; /* INPUT BACKGROUND */
+      background: #fafdf4;
       font-size: 1rem;
       box-sizing: border-box;
       transition: border-color 0.2s ease, background-color 0.2s ease;
@@ -424,10 +260,6 @@
       min-height: 1.1rem;
     }
 
-    /* -------------------------------
-       FILTERS / CHIPS (ROUND + TOOLTIP)
-    -------------------------------- */
-
     .filters{
       width:100%;
       max-width:650px;
@@ -461,45 +293,33 @@
       flex-wrap:wrap;
     }
 
-    /* Perfectly round bubbles (fixed size) */
     .chip{
       border:1px solid #214478ff;
-      background:#fafdf4; /* match input background */
+      background:#fafdf4;
       color:#214478ff;
-
       width: 27px;
       height: 27px;
       border-radius: 999px;
       padding: 0;
-
       display: inline-flex;
       align-items: center;
       justify-content: center;
-
       font-size: 0.85rem;
       font-weight: 800;
       line-height: 1;
-
       cursor:pointer;
       transition: background 0.2s ease, color 0.2s ease, transform 0.05s ease, box-shadow 0.2s ease;
-      position: relative; /* for tooltip */
+      position: relative;
     }
 
-    .chip:hover{
-      background:#e8f0ff;
-    }
-
+    .chip:hover{ background:#e8f0ff; }
     .chip.active{
       background:#214478ff;
       color:#ffffff;
       box-shadow: 0 2px 6px rgba(33, 68, 120, 0.25);
     }
+    .chip:active{ transform: scale(0.98); }
 
-    .chip:active{
-      transform: scale(0.98);
-    }
-
-    /* Custom tooltip using aria-label */
     .chip[aria-label]::after{
       content: attr(aria-label);
       position: absolute;
@@ -537,13 +357,8 @@
       opacity: 1;
       transform: translateX(-50%) translateY(-2px);
     }
-    .chip:hover::before{
-      opacity: 1;
-    }
+    .chip:hover::before{ opacity: 1; }
 
-    /* --------------------------------
-       NEW: Bottom image tags (gender + shoeType)
-    --------------------------------- */
     .card-tags {
       position: absolute;
       left: 0.35rem;
@@ -554,7 +369,7 @@
       justify-content: flex-start;
       align-items: center;
       z-index: 2;
-      pointer-events: none; /* keep link clickable */
+      pointer-events: none;
     }
 
     .card-tag {
@@ -572,7 +387,6 @@
       white-space: nowrap;
     }
 
-    /* Daily Deals Section */
     .daily-deals {
       width: 100%;
       max-width: 900px;
@@ -594,80 +408,22 @@
       width: 100%;
       justify-content: center;
       max-width: 900px;
-      /* Auto-fit with minimum 180px, proportional growth */
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(var(--grid-columns, auto-fit), minmax(min(100%, 180px), 1fr));
     }
 
-    /* Proportional card with aspect ratio */
     .shoe-grid .card {
+      max-width: 240px;
+      margin: 0 auto;
       width: 100%;
-      margin: 0;
-      aspect-ratio: 3 / 4;  /* 3 wide by 4 tall */
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Override grid behavior in device preview containers */
-    #devicePreview.mobile .shoe-grid {
-      grid-template-columns: 1fr !important;
-      max-width: 100%;
-      gap: 1rem;
-    }
-    
-    #devicePreview.mobile .shoe-grid .card {
-      width: 100%;
-      aspect-ratio: 3 / 4;
-    }
-
-    #devicePreview.mobile.landscape .shoe-grid {
-      grid-template-columns: repeat(2, 1fr) !important;
-      max-width: 100%;
-      gap: 1rem;
-    }
-
-    #devicePreview.mobile.landscape .shoe-grid .card {
-      width: 100%;
-      aspect-ratio: 3 / 4;
-    }
-
-    #devicePreview.tablet .shoe-grid {
-      grid-template-columns: repeat(2, 1fr) !important;
-      gap: 1rem;
-    }
-
-    #devicePreview.tablet .shoe-grid .card {
-      width: 100%;
-      aspect-ratio: 3 / 4;
-    }
-
-    #devicePreview.tablet.landscape .shoe-grid {
-      grid-template-columns: repeat(3, 1fr) !important;
-      gap: 1rem;
-    }
-
-    #devicePreview.tablet.landscape .shoe-grid .card {
-      width: 100%;
-      aspect-ratio: 3 / 4;
-    }
-
-    #devicePreview.desktop .shoe-grid {
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
-    }
-
-    #devicePreview.desktop .shoe-grid .card {
-      width: 100%;
-      aspect-ratio: 3 / 4;
     }
 
     @media (max-width: 480px) {
-      body:not(.testing-mode) .shoe-grid {
+      .shoe-grid {
         grid-template-columns: 1fr;
         max-width: 100%;
       }
-      
-      body:not(.testing-mode) .shoe-grid .card {
-        width: 100%;
-        aspect-ratio: auto; /* let content define height */
+      .shoe-grid .card {
+        max-width: 100%;
       }
     }
 
@@ -680,24 +436,26 @@
       flex-direction: column;
       text-align: left;
       box-sizing: border-box;
-      position: relative;
     }
 
     .card-link {
       display: flex;
-      flex-direction: row; /* image left, text right */
-      gap: 0.6rem;
+      flex-direction: column;
+      gap: 0.4rem;
       text-decoration: none;
       color: inherit;
       height: 100%;
-      flex: 1;
-      align-items: flex-start;
+    }
+
+    .card-image-wrapper {
+      width: 100%;
+      overflow: hidden;
+      position: relative;
     }
 
     .card img {
       width: 100%;
-      height: auto;
-      aspect-ratio: 4 / 3;  /* 4 wide, 3 tall */
+      height: 150px;
       border-radius: 0.6rem;
       object-fit: contain;
       background: white;
@@ -710,21 +468,22 @@
       flex-direction: column;
       gap: 0.3rem;
       flex: 1;
-      min-height: 0;  /* Allow shrinking */
-      min-width: 0;
     }
 
     .card-title {
       font-size: 0.92rem;
       font-weight: 600;
-      line-height: 1.2;
-      flex-shrink: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-height: calc(1.2em * 3);
     }
 
     .card-store {
       font-size: 0.82rem;
       color: #49543a;
-      flex-shrink: 0;
     }
 
     .card-price-row {
@@ -732,8 +491,6 @@
       align-items: baseline;
       gap: 0.3rem;
       font-size: 0.95rem;
-      margin-top: auto;
-      flex-shrink: 0;
     }
 
     .price {
@@ -742,34 +499,24 @@
     }
 
     @media (max-width: 480px) {
-      body:not(.testing-mode) .shoe-grid {
-        grid-template-columns: 1fr;
-        max-width: 100%;
-      }
-      
-      body:not(.testing-mode) .shoe-grid .card {
-        width: 100%;
-        aspect-ratio: auto;
-      }
-
       .card-link {
-        flex-direction: row;  /* keep side-by-side on mobile single column */
-        gap: 0.6rem;
+        flex-direction: row;
+        gap: 0.75rem;
+        align-items: center;
       }
 
       .card-image-wrapper {
-        width: 40%;
-        max-width: 45%;
+        flex-shrink: 0;
+        width: 100px;
+        height: 80px;
+        overflow: hidden;
       }
 
       .card img {
-        width: 100%;
-        height: auto;
-        aspect-ratio: 4 / 3;
-        object-fit: contain;
+        height: 80px;
+        object-fit: cover;
       }
 
-      /* Tags still work on mobile; keep them inside wrapper */
       .card-tags {
         left: 0.25rem;
         right: 0.25rem;
@@ -782,8 +529,19 @@
       }
 
       .card-content {
-        justify-content: flex-start;
+        justify-content: center;
         min-width: 0;
+      }
+
+      .card-title {
+        -webkit-line-clamp: 2;
+        min-height: auto;
+      }
+    }
+
+    @media (min-width: 481px) and (max-width: 900px) and (orientation: landscape) {
+      .shoe-grid { 
+        grid-template-columns: repeat(var(--grid-columns, 3), minmax(min(100%, 180px), 1fr));
       }
     }
 
@@ -818,199 +576,85 @@
 </head>
 
 <body>
-  <!-- ========================================================================
-       TESTING TOOLBAR - DELETE THIS ENTIRE SECTION TO REMOVE
-       ======================================================================== -->
-  <div id="testingToolbar">
-    <div class="toolbar-group">
-      <label>Device:</label>
-      <button id="btnMobile" data-device="mobile">Mobile (375px)</button>
-      <button id="btnTablet" data-device="tablet">Tablet (768px)</button>
-      <button id="btnDesktop" data-device="desktop" class="active">Desktop (Full)</button>
+  <div style="display:none;">Impact-Site-Verification: 484b0fd5-0544-4654-b916-4e921a2e5077</div>
+
+  <div class="app">
+    <div class="brand">
+      <img src="/images/logo.svg" class="brand-logo" alt="Shoe Beagle Logo" id="logoLink">
     </div>
-    
-    <div class="toolbar-group">
-      <label>Orientation:</label>
-      <button id="btnPortrait" data-orientation="portrait" class="active">Portrait</button>
-      <button id="btnLandscape" data-orientation="landscape">Landscape</button>
+
+    <form id="search-form" method="POST">
+      <div class="input-wrapper">
+        <input id="brand" type="text" placeholder="Enter Shoe Brand" autocomplete="off"/>
+        <button type="button" class="input-clear" aria-label="Clear brand">&times;</button>
+        <div id="brandSuggestions" class="suggestions"></div>
+      </div>
+
+      <div class="input-wrapper">
+        <input id="model" type="text" placeholder="Enter Shoe Model" autocomplete="off"/>
+        <button type="button" class="input-clear" aria-label="Clear model">&times;</button>
+        <div id="modelSuggestions" class="suggestions"></div>
+      </div>
+
+      <div class="button-wrapper">
+        <button id="fetchBtn" type="submit" class="search-btn">Fetch!</button>
+      </div>
+
+      <div class="menu-wrapper">
+        <button id="menuBtn" type="button" class="menu-btn" aria-label="Menu">
+          <span class="menu-icon">☰</span>
+        </button>
+        <div id="menuDropdown" class="menu-dropdown">
+          <a href="/pages/myalerts.html">My Alerts</a>
+        </div>
+      </div>
+    </form>
+
+    <div class="status-message" id="statusMessage">Let's find your running shoes!</div>
+
+    <div class="filters" id="filters" style="display:none;">
+      <div class="filter-row">
+        <div class="filter-label">Gender:</div>
+        <div class="chip-group" id="genderChips">
+          <button type="button" class="chip active" data-gender="" aria-label="Filter off">&times;</button>
+          <button type="button" class="chip" data-gender="mens" aria-label="Mens">M</button>
+          <button type="button" class="chip" data-gender="womens" aria-label="Womens">W</button>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-label">Shoe type:</div>
+        <div class="chip-group" id="typeChips">
+          <button type="button" class="chip active" data-type="" aria-label="Filter off">&times;</button>
+          <button type="button" class="chip" data-type="road" aria-label="Road">R</button>
+          <button type="button" class="chip" data-type="trail" aria-label="Trail">T</button>
+          <button type="button" class="chip" data-type="track" aria-label="Spikes">S</button>
+        </div>
+      </div>
     </div>
-    
-    <div class="toolbar-group">
-      <button id="btnCloseToolbar">✕ Close Toolbar</button>
+
+    <div id="mainContent">
+      <div class="daily-deals" id="dailyDeals">
+        <div class="daily-deals-header">Marty's Daily Deals</div>
+        <div class="shoe-grid" id="dailyDealsGrid"></div>
+      </div>
+
+      <div class="shoe-grid" id="results"></div>
+      <p class="disclaimer">Shoe Beagle does not sell products directly and is not responsible for changes in price, availability, or shipping terms on retailer sites.</p>
     </div>
-  </div>
-  <!-- ======================================================================== -->
 
-  <div id="devicePreview" class="desktop">
-    <div style="display:none;">Impact-Site-Verification: 484b0fd5-0544-4654-b916-4e921a2e5077</div>
-
-    <div class="app">
-      <div class="brand">
-        <img src="/images/logo.svg" class="brand-logo" alt="Shoe Beagle Logo" id="logoLink">
-      </div>
-
-      <form id="search-form" method="POST">
-        <div class="input-wrapper">
-          <input id="brand" type="text" placeholder="Enter Shoe Brand" autocomplete="off"/>
-          <button type="button" class="input-clear" aria-label="Clear brand">&times;</button>
-          <div id="brandSuggestions" class="suggestions"></div>
-        </div>
-
-        <div class="input-wrapper">
-          <input id="model" type="text" placeholder="Enter Shoe Model" autocomplete="off"/>
-          <button type="button" class="input-clear" aria-label="Clear model">&times;</button>
-          <div id="modelSuggestions" class="suggestions"></div>
-        </div>
-
-        <div class="button-wrapper">
-          <button id="fetchBtn" type="submit" class="search-btn">Fetch!</button>
-        </div>
-
-        <div class="menu-wrapper">
-          <button id="menuBtn" type="button" class="menu-btn" aria-label="Menu">
-            <span class="menu-icon">☰</span>
-          </button>
-          <div id="menuDropdown" class="menu-dropdown">
-            <a href="/pages/myalerts.html">My Alerts</a>
-          </div>
-        </div>
-      </form>
-
-      <div class="status-message" id="statusMessage">Let's find your running shoes!</div>
-
-      <!-- Filters -->
-      <div class="filters" id="filters" style="display:none;">
-        <div class="filter-row">
-          <div class="filter-label">Gender:</div>
-          <div class="chip-group" id="genderChips">
-            <button type="button" class="chip active" data-gender="" aria-label="Filter off">&times;</button>
-            <button type="button" class="chip" data-gender="mens" aria-label="Mens">M</button>
-            <button type="button" class="chip" data-gender="womens" aria-label="Womens">W</button>
-          </div>
-        </div>
-
-        <div class="filter-row">
-          <div class="filter-label">Shoe type:</div>
-          <div class="chip-group" id="typeChips">
-            <button type="button" class="chip active" data-type="" aria-label="Filter off">&times;</button>
-            <button type="button" class="chip" data-type="road" aria-label="Road">R</button>
-            <button type="button" class="chip" data-type="trail" aria-label="Trail">T</button>
-            <button type="button" class="chip" data-type="track" aria-label="Spikes">S</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="mainContent">
-        <div class="daily-deals" id="dailyDeals">
-          <div class="daily-deals-header">Marty's Daily Deals</div>
-          <div class="shoe-grid" id="dailyDealsGrid"></div>
-        </div>
-
-        <div class="shoe-grid" id="results"></div>
-        <p class="disclaimer">Shoe Beagle does not sell products directly and is not responsible for changes in price, availability, or shipping terms on retailer sites.</p>
-      </div>
-
-      <div class="footer">
-        <a href="/pages/about.html">About</a> |
-        <a href="/pages/contact.html">Contact</a> |
-        <a href="/pages/privacy.html">Privacy</a> |
-        <a href="/pages/terms.html">Terms</a> |
-        <br>
-        © <span id="footerYear"></span> Shoe Beagle. All rights reserved.
-      </div>
+    <div class="footer">
+      <a href="/pages/about.html">About</a> |
+      <a href="/pages/contact.html">Contact</a> |
+      <a href="/pages/privacy.html">Privacy</a> |
+      <a href="/pages/terms.html">Terms</a> |
+      <br>
+      © <span id="footerYear"></span> Shoe Beagle. All rights reserved.
     </div>
   </div>
 
   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
   <script>
-    /* ========================================================================
-       TESTING TOOLBAR SCRIPT - DELETE THIS ENTIRE SCRIPT BLOCK TO REMOVE
-       ======================================================================== */
-    (function() {
-      const toolbar = document.getElementById('testingToolbar');
-      const devicePreview = document.getElementById('devicePreview');
-      const body = document.body;
-      
-      const btnMobile = document.getElementById('btnMobile');
-      const btnTablet = document.getElementById('btnTablet');
-      const btnDesktop = document.getElementById('btnDesktop');
-      const btnPortrait = document.getElementById('btnPortrait');
-      const btnLandscape = document.getElementById('btnLandscape');
-      const btnCloseToolbar = document.getElementById('btnCloseToolbar');
-      
-      let currentDevice = 'desktop';
-      let currentOrientation = 'portrait';
-      
-      // Add testing mode class
-      body.classList.add('testing-mode');
-      
-      // Device switching
-      function setDevice(device) {
-        currentDevice = device;
-        updatePreview();
-        
-        [btnMobile, btnTablet, btnDesktop].forEach(btn => {
-          btn.classList.remove('active');
-          if (btn.dataset.device === device) btn.classList.add('active');
-        });
-        
-        // Disable orientation controls for desktop
-        if (device === 'desktop') {
-          btnPortrait.disabled = true;
-          btnLandscape.disabled = true;
-          btnPortrait.style.opacity = '0.5';
-          btnLandscape.style.opacity = '0.5';
-          btnPortrait.style.cursor = 'not-allowed';
-          btnLandscape.style.cursor = 'not-allowed';
-        } else {
-          btnPortrait.disabled = false;
-          btnLandscape.disabled = false;
-          btnPortrait.style.opacity = '1';
-          btnLandscape.style.opacity = '1';
-          btnPortrait.style.cursor = 'pointer';
-          btnLandscape.style.cursor = 'pointer';
-        }
-      }
-      
-      // Orientation switching
-      function setOrientation(orientation) {
-        currentOrientation = orientation;
-        updatePreview();
-        
-        [btnPortrait, btnLandscape].forEach(btn => {
-          btn.classList.remove('active');
-          if (btn.dataset.orientation === orientation) btn.classList.add('active');
-        });
-      }
-      
-      // Update preview classes
-      function updatePreview() {
-        if (currentDevice === 'desktop') {
-          devicePreview.className = 'desktop';
-        } else {
-          devicePreview.className = currentDevice + (currentOrientation === 'landscape' ? ' landscape' : '');
-        }
-      }
-      
-      btnMobile.addEventListener('click', () => setDevice('mobile'));
-      btnTablet.addEventListener('click', () => setDevice('tablet'));
-      btnDesktop.addEventListener('click', () => setDevice('desktop'));
-      
-      btnPortrait.addEventListener('click', () => setOrientation('portrait'));
-      btnLandscape.addEventListener('click', () => setOrientation('landscape'));
-      
-      // Close toolbar
-      btnCloseToolbar.addEventListener('click', () => {
-        toolbar.style.display = 'none';
-        body.classList.remove('testing-mode');
-        devicePreview.className = '';
-      });
-      
-      // Initialize
-      setDevice('desktop');
-    })();
-    /* ======================================================================== */
-
     const form = document.getElementById("search-form");
     form.addEventListener("keydown", (e) => {
       if (e.key === "Enter") e.preventDefault();
@@ -1299,7 +943,6 @@
         const itemGender = normalizeEnum(item.gender);
         const itemType = normalizeEnum(item.shoeType);
 
-        // Unisex ALWAYS included when filtering by mens/womens
         const genderOk = !g || itemGender === g || itemGender === "unisex";
         const typeOk = !t || itemType === t;
 
@@ -1372,7 +1015,6 @@
         imgWrapper.appendChild(badge);
       }
 
-      /* -------- gender + shoeType tags on bottom of image -------- */
       const g = normalizeEnum(item.gender);
       const t = normalizeEnum(item.shoeType);
 
@@ -1401,7 +1043,6 @@
       }
 
       if (hasAnyTag) imgWrapper.appendChild(tagWrap);
-      /* ---------------------------------------------------------------- */
 
       link.appendChild(imgWrapper);
 
@@ -1414,19 +1055,10 @@
       const brand = (item.brand || "").trim();
       const model = (item.model || "").trim();
 
-      if (brand || model) {
-        const brandLine = document.createElement("div");
-        brandLine.textContent = brand.toUpperCase();
-        titleDiv.appendChild(brandLine);
-
-        if (model) {
-          const modelLine = document.createElement("div");
-          modelLine.textContent = model;
-          titleDiv.appendChild(modelLine);
-        }
-      } else {
-        titleDiv.textContent = item.title || "Deal";
-      }
+      titleDiv.textContent =
+        (brand || model)
+          ? [brand, model].filter(Boolean).join(" ")
+          : (item.title || "Deal");
 
       contentDiv.appendChild(titleDiv);
 
@@ -1537,7 +1169,6 @@
       const results = (data && data.results) ? data.results : [];
       lastSearchResults = results;
 
-      // Reset filters each new search
       selectedGender = "";
       selectedShoeType = "";
       if (genderChips) setActiveChip(genderChips, genderChips.querySelector('.chip[data-gender=""]'));
