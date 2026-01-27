@@ -1,4 +1,18 @@
 // api/scrapers/als-sale.js
+// Scrapes ALS Men's + Women's running shoes (all pages) using axios+cheerio
+// Mirrors ASICS output shape and blob behavior
+//
+// STRICT RULES:
+// - Only include products with exactly ONE original price and ONE sale price
+// - Skip ranges like "$81.99 - $131.99"
+// - Skip if missing sale price
+// - Original price = higher of the two, sale price = lower of the two
+//
+// Outputs 10-field schema per deal:
+// { title, brand, model, salePrice, price, store, url, image, gender, shoeType }
+//
+// Saves blob: als-sale.json (public, stable name)
+
 const axios = require("axios");
 const cheerio = require("cheerio");
 const { put } = require("@vercel/blob");
@@ -20,6 +34,7 @@ function absolutizeAlsUrl(url) {
   url = url.replace(/&amp;/g, "&").trim();
   if (!url) return null;
   if (url.startsWith("data:")) return null;
+
   if (url.startsWith("http")) return url;
   if (url.startsWith("//")) return `https:${url}`;
   if (url.startsWith("/")) return `${BASE}${url}`;
@@ -29,26 +44,30 @@ function absolutizeAlsUrl(url) {
 function parseSinglePrice(text) {
   if (!text) return null;
   const t = String(text).replace(/\s+/g, " ").trim();
-  if (t.includes("-")) return null; // range
+
+  // Range => invalid (we don't want it)
+  if (t.includes("-")) return null;
+
   const m = t.replace(/,/g, "").match(/\$([\d]+(?:\.\d{2})?)/);
   if (!m) return null;
+
   const n = parseFloat(m[1]);
   return Number.isFinite(n) ? n : null;
 }
 
-// Strict: accept ONLY exactly 2 distinct single prices (no ranges anywhere)
 function extractTwoPricesStrict($container) {
   const text = $container.text().replace(/\s+/g, " ").trim();
-  if (!text) return { price: null, salePrice: null, reason: "no_text" };
+  if (!text) return { price: null, salePrice: null };
 
-  // Range present => invalid
+  // If any explicit range pattern exists, skip
   if (/\$\s*\d+(?:\.\d{2})?\s*-\s*\$\s*\d+(?:\.\d{2})?/.test(text)) {
-    return { price: null, salePrice: null, reason: "range" };
+    return { price: null, salePrice: null };
   }
 
   const matches = text.match(/\$\s*\d+(?:\.\d{2})?/g) || [];
   const seen = new Set();
   const nums = [];
+
   for (const raw of matches) {
     const n = parseSinglePrice(raw);
     if (n == null) continue;
@@ -58,30 +77,23 @@ function extractTwoPricesStrict($container) {
     nums.push(n);
   }
 
-  if (nums.length !== 2) {
-    return {
-      price: null,
-      salePrice: null,
-      reason: nums.length === 0 ? "no_prices" : nums.length === 1 ? "one_price" : "too_many_prices",
-    };
-  }
+  // Strict: must be exactly 2 distinct prices
+  if (nums.length !== 2) return { price: null, salePrice: null };
 
   const hi = Math.max(nums[0], nums[1]);
   const lo = Math.min(nums[0], nums[1]);
-  if (!(lo < hi)) return { price: null, salePrice: null, reason: "not_a_sale" };
 
-  return { price: hi, salePrice: lo, reason: null };
-}
+  // Must be an actual sale
+  if (!(lo < hi)) return { price: null, salePrice: null };
 
-function detectShoeTypeFromTitle(title) {
-  const t = (title || "").toLowerCase();
-  if (t.includes("trail")) return "trail";
-  if (t.includes("track") || t.includes("spike")) return "track";
-  return "road";
+  return { price: hi, salePrice: lo };
 }
 
 function cleanTitle(title) {
-  return (title || "").replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+  return (title || "")
+    .replace(/\u00a0/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function splitBrandModel(title) {
@@ -91,29 +103,26 @@ function splitBrandModel(title) {
   const brand = t.split(" ")[0];
   let model = t.replace(new RegExp("^" + brand + "\\s+", "i"), "").trim();
   model = model.replace(/\s+-\s+(men's|women's)\s*$/i, "").trim();
+
   return { brand, model: model || null };
 }
 
+function detectShoeTypeFromTitle(title) {
+  const t = (title || "").toLowerCase();
+  if (t.includes("trail")) return "trail";
+  if (t.includes("track") || t.includes("spike")) return "track";
+  return "road";
+}
+
 /**
- * Returns:
- * - deals: valid deals
- * - tileCount: how many product links were found (for pagination stopping)
- * - skipStats: reasons we skipped
+ * Extract deals from ALS listing page HTML.
+ * Returns: { deals, tileCount } so pagination doesn't stop early
  */
 function extractAlsDealsFromListing(html, gender) {
   const $ = cheerio.load(html);
+  const deals = [];
 
-  const skipStats = {
-    range: 0,
-    no_prices: 0,
-    one_price: 0,
-    too_many_prices: 0,
-    not_a_sale: 0,
-    missing_title_or_url: 0,
-    missing_brand_or_model: 0,
-  };
-
-  // Product pages end with "/p" (observed on ALS product links)
+  // Product pages commonly end with "/p" on ALS (listing tiles link there)
   const $links = $('a[href$="/p"]').filter((_, a) => {
     const href = $(a).attr("href") || "";
     const text = cleanTitle($(a).text());
@@ -123,20 +132,17 @@ function extractAlsDealsFromListing(html, gender) {
   });
 
   const tileCount = $links.length;
-  const deals = [];
 
   $links.each((_, a) => {
     const $a = $(a);
     const title = cleanTitle($a.text());
     const url = absolutizeAlsUrl($a.attr("href"));
 
-    if (!title || !url) {
-      skipStats.missing_title_or_url++;
-      return;
-    }
+    if (!title || !url) return;
 
-    // Card container heuristic
-    let $card = $a.closest('div[class*="product"], li[class*="product"], article').first();
+    // Find a card-like container around link
+    let $card =
+      $a.closest('div[class*="product"], li[class*="product"], article').first();
     if (!$card || !$card.length) $card = $a.parent();
 
     // Image
@@ -149,17 +155,11 @@ function extractAlsDealsFromListing(html, gender) {
     image = absolutizeAlsUrl(image);
 
     // Prices (strict)
-    const { price, salePrice, reason } = extractTwoPricesStrict($card);
-    if (!price || !salePrice) {
-      if (reason && skipStats[reason] !== undefined) skipStats[reason]++;
-      return;
-    }
+    const { price, salePrice } = extractTwoPricesStrict($card);
+    if (!price || !salePrice) return;
 
     const { brand, model } = splitBrandModel(title);
-    if (!brand || !model) {
-      skipStats.missing_brand_or_model++;
-      return;
-    }
+    if (!brand || !model) return;
 
     deals.push({
       title,
@@ -170,12 +170,12 @@ function extractAlsDealsFromListing(html, gender) {
       store: STORE,
       url,
       image: image || null,
-      gender,
+      gender, // "mens" or "womens"
       shoeType: detectShoeTypeFromTitle(title),
     });
   });
 
-  // Dedup by URL
+  // Deduplicate by URL within the page
   const unique = [];
   const seen = new Set();
   for (const d of deals) {
@@ -185,7 +185,7 @@ function extractAlsDealsFromListing(html, gender) {
     unique.push(d);
   }
 
-  return { deals: unique, tileCount, skipStats };
+  return { deals: unique, tileCount };
 }
 
 async function fetchHtml(url) {
@@ -209,10 +209,7 @@ async function scrapeAlsCategoryAllPages(baseUrl, gender, description) {
   const allDeals = [];
   const seenUrls = new Set();
 
-  const MAX_PAGES = 60; // still safe cap
-
-  // Aggregate skip reasons across pages for debugging
-  const skipTotals = {};
+  const MAX_PAGES = 60; // safety cap
 
   for (let page = 1; page <= MAX_PAGES; page++) {
     const pageUrl = withPageParam(baseUrl, page);
@@ -220,12 +217,7 @@ async function scrapeAlsCategoryAllPages(baseUrl, gender, description) {
 
     try {
       const html = await fetchHtml(pageUrl);
-      const { deals, tileCount, skipStats } = extractAlsDealsFromListing(html, gender);
-
-      // merge skip stats
-      for (const [k, v] of Object.entries(skipStats)) {
-        skipTotals[k] = (skipTotals[k] || 0) + v;
-      }
+      const { deals, tileCount } = extractAlsDealsFromListing(html, gender);
 
       let newCount = 0;
       for (const d of deals) {
@@ -242,14 +234,14 @@ async function scrapeAlsCategoryAllPages(baseUrl, gender, description) {
         page: `${description} (page=${page})`,
         success: true,
         count: deals.length,
-        newCount,
-        tileCount, // NEW: how many product links existed (even if we skipped most)
         error: null,
         url: pageUrl,
+        // keep compatibility with your earlier logging
+        newCount,
         durationMs: duration,
       });
 
-      // Stop when there are no tiles at all (true end), OR no new urls (loop/repeat)
+      // Stop when there are no tiles (true end) OR no new URLs (repeat/loop)
       if (tileCount === 0 || newCount === 0) break;
 
       await sleep(800);
@@ -259,7 +251,6 @@ async function scrapeAlsCategoryAllPages(baseUrl, gender, description) {
         success: false,
         count: 0,
         newCount: 0,
-        tileCount: 0,
         error: err.message || String(err),
         url: pageUrl,
       });
@@ -267,27 +258,36 @@ async function scrapeAlsCategoryAllPages(baseUrl, gender, description) {
     }
   }
 
-  return { deals: allDeals, pageResults, skipTotals };
+  return { deals: allDeals, pageResults };
 }
 
 async function scrapeAllAlsSales() {
+  console.log("[ALS] Starting scrape of all pages (sequential)...");
+
   const results = [];
   const allDeals = [];
-  const skipByGender = { mens: {}, womens: {} };
 
-  const men = await scrapeAlsCategoryAllPages(MEN_BASE_URL, "mens", "Men's Running Shoes");
-  results.push(...men.pageResults);
-  allDeals.push(...men.deals);
-  skipByGender.mens = men.skipTotals;
+  const pages = [
+    { url: MEN_BASE_URL, gender: "mens", description: "Men's Running Shoes" },
+    { url: WOMEN_BASE_URL, gender: "womens", description: "Women's Running Shoes" },
+  ];
 
-  await sleep(1200);
+  for (let i = 0; i < pages.length; i++) {
+    const { url, gender, description } = pages[i];
 
-  const women = await scrapeAlsCategoryAllPages(WOMEN_BASE_URL, "womens", "Women's Running Shoes");
-  results.push(...women.pageResults);
-  allDeals.push(...women.deals);
-  skipByGender.womens = women.skipTotals;
+    console.log(`[ALS] Starting category ${i + 1}/${pages.length}: ${description}`);
 
-  // Dedupe across categories
+    const result = await scrapeAlsCategoryAllPages(url, gender, description);
+    results.push(...result.pageResults);
+    allDeals.push(...result.deals);
+
+    if (i < pages.length - 1) {
+      console.log("[ALS] Waiting 1.2s before next category...");
+      await sleep(1200);
+    }
+  }
+
+  // Deduplicate across categories by URL
   const unique = [];
   const seen = new Set();
   for (const d of allDeals) {
@@ -297,11 +297,14 @@ async function scrapeAllAlsSales() {
     unique.push(d);
   }
 
-  return { deals: unique, pageResults: results, skipByGender };
+  console.log(`[ALS] Total unique products: ${unique.length}`);
+  return { deals: unique, pageResults: results };
 }
 
 module.exports = async (req, res) => {
-  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret && req.headers["x-cron-secret"] !== cronSecret) {
@@ -311,7 +314,7 @@ module.exports = async (req, res) => {
   const start = Date.now();
 
   try {
-    const { deals, pageResults, skipByGender } = await scrapeAllAlsSales();
+    const { deals, pageResults } = await scrapeAllAlsSales();
 
     const output = {
       lastUpdated: new Date().toISOString(),
@@ -324,8 +327,6 @@ module.exports = async (req, res) => {
         unisex: deals.filter((d) => d.gender === "unisex").length,
       },
       pageResults,
-      // NEW: diagnostic so you can tell “why” strict filtering cut items
-      skipStats: skipByGender,
       deals,
     };
 
@@ -338,11 +339,9 @@ module.exports = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      totalDeals: output.totalDeals,
+      totalDeals: deals.length,
       dealsByGender: output.dealsByGender,
       pageResults,
-      // (optional) include skipStats in response too, or remove if you want it only in blob
-      skipStats: output.skipStats,
       blobUrl: blob.url,
       duration: `${duration}ms`,
       timestamp: output.lastUpdated,
