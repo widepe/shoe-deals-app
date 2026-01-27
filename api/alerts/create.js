@@ -33,7 +33,7 @@ function generateConfirmationEmail(newAlert, allUserAlerts) {
   <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
     <div style="background: white; border-radius: 10px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
       <div style="text-align: center; margin-bottom: 30px;">
-        <img src="https://shoebeagle.com/images/logo.png" alt="Shoe Beagle" style="max-width: 300px; height: auto;">
+        <img src="https://shoebeagle.com/images/email_logo.png" alt="Shoe Beagle" style="max-width: 300px; height: auto;">
       </div>
       
       <h1 style="color: #214478; margin: 0 0 20px; font-size: 24px;">✅ Alert Confirmed!</h1>
