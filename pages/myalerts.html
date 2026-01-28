@@ -89,6 +89,17 @@
       transition: border-color 0.2s ease;
     }
 
+    /* Hide number input arrows */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
     input:focus {
       outline: none;
       border-color: #1a3661;
@@ -153,22 +164,29 @@
       align-items: center;
     }
 
-    .gender-option {
-      display: flex;
+    .gender-chip {
+      display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
+      justify-content: center;
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border: 2px solid #214478ff;
+      background: white;
+      color: #214478ff;
       cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
     }
 
-    .gender-option input[type="radio"] {
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
+    .gender-chip:hover {
+      background: rgba(33, 68, 120, 0.1);
     }
 
-    .gender-option label {
-      cursor: pointer;
-      font-size: 0.95rem;
+    .gender-chip.active {
+      background: #214478ff;
+      color: white;
     }
 
     .price-input-wrapper {
@@ -239,6 +257,12 @@
       color: #8a1f2c;
     }
 
+    .status-message.warning {
+      background: rgba(255, 193, 7, 0.15);
+      border: 1px solid rgba(255, 193, 7, 0.5);
+      color: #856404;
+    }
+
     /* Alerts dashboard */
     .alerts-dashboard {
       width: 100%;
@@ -299,7 +323,10 @@
 
     .alerts-table tbody tr:hover { background: rgba(33, 68, 120, 0.08); }
     .alerts-table tbody tr.selected { background: rgba(33, 68, 120, 0.15); }
-    .alerts-table tbody tr.inactive { background: #e8e8e8; }
+    .alerts-table tbody tr.inactive { 
+      background: #e8e8e8;
+      opacity: 0.6;
+    }
     .alerts-table tbody tr.inactive:hover { background: #d8d8d8; }
 
     .alerts-table tbody td {
@@ -323,6 +350,24 @@
     }
 
     .alerts-table td.target-cell { text-align: right; }
+
+    /* Stacked date and days */
+    .stacked-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+      line-height: 1.2;
+    }
+
+    .stacked-primary {
+      font-weight: 600;
+      font-size: 0.92rem;
+    }
+
+    .stacked-secondary {
+      font-size: 0.75rem;
+      color: #666;
+    }
 
     .alerts-muted {
       text-align: center;
@@ -384,6 +429,7 @@
       color: white;
       cursor: pointer;
       transition: background 0.2s ease;
+      position: relative;
     }
 
     .alert-actions button:hover { background: #1a3661; }
@@ -410,6 +456,39 @@
 
     .alert-actions button.success:hover { background: #218838; }
 
+    .alert-actions .edit-price-form {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .alert-actions .edit-price-input {
+      width: 120px;
+      height: 36px;
+      padding: 0 0.5rem 0 1.75rem;
+      border-radius: 0.4rem;
+      border: 1px solid #214478ff;
+      font-size: 0.9rem;
+      text-align: right;
+    }
+
+    .alert-actions .price-input-wrapper-small {
+      position: relative;
+      display: inline-block;
+    }
+
+    .alert-actions .price-input-wrapper-small::before {
+      content: '$';
+      position: absolute;
+      left: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.9rem;
+      color: #444;
+      pointer-events: none;
+      font-weight: 500;
+    }
+
     .alert-actions .confirmation {
       display: flex;
       gap: 0.5rem;
@@ -420,6 +499,33 @@
       font-size: 0.88rem;
       color: #2d2d2d;
       font-weight: 600;
+    }
+
+    /* Tooltip styles */
+    [data-tooltip] {
+      position: relative;
+    }
+
+    [data-tooltip]::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-8px);
+      background: #2d2d2d;
+      color: white;
+      padding: 0.4rem 0.6rem;
+      border-radius: 0.3rem;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 1000;
+    }
+
+    [data-tooltip]:hover::after {
+      opacity: 1;
     }
 
     .hidden { display: none !important; }
@@ -477,13 +583,13 @@
 
     <!-- Create Alert -->
     <div class="create-alert-section">
-      <div class="section-title">Create New Alert</div>
+      <div class="section-title">Set Alert</div>
 
       <form id="createAlertForm">
         <div class="form-group">
           <label class="form-label" for="alertEmail">Email Address *</label>
           <input type="email" id="alertEmail" placeholder="your@email.com" required />
-          <div class="form-hint">We’ll email you to confirm the alert, and again when we find matches.</div>
+          <div class="form-hint">We'll email you to confirm the alert, and again when we find matches.</div>
         </div>
 
         <div class="form-group">
@@ -507,31 +613,20 @@
         <div class="form-group">
           <label class="form-label">Gender Preference</label>
           <div class="gender-selector">
-            <div class="gender-option">
-              <input type="radio" id="genderBoth" name="gender" value="" checked>
-              <label for="genderBoth">Both</label>
-            </div>
-            <div class="gender-option">
-              <input type="radio" id="genderMens" name="gender" value="mens">
-              <label for="genderMens">Mens</label>
-            </div>
-            <div class="gender-option">
-              <input type="radio" id="genderWomens" name="gender" value="womens">
-              <label for="genderWomens">Womens</label>
-            </div>
+            <div class="gender-chip active" data-gender="mens">Mens</div>
+            <div class="gender-chip active" data-gender="womens">Womens</div>
           </div>
-          <div class="form-hint">Note: your current backend matching checks brand/model/price. Gender is stored here for UI context.</div>
         </div>
 
         <div class="form-group">
           <label class="form-label" for="alertPrice">Target Price *</label>
           <div class="price-input-wrapper">
-            <input type="number" id="alertPrice" placeholder="0.00" step="1" min="1" required />
+            <input type="number" id="alertPrice" placeholder="0" step="1" min="1" required />
           </div>
-          <div class="form-hint">Alert expires after 30 days.</div>
+          <div class="form-hint">When we find your shoes equal to or lower than your set price, we'll notify you by email. Alert expires after 30 days.</div>
         </div>
 
-        <button type="submit" class="submit-btn" id="createAlertBtn">Create Alert</button>
+        <button type="submit" class="submit-btn" id="createAlertBtn">Set Alert</button>
       </form>
 
       <div id="statusMessage" class="status-message"></div>
@@ -584,10 +679,12 @@
       create: "/api/alerts/create",
       list: "/api/alerts/list",
       cancel: "/api/alerts/cancel",
+      update: "/api/alerts/update", // New endpoint for updating price
+      remove: "/api/alerts/remove"  // New endpoint for removing inactive alerts
     };
 
     // =======================
-    // BRAND/MODEL SUGGESTIONS (same as your current file)
+    // BRAND/MODEL SUGGESTIONS
     // =======================
     const brandModels = {
       "361°": ["Spire","Fury","Strata","Flame"],
@@ -661,8 +758,30 @@
     // STATE
     // =======================
     let selectedAlertRow = null;
-    let currentAlerts = []; // loaded from backend
-    let currentEmail = "";  // email used to load list
+    let currentAlerts = [];
+    let currentEmail = "";
+    let selectedGenders = new Set(["mens", "womens"]); // Both selected by default
+
+    // =======================
+    // GENDER CHIP HANDLING
+    // =======================
+    document.querySelectorAll(".gender-chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        const gender = chip.dataset.gender;
+        
+        if (selectedGenders.has(gender)) {
+          // Don't allow deselecting if it's the only one selected
+          if (selectedGenders.size === 1) {
+            return;
+          }
+          selectedGenders.delete(gender);
+          chip.classList.remove("active");
+        } else {
+          selectedGenders.add(gender);
+          chip.classList.add("active");
+        }
+      });
+    });
 
     // =======================
     // UTILS
@@ -726,20 +845,20 @@
       return "pill";
     }
 
-    function showStatus(message, isSuccess) {
+    function showStatus(message, type = "error") {
       statusMessage.textContent = message;
-      statusMessage.className = `status-message ${isSuccess ? "success" : "error"}`;
+      statusMessage.className = `status-message ${type}`;
       statusMessage.style.display = "block";
       setTimeout(() => { statusMessage.style.display = "none"; }, 6500);
     }
 
     function setBusy(isBusy) {
       createAlertBtn.disabled = isBusy;
-      createAlertBtn.textContent = isBusy ? "Creating..." : "Create Alert";
+      createAlertBtn.textContent = isBusy ? "Setting..." : "Set Alert";
     }
 
     // =======================
-    // API CALLS (integrated with your backend)
+    // API CALLS
     // =======================
     async function apiListAlerts(email) {
       const url = `${API.list}?email=${encodeURIComponent(email)}`;
@@ -759,10 +878,9 @@
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        // backend sends { error: "...", currentCount? }
         throw new Error(data.error || "Failed to create alert.");
       }
-      return data; // { success, alert, message }
+      return data;
     }
 
     async function apiCancelAlert(alertId, email) {
@@ -775,11 +893,37 @@
       if (!res.ok) {
         throw new Error(data.error || "Failed to cancel alert.");
       }
-      return data; // { success, message }
+      return data;
+    }
+
+    async function apiUpdateAlert(alertId, email, newPrice) {
+      const res = await fetch(API.update, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ alertId, email, targetPrice: newPrice }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update alert.");
+      }
+      return data;
+    }
+
+    async function apiRemoveAlert(alertId, email) {
+      const res = await fetch(API.remove, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ alertId, email }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to remove alert.");
+      }
+      return data;
     }
 
     // =======================
-    // SUGGESTIONS ENGINE (same logic as before)
+    // SUGGESTIONS ENGINE
     // =======================
     function squashStr(s) {
       return String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -1028,6 +1172,67 @@
     // =======================
     // DASHBOARD RENDER
     // =======================
+    function showEditPriceForm(actionsDiv, alert) {
+      actionsDiv.innerHTML = "";
+
+      const formDiv = document.createElement("div");
+      formDiv.className = "edit-price-form";
+
+      const label = document.createElement("span");
+      label.className = "confirmation-text";
+      label.textContent = "New target price:";
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "price-input-wrapper-small";
+
+      const input = document.createElement("input");
+      input.type = "number";
+      input.className = "edit-price-input";
+      input.value = Math.round(Number(alert.targetPrice || 0));
+      input.min = "1";
+      input.step = "1";
+      input.placeholder = "0";
+
+      wrapper.appendChild(input);
+
+      const saveBtn = document.createElement("button");
+      saveBtn.textContent = "Save";
+      saveBtn.className = "success";
+      saveBtn.setAttribute("data-tooltip", "Reset alert to 30 days");
+      saveBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const newPrice = parseInt(input.value, 10);
+        if (!newPrice || newPrice <= 0) {
+          showStatus("Please enter a valid price.", "error");
+          return;
+        }
+        try {
+          await apiUpdateAlert(alert.id, currentEmail, newPrice);
+          showStatus("Alert updated and reset to 30 days!", "success");
+          await refreshAlerts();
+        } catch (err) {
+          showStatus(err.message || "Failed to update alert.", "error");
+        }
+      });
+
+      const cancelBtn = document.createElement("button");
+      cancelBtn.textContent = "Cancel";
+      cancelBtn.className = "secondary";
+      cancelBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        renderAlertsDashboard();
+      });
+
+      formDiv.appendChild(label);
+      formDiv.appendChild(wrapper);
+      formDiv.appendChild(saveBtn);
+      formDiv.appendChild(cancelBtn);
+      actionsDiv.appendChild(formDiv);
+
+      input.focus();
+      input.select();
+    }
+
     function showConfirmation(actionsDiv, message, onYes) {
       actionsDiv.innerHTML = "";
 
@@ -1090,33 +1295,53 @@
         tr.dataset.alertId = a.id;
         if (status !== "Active") tr.classList.add("inactive");
 
+        // Date Set (stacked)
         const tdDate = document.createElement("td");
-        tdDate.textContent = formatDateShort(Number(a.setAt || 0));
+        const dateDiv = document.createElement("div");
+        dateDiv.className = "stacked-cell";
+        
+        const datePrimary = document.createElement("div");
+        datePrimary.className = "stacked-primary";
+        datePrimary.textContent = formatDateShort(Number(a.setAt || 0));
+        
+        dateDiv.appendChild(datePrimary);
+        tdDate.appendChild(dateDiv);
         tr.appendChild(tdDate);
 
+        // Shoe
         const tdShoe = document.createElement("td");
         const shoeText = `${a.brand || ""} ${a.model || ""}`.trim();
-        // (Optional) display gender if stored (your create.js doesn’t store gender today)
-        const genderText = a.gender === "mens" ? " (M)" : a.gender === "womens" ? " (W)" : "";
-        const label = (shoeText + genderText).trim();
+        const label = shoeText;
         tdShoe.textContent = label.length > 40 ? label.substring(0, 40) + "..." : label;
         tdShoe.title = label;
         tr.appendChild(tdShoe);
 
+        // Email
         const tdEmail = document.createElement("td");
         tdEmail.textContent = maskEmail(a.email);
         tdEmail.title = a.email || "";
         tr.appendChild(tdEmail);
 
+        // Days Left (stacked)
         const tdDays = document.createElement("td");
-        tdDays.textContent = status === "Active" ? String(daysLeft) : "—";
+        const daysDiv = document.createElement("div");
+        daysDiv.className = "stacked-cell";
+        
+        const daysPrimary = document.createElement("div");
+        daysPrimary.className = "stacked-primary";
+        daysPrimary.textContent = status === "Active" ? String(daysLeft) : "—";
+        
+        daysDiv.appendChild(daysPrimary);
+        tdDays.appendChild(daysDiv);
         tr.appendChild(tdDays);
 
+        // Target
         const tdTarget = document.createElement("td");
         tdTarget.className = "target-cell";
         tdTarget.textContent = `$${Math.round(Number(a.targetPrice || 0))}`;
         tr.appendChild(tdTarget);
 
+        // Status
         const tdStatus = document.createElement("td");
         const pill = document.createElement("span");
         pill.className = pillClassFor(status);
@@ -1150,37 +1375,66 @@
           actionsDiv.className = "alert-actions";
 
           if (status === "Active") {
+            // Edit price button
+            const editBtn = document.createElement("button");
+            editBtn.textContent = "Edit Price";
+            editBtn.className = "secondary";
+            editBtn.addEventListener("click", (ev) => {
+              ev.stopPropagation();
+              showEditPriceForm(actionsDiv, a);
+            });
+            actionsDiv.appendChild(editBtn);
+
+            // Cancel button
             const cancelBtn = document.createElement("button");
-            cancelBtn.textContent = "Cancel Alert";
+            cancelBtn.textContent = "Cancel";
             cancelBtn.className = "danger";
+            cancelBtn.setAttribute("data-tooltip", "Cancel alert and refresh");
             cancelBtn.addEventListener("click", (ev) => {
               ev.stopPropagation();
               showConfirmation(actionsDiv, "Cancel this alert?", async () => {
                 try {
                   if (!currentEmail) throw new Error("Missing email context.");
                   await apiCancelAlert(a.id, currentEmail);
-                  showStatus("Alert cancelled.", true);
-                  await refreshAlerts(); // reload from backend
+                  showStatus("Alert cancelled.", "success");
+                  await refreshAlerts();
                 } catch (err) {
-                  showStatus(err.message || "Failed to cancel alert.", false);
+                  showStatus(err.message || "Failed to cancel alert.", "error");
                 }
               });
             });
             actionsDiv.appendChild(cancelBtn);
-          } else {
-            const info = document.createElement("span");
-            info.className = "confirmation-text";
-            info.textContent = "Inactive alerts can’t be deleted by API (only cancelled).";
-            actionsDiv.appendChild(info);
 
+            // Refresh button
             const refreshBtn = document.createElement("button");
             refreshBtn.textContent = "Refresh";
             refreshBtn.className = "secondary";
+            refreshBtn.setAttribute("data-tooltip", "Refresh alerts list");
             refreshBtn.addEventListener("click", async (ev) => {
               ev.stopPropagation();
               await refreshAlerts();
             });
             actionsDiv.appendChild(refreshBtn);
+
+          } else {
+            // Remove button for inactive alerts
+            const removeBtn = document.createElement("button");
+            removeBtn.textContent = "Remove";
+            removeBtn.className = "danger";
+            removeBtn.addEventListener("click", (ev) => {
+              ev.stopPropagation();
+              showConfirmation(actionsDiv, "Remove this alert?", async () => {
+                try {
+                  if (!currentEmail) throw new Error("Missing email context.");
+                  await apiRemoveAlert(a.id, currentEmail);
+                  showStatus("Alert removed.", "success");
+                  await refreshAlerts();
+                } catch (err) {
+                  showStatus(err.message || "Failed to remove alert.", "error");
+                }
+              });
+            });
+            actionsDiv.appendChild(removeBtn);
           }
 
           actionCell.appendChild(actionsDiv);
@@ -1224,7 +1478,7 @@
       } catch (err) {
         currentAlerts = [];
         renderAlertsDashboard();
-        showStatus(err.message || "Failed to load alerts.", false);
+        showStatus(err.message || "Failed to load alerts.", "error");
       }
     }
 
@@ -1242,7 +1496,19 @@
     }
 
     // =======================
-    // CREATE ALERT (uses /api/alerts/create)
+    // CHECK FOR DUPLICATE ACTIVE ALERTS
+    // =======================
+    function hasActiveAlert(brand, model) {
+      return currentAlerts.some(alert => {
+        const status = computeAlertStatus(alert);
+        return status === "Active" && 
+               normalizeStr(alert.brand) === normalizeStr(brand) &&
+               normalizeStr(alert.model) === normalizeStr(model);
+      });
+    }
+
+    // =======================
+    // CREATE ALERT
     // =======================
     createAlertForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -1252,31 +1518,42 @@
       const model = sanitizeInput(alertModel.value);
       const targetPrice = parseInt(String(alertPrice.value || ""), 10);
 
+      // Validation
       if (!email || !email.includes("@")) {
-        showStatus("Please enter a valid email address.", false);
+        showStatus("Please enter a valid email address.", "error");
         return;
       }
       if (!brand) {
-        showStatus("Please enter a shoe brand.", false);
+        showStatus("Please enter a shoe brand.", "error");
         return;
       }
       if (!model) {
-        showStatus("Please enter a shoe model.", false);
+        showStatus("Please enter a shoe model.", "error");
         return;
       }
       if (!targetPrice || targetPrice <= 0) {
-        showStatus("Please enter a valid target price (whole dollars).", false);
+        showStatus("Please enter a valid target price (whole dollars).", "error");
+        return;
+      }
+      if (selectedGenders.size === 0) {
+        showStatus("Please select at least one gender preference.", "error");
+        return;
+      }
+
+      // Check for duplicate active alert
+      if (hasActiveAlert(brand, model)) {
+        showStatus(
+          "You already have an active alert for this shoe. Please modify the existing alert or cancel it to create a new one.",
+          "warning"
+        );
         return;
       }
 
       setBusy(true);
 
       try {
-        // Note: your backend create.js expects { email, brand, model, targetPrice }
-        // It does NOT currently store gender. We leave the gender radio for UI preference.
         const result = await apiCreateAlert({ email, brand, model, targetPrice });
 
-        // Keep email in URL so "Manage My Alerts" links work consistently
         if (email && getEmailFromQueryString() !== email) {
           const u = new URL(window.location.href);
           u.searchParams.set("email", email);
@@ -1285,9 +1562,9 @@
 
         setEmailContext(email);
 
-        showStatus(result.message || "Alert created! Check your email for confirmation.", true);
+        showStatus(result.message || "Alert set! Check your email for confirmation.", "success");
 
-        // Reset only brand/model/price; keep email
+        // Reset only brand/model/price; keep email and gender selection
         alertBrand.value = "";
         alertModel.value = "";
         alertPrice.value = "";
@@ -1295,7 +1572,7 @@
 
         await refreshAlerts();
       } catch (err) {
-        showStatus(err.message || "Failed to create alert.", false);
+        showStatus(err.message || "Failed to set alert.", "error");
       } finally {
         setBusy(false);
       }
@@ -1308,7 +1585,6 @@
       const emailFromQS = getEmailFromQueryString();
       if (emailFromQS) setEmailContext(emailFromQS);
 
-      // If user edits email, we treat that as the context for list + cancel.
       alertEmail.addEventListener("change", async () => {
         const next = sanitizeInput(alertEmail.value).toLowerCase();
         setEmailContext(next);
