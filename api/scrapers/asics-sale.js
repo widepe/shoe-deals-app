@@ -1,8 +1,8 @@
 // api/scrapers/asics-sale.js
 // Scrapes all three ASICS sale pages using Firecrawl
-// FIXED: Gender detection works with query parameters using category codes
-// FIXED: Image extraction now includes a robust fallback derived from the product URL
-// UPDATED: Discard items unless TWO prices exist (salePrice + price) and salePrice < price
+// - Fixes dealsByGender by normalizing gender values consistently
+// - Improves price extraction to prefer DOM "was/list" vs "sale/now" nodes (no swapping)
+// - Leaves single-price items in output (merge-deals filters them out)
 
 const FirecrawlApp = require("@mendable/firecrawl-js").default;
 const cheerio = require("cheerio");
@@ -18,22 +18,17 @@ function pickBestFromSrcset(srcset) {
   const candidates = srcset
     .split(",")
     .map((s) => s.trim())
-    .map((entry) => entry.split(/\s+/)[0]) // URL part
+    .map((entry) => entry.split(/\s+/)[0])
     .filter(Boolean);
 
   if (!candidates.length) return null;
   return candidates[candidates.length - 1];
 }
 
-/**
- * Convert ASICS-ish URLs to absolute https URLs.
- */
 function absolutizeAsicsUrl(url) {
   if (!url || typeof url !== "string") return null;
 
-  // handle HTML entities if present
   url = url.replace(/&amp;/g, "&").trim();
-
   if (!url) return null;
   if (url.startsWith("data:")) return null;
 
@@ -44,60 +39,139 @@ function absolutizeAsicsUrl(url) {
 }
 
 /**
- * Some ASICS tiles don't include a usable <img src/srcset> in the HTML we get back.
- * But their product URLs usually include a style+color code like:
- *   .../p/ANA_1012B755-402.html
- * And their image CDN commonly follows this pattern:
- *   https://images.asics.com/is/image/asics/1012B755_402_SR_RT_GLB?$zoom$
- *
- * This builds that as a fallback (best-effort).
+ * Best-effort image fallback from product URL.
  */
 function buildAsicsImageFromProductUrl(productUrl) {
   if (!productUrl || typeof productUrl !== "string") return null;
 
-  // Example match: ANA_1012B755-402.html
   const m = productUrl.match(/ANA_([A-Za-z0-9]+)-([A-Za-z0-9]+)\.html/i);
   if (!m) return null;
 
-  const style = m[1]; // 1012B755
-  const color = m[2]; // 402
+  const style = m[1];
+  const color = m[2];
 
   return `https://images.asics.com/is/image/asics/${style}_${color}_SR_RT_GLB?$zoom$`;
 }
 
-/**
- * Detect shoe type from title or model
- */
 function detectShoeType(title, model) {
   const combined = ((title || "") + " " + (model || "")).toLowerCase();
 
-  // Trail indicators
-  if (/\b(trail|trabuco|fujitrabuco|fuji)\b/i.test(combined)) {
-    return "trail";
-  }
-
-  // Track/spike indicators
-  if (/\b(track|spike|japan|metaspeed|magic speed)\b/i.test(combined)) {
-    return "track";
-  }
-
+  if (/\b(trail|trabuco|fujitrabuco|fuji)\b/i.test(combined)) return "trail";
+  if (/\b(track|spike|japan|metaspeed|magic speed)\b/i.test(combined)) return "track";
   return "road";
 }
 
 /**
+ * Normalize gender to one of: mens | womens | unisex
+ */
+function normalizeGender(raw) {
+  const g = String(raw || "").trim().toLowerCase();
+
+  if (g === "mens" || g === "men" || g === "m") return "mens";
+  if (g === "womens" || g === "women" || g === "w" || g === "ladies") return "womens";
+  if (g === "unisex" || g === "u") return "unisex";
+
+  return "unisex";
+}
+
+/**
+ * Extract a single money value from text like "$129.95" etc.
+ */
+function parseMoneyFromText(text) {
+  if (!text) return null;
+  const m = String(text).match(/\$?\s*([\d,]+(?:\.\d{1,2})?)/);
+  if (!m) return null;
+  const n = parseFloat(m[1].replace(/,/g, ""));
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Prefer DOM-based "was/list" vs "sale/now" price extraction.
+ * We DO NOT swap values. If we can't confidently identify both, we fall back.
+ */
+function extractPricesFromTile($product) {
+  // ---- 1) Try obvious "was/list/strike" patterns for ORIGINAL price
+  const originalCandidates = [
+    // class contains strike / was / list
+    $product.find('[class*="strike"], [class*="Strike"], [class*="was"], [class*="Was"], [class*="list"], [class*="List"]').toArray(),
+    // common data-testid patterns (if present)
+    $product.find('[data-testid*="list"], [data-testid*="was"], [data-testid*="original"]').toArray(),
+  ].flat();
+
+  let price = null;
+  for (const el of originalCandidates) {
+    const t = cheerio.load(el).text();
+    const v = parseMoneyFromText(t);
+    if (v != null) {
+      price = v;
+      break;
+    }
+  }
+
+  // ---- 2) Try obvious "sale/now" patterns for SALE price
+  const saleCandidates = [
+    $product.find('[class*="sale"], [class*="Sale"], [class*="now"], [class*="Now"]').toArray(),
+    $product.find('[data-testid*="sale"], [data-testid*="now"]').toArray(),
+  ].flat();
+
+  let salePrice = null;
+  for (const el of saleCandidates) {
+    const t = cheerio.load(el).text();
+    const v = parseMoneyFromText(t);
+    if (v != null) {
+      salePrice = v;
+      break;
+    }
+  }
+
+  // ---- 3) If we got both and they look like a valid markdown, return.
+  if (price != null && salePrice != null) {
+    // IMPORTANT: no swapping. Just validate.
+    if (salePrice < price) return { price, salePrice };
+
+    // If DOM gave us both but they don't satisfy sale<orig, treat as "not confident"
+    // and fall back to text-based extraction rather than swapping.
+    price = null;
+    salePrice = null;
+  }
+
+  // ---- 4) Fallback: regex from tile text (best-effort).
+  const productText = $product.text();
+  const matches = productText.match(/\$(\d+(?:\.\d{2})?)/g);
+
+  if (matches && matches.length >= 2) {
+    const nums = matches
+      .map((m) => parseFloat(m.replace("$", "")))
+      .filter((n) => Number.isFinite(n));
+
+    // We still avoid swapping: prefer first as original, second as sale (common layout).
+    const p = nums[0] ?? null;
+    const s = nums[1] ?? null;
+
+    if (p != null && s != null && s < p) return { price: p, salePrice: s };
+  }
+
+  // If only one price, we return it as salePrice (merge-deals will filter it out)
+  if (matches && matches.length === 1) {
+    const only = parseFloat(matches[0].replace("$", ""));
+    if (Number.isFinite(only)) return { price: null, salePrice: only };
+  }
+
+  return { price: null, salePrice: null };
+}
+
+/**
  * Extract products from ASICS HTML
- * Uses category codes (aa10106000, aa20106000) for gender detection
- * UPDATED: Outputs new schema AND discards non-discounted (single-price) items
+ * UPDATED: Outputs new schema
  */
 function extractAsicsProducts(html, sourceUrl) {
   const $ = cheerio.load(html);
   const products = [];
 
-  // Determine gender from URL - normalize URL first to handle query params
-  const normalizedUrl = (sourceUrl || "").toLowerCase();
+  const normalizedUrl = String(sourceUrl || "").toLowerCase();
   let gender = "unisex";
 
-  // IMPORTANT: Check women's FIRST since aa20106000 contains aa10106000 as substring!
+  // Women FIRST (avoid substring collisions)
   if (normalizedUrl.includes("aa20106000") || normalizedUrl.includes("womens-clearance")) {
     gender = "womens";
   } else if (normalizedUrl.includes("aa10106000") || normalizedUrl.includes("mens-clearance")) {
@@ -106,67 +180,43 @@ function extractAsicsProducts(html, sourceUrl) {
     gender = "unisex";
   }
 
+  gender = normalizeGender(gender);
+
   console.log(`[ASICS] Processing URL: ${sourceUrl} -> Gender: ${gender}`);
 
   const $products = $(".productTile__root");
   console.log(`[ASICS] Found ${$products.length} products for ${gender}`);
 
-  $products.each((i, el) => {
+  $products.each((_, el) => {
     const $product = $(el);
 
-    // Get product link for title and URL
     const $link = $product.find('a[href*="/p/"]').first();
     const linkTitle = $link.attr("aria-label") || $link.text().trim();
 
-    // Clean up title
-    let cleanTitle = linkTitle
+    let cleanTitle = String(linkTitle || "")
       .replace(/Next slide/gi, "")
       .replace(/Previous slide/gi, "")
       .replace(/\bSale\b/gi, "")
       .replace(/\s+/g, " ")
       .trim();
 
-    // Extract model name (before "Men's" or "Women's")
+    // Extract model-ish prefix if present
     const modelMatch = cleanTitle.match(/^([A-Z][A-Z\-\s\d]+?)(?=Men's|Women's|Unisex|\$)/i);
-    if (modelMatch) {
-      cleanTitle = modelMatch[1].trim();
-    }
+    if (modelMatch) cleanTitle = modelMatch[1].trim();
 
     if (!cleanTitle || cleanTitle.length < 3) return;
 
-    // Get URL
+    // URL
     let url = $link.attr("href");
-    if (url && !url.startsWith("http")) {
-      url = `https://www.asics.com${url}`;
-    }
+    if (url && !url.startsWith("http")) url = `https://www.asics.com${url}`;
     if (!url) return;
 
-    // ---------------------------------------------------------
-    // PRICE EXTRACTION — STRICT DISCOUNT-ONLY
-    // REQUIRE TWO PRICES (original + sale), and sale < original
-    // ---------------------------------------------------------
-    const productText = $product.text();
-    const priceMatches = productText.match(/\$(\d+\.\d{2})/g);
+    // Prices (no swapping; prefer DOM; fallback to text)
+    const { price, salePrice } = extractPricesFromTile($product);
 
-    // DISCARD: if there aren't at least two prices shown
-    if (!priceMatches || priceMatches.length < 2) return;
-
-    // ASICS typically shows original first, sale second
-    let price = parseFloat(priceMatches[0].replace("$", "")); // original
-    let salePrice = parseFloat(priceMatches[1].replace("$", "")); // sale
-
-    // DISCARD: any weirdness (no swap; strict only)
-    if (!Number.isFinite(price) || !Number.isFinite(salePrice)) return;
-    if (salePrice >= price) return;
-    // optional sanity: keep within a realistic shoe range
-    if (salePrice < 10 || salePrice > 1000 || price < 10 || price > 1000) return;
-
-    // ----------------------------
-    // IMAGE EXTRACTION (ROBUST)
-    // ----------------------------
+    // IMAGE extraction (your existing robust logic)
     let image = null;
 
-    // 1) picture source srcset
     const sourceSrcset =
       $product.find("picture source[srcset]").first().attr("srcset") ||
       $product.find("picture source[data-srcset]").first().attr("data-srcset") ||
@@ -174,61 +224,47 @@ function extractAsicsProducts(html, sourceUrl) {
 
     image = pickBestFromSrcset(sourceSrcset);
 
-    // 2) img srcset variants
     if (!image) {
       const $img = $product.find("img").first();
       const imgSrcset = $img.attr("srcset") || $img.attr("data-srcset") || $img.attr("data-lazy-srcset") || null;
       image = pickBestFromSrcset(imgSrcset);
     }
 
-    // 3) img src variants
     if (!image) {
       const $img = $product.find("img").first();
       image = $img.attr("src") || $img.attr("data-src") || $img.attr("data-lazy-src") || $img.attr("data-original") || null;
     }
 
-    // 4) noscript fallback
     if (!image) {
       const noscriptHtml = $product.find("noscript").first().html();
       if (noscriptHtml) {
         const $$ = cheerio.load(noscriptHtml);
-        const nsImg = $$("img").first().attr("src") || $$("img").first().attr("data-src") || null;
-        image = nsImg || null;
+        image = $$("img").first().attr("src") || $$("img").first().attr("data-src") || null;
       }
     }
 
     image = absolutizeAsicsUrl(image);
 
-    // Skip data URIs and obvious placeholders
-    if (image && (image.startsWith("data:") || image.toLowerCase().includes("placeholder"))) {
-      image = null;
-    }
+    if (image && (image.startsWith("data:") || image.toLowerCase().includes("placeholder"))) image = null;
+    if (image && image.includes("$variantthumbnail$")) image = image.replace("$variantthumbnail$", "$zoom$");
 
-    // Upgrade thumbnail images to larger versions (if present)
-    if (image && image.includes("$variantthumbnail$")) {
-      image = image.replace("$variantthumbnail$", "$zoom$");
-    }
-
-    // 5) FINAL fallback: derive from product URL
     if (!image && url) {
       const derived = buildAsicsImageFromProductUrl(url);
       if (derived) image = derived;
     }
-    // ----------------------------
 
-    // Model name
     const model = cleanTitle.replace(/^ASICS\s+/i, "").trim();
 
     products.push({
       title: cleanTitle,
       brand: "ASICS",
       model,
-      salePrice, // discounted price
-      price,     // original price
+      salePrice: salePrice != null ? salePrice : null,
+      price: price != null ? price : null,
       store: "ASICS",
       url,
       image: image || null,
-      gender,
+      gender, // normalized
       shoeType: detectShoeType(cleanTitle, model),
     });
   });
@@ -236,16 +272,11 @@ function extractAsicsProducts(html, sourceUrl) {
   return products;
 }
 
-/**
- * Scrape ASICS page with pagination - single attempt with larger size
- */
 async function scrapeAsicsUrlWithPagination(app, baseUrl, description) {
   console.log(`[ASICS] Scraping ${description}...`);
 
   try {
-    // Request 100 items directly (ASICS max seems to be around 96-100)
     const url = baseUrl.includes("?") ? `${baseUrl}&sz=100` : `${baseUrl}?sz=100`;
-
     console.log(`[ASICS] Fetching: ${url}`);
 
     const scrapeResult = await app.scrapeUrl(url, {
@@ -256,36 +287,18 @@ async function scrapeAsicsUrlWithPagination(app, baseUrl, description) {
 
     const products = extractAsicsProducts(scrapeResult.html, baseUrl);
 
-    // quick diagnostic: how many missing images
     const missingImages = products.filter((p) => !p.image).length;
     console.log(`[ASICS] ${description}: Found ${products.length} products (${missingImages} missing images)`);
 
-    return {
-      success: true,
-      products,
-      count: products.length,
-      url,
-    };
+    return { success: true, products, count: products.length, url };
   } catch (error) {
     console.error(`[ASICS] Error scraping ${description}:`, error.message);
-    return {
-      success: false,
-      products: [],
-      count: 0,
-      error: error.message,
-      url: baseUrl,
-    };
+    return { success: false, products: [], count: 0, error: error.message, url: baseUrl };
   }
 }
 
-/**
- * Main scraper - scrapes all 3 ASICS pages SEQUENTIALLY (not parallel)
- * Sequential is more reliable for avoiding rate limits
- */
 async function scrapeAllAsicsSales() {
-  const app = new FirecrawlApp({
-    apiKey: process.env.FIRECRAWL_API_KEY,
-  });
+  const app = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY });
 
   console.log("[ASICS] Starting scrape of all sale pages (sequential)...");
 
@@ -321,9 +334,7 @@ async function scrapeAllAsicsSales() {
       url: result.url,
     });
 
-    if (result.success) {
-      allProducts.push(...result.products);
-    }
+    if (result.success) allProducts.push(...result.products);
 
     if (i < pages.length - 1) {
       console.log("[ASICS] Waiting 2 seconds before next page...");
@@ -340,7 +351,6 @@ async function scrapeAllAsicsSales() {
       uniqueProducts.push(product);
       continue;
     }
-
     if (!seenUrls.has(product.url)) {
       seenUrls.add(product.url);
       uniqueProducts.push(product);
@@ -354,13 +364,8 @@ async function scrapeAllAsicsSales() {
   return { products: uniqueProducts, pageResults: results };
 }
 
-/**
- * Vercel handler
- */
 module.exports = async (req, res) => {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
 
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret && req.headers["x-cron-secret"] !== cronSecret) {
@@ -372,16 +377,20 @@ module.exports = async (req, res) => {
   try {
     const { products: deals, pageResults } = await scrapeAllAsicsSales();
 
+    // Robust dealsByGender (counts normalized values, never "Men/Women" casing issues)
+    const dealsByGender = { mens: 0, womens: 0, unisex: 0 };
+    for (const d of deals) {
+      const g = normalizeGender(d.gender);
+      d.gender = g;
+      dealsByGender[g] += 1;
+    }
+
     const output = {
       lastUpdated: new Date().toISOString(),
       store: "ASICS",
       segments: ["Men's Clearance", "Women's Clearance", "Last Chance Styles"],
       totalDeals: deals.length,
-      dealsByGender: {
-        mens: deals.filter((d) => d.gender === "mens").length,
-        womens: deals.filter((d) => d.gender === "womens").length,
-        unisex: deals.filter((d) => d.gender === "unisex").length,
-      },
+      dealsByGender,
       pageResults,
       deals,
     };
