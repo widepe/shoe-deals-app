@@ -1,6 +1,5 @@
 // api/scrapers/asics-sale.js
-// FIXED VERSION - Updated for current ASICS HTML structure
-// Scrapes all three ASICS sale pages using Firecrawl
+// DIAGNOSTIC VERSION - Logs what Firecrawl actually returns
 
 const FirecrawlApp = require("@mendable/firecrawl-js").default;
 const cheerio = require("cheerio");
@@ -86,31 +85,25 @@ function parseMoneyFromText(text) {
  * Extract prices from product element or its surrounding context
  */
 function extractPrices($, $productLink) {
-  // Strategy: Look for prices in the link text, parent, and nearby siblings
   let price = null;
   let salePrice = null;
 
-  // Get the full text content from the product link and its parent
   const linkText = $productLink.text();
   const parentText = $productLink.parent().text();
   
-  // Find all price-like strings in the combined text
   const priceMatches = (linkText + " " + parentText).match(/\$\d+\.\d{2}/g);
   
   if (priceMatches && priceMatches.length >= 2) {
-    // Typically format is: "$original_price $sale_price" or vice versa
     const prices = priceMatches
       .map(p => parseFloat(p.replace("$", "")))
       .filter(n => Number.isFinite(n) && n > 0);
     
     if (prices.length >= 2) {
-      // Sort to ensure we identify original vs sale correctly
-      prices.sort((a, b) => b - a); // Descending
-      price = prices[0]; // Higher price is original
-      salePrice = prices[1]; // Lower price is sale
+      prices.sort((a, b) => b - a);
+      price = prices[0];
+      salePrice = prices[1];
     }
   } else if (priceMatches && priceMatches.length === 1) {
-    // Only one price found - treat as sale price
     salePrice = parseFloat(priceMatches[0].replace("$", ""));
   }
 
@@ -118,7 +111,7 @@ function extractPrices($, $productLink) {
 }
 
 /**
- * Extract products from ASICS HTML - UPDATED FOR NEW STRUCTURE
+ * DIAGNOSTIC VERSION - Tries multiple selector strategies and logs results
  */
 function extractAsicsProducts(html, sourceUrl) {
   const $ = cheerio.load(html);
@@ -127,7 +120,6 @@ function extractAsicsProducts(html, sourceUrl) {
   const normalizedUrl = String(sourceUrl || "").toLowerCase();
   let gender = "unisex";
 
-  // Determine gender from URL
   if (normalizedUrl.includes("aa20106000") || normalizedUrl.includes("womens-clearance")) {
     gender = "womens";
   } else if (normalizedUrl.includes("aa10106000") || normalizedUrl.includes("mens-clearance")) {
@@ -138,20 +130,95 @@ function extractAsicsProducts(html, sourceUrl) {
 
   gender = normalizeGender(gender);
 
-  console.log(`[ASICS] Processing URL: ${sourceUrl} -> Gender: ${gender}`);
+  console.log(`\n[ASICS DIAGNOSTIC] Processing URL: ${sourceUrl}`);
+  console.log(`[ASICS DIAGNOSTIC] Detected gender: ${gender}`);
+  console.log(`[ASICS DIAGNOSTIC] HTML length: ${html.length} chars`);
 
-  // NEW APPROACH: Find all product links directly
-  // ASICS product URLs follow pattern: /p/ANA_XXXXX-XXX.html
-  const $productLinks = $('a[href*="/p/ANA_"]');
+  // Try multiple selector strategies
+  const strategies = [
+    { name: "Product links with ANA_", selector: 'a[href*="/p/ANA_"]' },
+    { name: "Product links with /p/", selector: 'a[href*="/p/"]' },
+    { name: "Old productTile__root", selector: '.productTile__root' },
+    { name: "Any productTile class", selector: '[class*="productTile"]' },
+    { name: "Any product class", selector: '[class*="product"]' },
+    { name: "Article tags", selector: 'article' },
+    { name: "Data-testid product", selector: '[data-testid*="product"]' },
+  ];
+
+  let bestStrategy = null;
+  let maxFound = 0;
+
+  for (const strategy of strategies) {
+    const elements = $(strategy.selector);
+    const count = elements.length;
+    console.log(`[ASICS DIAGNOSTIC] ${strategy.name} (${strategy.selector}): ${count} found`);
+    
+    if (count > maxFound) {
+      maxFound = count;
+      bestStrategy = strategy;
+    }
+
+    // Show first element details if found
+    if (count > 0) {
+      const first = elements.first();
+      const classes = first.attr("class") || "none";
+      const tag = first.prop("tagName");
+      const hasLink = first.find('a[href*="/p/"]').length > 0 || first.is('a[href*="/p/"]');
+      const hasImg = first.find('img').length > 0;
+      const text = first.text().trim().substring(0, 100);
+      
+      console.log(`[ASICS DIAGNOSTIC]   First element: <${tag}> class="${classes}"`);
+      console.log(`[ASICS DIAGNOSTIC]   Has product link: ${hasLink}, Has image: ${hasImg}`);
+      console.log(`[ASICS DIAGNOSTIC]   Text preview: "${text}"`);
+    }
+  }
+
+  // Check for any links at all
+  const allLinks = $('a[href]');
+  console.log(`[ASICS DIAGNOSTIC] Total links on page: ${allLinks.length}`);
   
-  console.log(`[ASICS] Found ${$productLinks.length} product links for ${gender}`);
+  // Check for price indicators
+  const priceElements = $('*').filter(function() {
+    return $(this).text().match(/\$\d+\.\d{2}/);
+  });
+  console.log(`[ASICS DIAGNOSTIC] Elements containing prices: ${priceElements.length}`);
 
-  const seenUrls = new Set(); // Dedupe within page
+  // Check for "Sale" text
+  const saleElements = $('*').filter(function() {
+    const text = $(this).text().toLowerCase();
+    return text.includes('sale') && text.length < 50; // Short elements likely badges
+  });
+  console.log(`[ASICS DIAGNOSTIC] Elements with 'sale': ${saleElements.length}`);
 
-  $productLinks.each((_, el) => {
-    const $link = $(el);
+  // Use best strategy if found
+  if (!bestStrategy || maxFound === 0) {
+    console.log(`[ASICS DIAGNOSTIC] ⚠️ NO PRODUCTS FOUND WITH ANY STRATEGY`);
+    
+    // Log first 1000 chars of HTML for debugging
+    console.log(`[ASICS DIAGNOSTIC] HTML Preview (first 1000 chars):`);
+    console.log(html.substring(0, 1000));
+    
+    return products;
+  }
 
-    // Get URL
+  console.log(`[ASICS DIAGNOSTIC] Using strategy: ${bestStrategy.name}`);
+
+  const $elements = $(bestStrategy.selector);
+  const seenUrls = new Set();
+
+  $elements.each((_, el) => {
+    const $el = $(el);
+    
+    // Get link - might be the element itself or inside it
+    let $link = $el.is('a') ? $el : $el.find('a[href*="/p/"]').first();
+    
+    if (!$link.length) {
+      // Try parent
+      $link = $el.parent('a[href*="/p/"]');
+    }
+
+    if (!$link.length) return;
+
     let url = $link.attr("href");
     if (!url) return;
     
@@ -159,81 +226,54 @@ function extractAsicsProducts(html, sourceUrl) {
     if (!url || seenUrls.has(url)) return;
     seenUrls.add(url);
 
-    // Extract title from link text or aria-label
-    let title = $link.attr("aria-label") || $link.text().trim();
+    let title = $link.attr("aria-label") || $el.text().trim() || $link.text().trim();
     
-    // Clean up title
     title = title
       .replace(/Next slide/gi, "")
       .replace(/Previous slide/gi, "")
       .replace(/\bSale\b/gi, "")
+      .replace(/\$\d+\.\d{2}/g, "")
       .replace(/\s+/g, " ")
       .trim();
 
-    // Sometimes title contains price info, clean that out
-    title = title.replace(/\$\d+\.\d{2}/g, "").trim();
+    if (!title || title.length < 3) return;
 
-    // Extract model from title
     const modelMatch = title.match(/^([A-Z][A-Z\-\s\d]+?)(?=\s*$|Men's|Women's|Unisex|Sportstyle|Running|Tennis|Trail)/i);
     const model = modelMatch ? modelMatch[1].trim() : title.replace(/^ASICS\s+/i, "").trim();
 
-    if (!title || title.length < 3) return;
-
-    // Extract prices
     const { price, salePrice } = extractPrices($, $link);
 
     // Extract image
     let image = null;
-
-    // Try to find image within the link element or nearby
-    const $img = $link.find("img").first();
+    const $img = $el.find("img").first();
     
     if ($img.length > 0) {
-      // Try srcset first
       const srcset = $img.attr("srcset") || $img.attr("data-srcset") || $img.attr("data-lazy-srcset");
       image = pickBestFromSrcset(srcset);
 
-      // Try src attributes
       if (!image) {
         image = $img.attr("src") || $img.attr("data-src") || $img.attr("data-lazy-src");
       }
     }
 
-    // Try picture source elements
     if (!image) {
-      const $picture = $link.find("picture");
+      const $picture = $el.find("picture");
       if ($picture.length > 0) {
         const sourceSrcset = $picture.find("source[srcset]").first().attr("srcset");
         image = pickBestFromSrcset(sourceSrcset);
       }
     }
 
-    // Check parent container for images
-    if (!image) {
-      const $parent = $link.parent();
-      const $parentImg = $parent.find("img").first();
-      if ($parentImg.length > 0) {
-        const srcset = $parentImg.attr("srcset") || $parentImg.attr("data-srcset");
-        image = pickBestFromSrcset(srcset);
-        if (!image) {
-          image = $parentImg.attr("src") || $parentImg.attr("data-src");
-        }
-      }
-    }
-
     image = absolutizeAsicsUrl(image);
 
-    // Filter out placeholders
     if (image && (image.startsWith("data:") || image.toLowerCase().includes("placeholder"))) {
       image = null;
     }
 
-    // Fix thumbnail URLs
     if (image && image.includes("$variantthumbnail$")) {
       image = image.replace("$variantthumbnail$", "$zoom$");
     }
 
-    // Fallback: derive image from product URL
     if (!image && url) {
       const derived = buildAsicsImageFromProductUrl(url);
       if (derived) image = derived;
@@ -253,11 +293,13 @@ function extractAsicsProducts(html, sourceUrl) {
     });
   });
 
+  console.log(`[ASICS DIAGNOSTIC] Extracted ${products.length} products`);
+  
   return products;
 }
 
 async function scrapeAsicsUrlWithPagination(app, baseUrl, description) {
-  console.log(`[ASICS] Scraping ${description}...`);
+  console.log(`\n[ASICS] ========== Scraping ${description} ==========`);
 
   try {
     const url = baseUrl.includes("?") ? `${baseUrl}&sz=100` : `${baseUrl}?sz=100`;
@@ -268,6 +310,8 @@ async function scrapeAsicsUrlWithPagination(app, baseUrl, description) {
       waitFor: 8000,
       timeout: 45000,
     });
+
+    console.log(`[ASICS] Firecrawl response received, HTML length: ${scrapeResult.html?.length || 0}`);
 
     const products = extractAsicsProducts(scrapeResult.html, baseUrl);
 
@@ -288,7 +332,7 @@ async function scrapeAsicsUrlWithPagination(app, baseUrl, description) {
 async function scrapeAllAsicsSales() {
   const app = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY });
 
-  console.log("[ASICS] Starting scrape of all sale pages (sequential)...");
+  console.log("[ASICS] Starting DIAGNOSTIC scrape of all sale pages...");
 
   const pages = [
     {
@@ -311,7 +355,9 @@ async function scrapeAllAsicsSales() {
   for (let i = 0; i < pages.length; i++) {
     const { url, description } = pages[i];
 
-    console.log(`[ASICS] Starting page ${i + 1}/${pages.length}: ${description}`);
+    console.log(`\n[ASICS] ========================================`);
+    console.log(`[ASICS] Page ${i + 1}/${pages.length}: ${description}`);
+    console.log(`[ASICS] ========================================`);
 
     const result = await scrapeAsicsUrlWithPagination(app, url, description);
     results.push({
@@ -325,7 +371,7 @@ async function scrapeAllAsicsSales() {
     if (result.success) allProducts.push(...result.products);
 
     if (i < pages.length - 1) {
-      console.log("[ASICS] Waiting 2 seconds before next page...");
+      console.log("\n[ASICS] Waiting 2 seconds before next page...");
       await new Promise((resolve) => setTimeout(resolve, 2000));
     }
   }
@@ -348,10 +394,11 @@ async function scrapeAllAsicsSales() {
   const missingImagesTotal = uniqueProducts.filter((p) => !p.image).length;
   const missingPricesTotal = uniqueProducts.filter((p) => !p.price || !p.salePrice).length;
   
+  console.log(`\n[ASICS] ========== FINAL RESULTS ==========`);
   console.log(`[ASICS] Total unique products: ${uniqueProducts.length}`);
   console.log(`[ASICS]   - Missing images: ${missingImagesTotal}`);
   console.log(`[ASICS]   - Missing prices: ${missingPricesTotal}`);
-  console.log(`[ASICS] Results per page:`, results);
+  console.log(`[ASICS] Results per page:`, JSON.stringify(results, null, 2));
 
   return { products: uniqueProducts, pageResults: results };
 }
@@ -359,19 +406,11 @@ async function scrapeAllAsicsSales() {
 module.exports = async (req, res) => {
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
 
-  // TEMP: disabled during schema/testing phase
-  // Re-enable before enabling Vercel Cron in prod
-  //  const cronSecret = process.env.CRON_SECRET;
-  //  if (cronSecret && req.headers["x-cron-secret"] !== cronSecret) {
-  //    return res.status(401).json({ error: "Unauthorized" });
-  //  }
-
   const start = Date.now();
 
   try {
     const { products: deals, pageResults } = await scrapeAllAsicsSales();
 
-    // Count by gender
     const dealsByGender = { mens: 0, womens: 0, unisex: 0 };
     for (const d of deals) {
       const g = normalizeGender(d.gender);
