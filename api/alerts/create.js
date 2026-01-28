@@ -91,7 +91,7 @@ function generateConfirmationEmail(newAlert, allUserAlerts) {
       </div>
 
       <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666;">
-        <p style="margin: 5px 0;">Your alert will remain active for 30 days or until cancelled.</p>
+        <p style="margin: 5px 0;">This alert will remain active for 30 days or until cancelled.</p>
         <p style="margin: 5px 0;">You can have up to 5 active alerts at a time.</p>
         <p style="margin: 15px 0 5px;"><strong>Privacy:</strong> Your email is never sold or shared by Shoe Beagle.</p>
         <p style="margin: 5px 0;">Questions? Visit <a href="https://shoebeagle.com" style="color: #214478;">shoebeagle.com</a></p>
