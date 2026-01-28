@@ -722,11 +722,7 @@
     // BACKEND ENDPOINTS
     // =======================
     const API = {
-      create: "/api/alerts/create",
-      list: "/api/alerts/list",
-      cancel: "/api/alerts/cancel",
-      update: "/api/alerts/update",
-      remove: "/api/alerts/remove"
+      alerts: "/api/alerts"  // Single endpoint for all operations
     };
 
     // =======================
@@ -929,7 +925,7 @@
     // API CALLS
     // =======================
     async function apiListAlerts(email) {
-      const url = `${API.list}?email=${encodeURIComponent(email)}`;
+      const url = `${API.alerts}?email=${encodeURIComponent(email)}`;
       const res = await fetch(url, { method: "GET" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -939,7 +935,7 @@
     }
 
     async function apiCreateAlert(payload) {
-      const res = await fetch(API.create, {
+      const res = await fetch(API.alerts, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -952,10 +948,10 @@
     }
 
     async function apiCancelAlert(alertId, email) {
-      const res = await fetch(API.cancel, {
+      const res = await fetch(API.alerts, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ alertId, email }),
+        body: JSON.stringify({ action: "cancel", alertId, email }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -965,10 +961,10 @@
     }
 
     async function apiUpdateAlert(alertId, email, newPrice) {
-      const res = await fetch(API.update, {
+      const res = await fetch(API.alerts, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ alertId, email, targetPrice: newPrice }),
+        body: JSON.stringify({ action: "update", alertId, email, targetPrice: newPrice }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -978,10 +974,10 @@
     }
 
     async function apiRemoveAlert(alertId, email) {
-      const res = await fetch(API.remove, {
+      const res = await fetch(API.alerts, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ alertId, email }),
+        body: JSON.stringify({ action: "remove", alertId, email }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
