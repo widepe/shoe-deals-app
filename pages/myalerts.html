@@ -158,9 +158,26 @@
     .suggestion-item:hover,
     .suggestion-item.active { background: #e8f0ff; }
 
+    /* Gender and Price Row */
+    .gender-price-row {
+      display: flex;
+      gap: 2rem;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .gender-group {
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .price-group {
+      flex: 0 0 auto;
+    }
+
     .gender-selector {
       display: flex;
-      gap: 0.75rem;
+      gap: 0.5rem;
       align-items: center;
     }
 
@@ -168,16 +185,18 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 0.5rem 1rem;
+      padding: 0.4rem 0.75rem;
       border-radius: 999px;
       font-weight: 600;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       border: 2px solid #214478ff;
       background: white;
       color: #214478ff;
       cursor: pointer;
       transition: all 0.2s ease;
       user-select: none;
+      width: 70px;
+      text-align: center;
     }
 
     .gender-chip:hover {
@@ -205,9 +224,18 @@
       color: #444;
       pointer-events: none;
       font-weight: 500;
+      z-index: 1;
     }
 
-    .price-input-wrapper input { padding-left: 2rem; text-align: right; }
+    .price-input-wrapper input { 
+      padding-left: 2rem; 
+      padding-right: 2rem;
+      text-align: right; 
+    }
+
+    .price-input-wrapper .input-clear {
+      right: 0.5rem;
+    }
 
     .submit-btn {
       width: 100%;
@@ -521,7 +549,7 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s ease;
-      z-index: 1000;
+      z-index: 10000;
     }
 
     [data-tooltip]:hover::after {
@@ -545,6 +573,7 @@
       font-weight: 600;
       transition: background 0.2s ease;
       width: max-content;
+      position: relative;
     }
 
     .home-btn:hover { background: #1a3661; }
@@ -570,6 +599,17 @@
     @media (max-width: 768px) {
       .alerts-table colgroup col:nth-child(3) { width: 15%; }
       .alerts-table tbody td:nth-child(3) { font-size: 0.8rem; }
+      
+      .gender-price-row {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      
+      .gender-group,
+      .price-group {
+        width: 100%;
+        min-width: 0;
+      }
     }
   </style>
 </head>
@@ -611,17 +651,23 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Gender Preference</label>
-          <div class="gender-selector">
-            <div class="gender-chip active" data-gender="mens">Mens</div>
-            <div class="gender-chip active" data-gender="womens">Womens</div>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="alertPrice">Target Price *</label>
-          <div class="price-input-wrapper">
-            <input type="number" id="alertPrice" placeholder="0" step="1" min="1" required />
+          <div class="gender-price-row">
+            <div class="gender-group">
+              <label class="form-label">Gender Preference</label>
+              <div class="gender-selector">
+                <div class="gender-chip active" data-gender="both">Both</div>
+                <div class="gender-chip" data-gender="mens">Mens</div>
+                <div class="gender-chip" data-gender="womens">Womens</div>
+              </div>
+            </div>
+            
+            <div class="price-group">
+              <label class="form-label" for="alertPrice">Target Price *</label>
+              <div class="price-input-wrapper">
+                <input type="text" id="alertPrice" placeholder="0" inputmode="numeric" required />
+                <button type="button" class="input-clear" aria-label="Clear price">&times;</button>
+              </div>
+            </div>
           </div>
           <div class="form-hint">When we find your shoes equal to or lower than your set price, we'll notify you by email. Alert expires after 30 days.</div>
         </div>
@@ -664,7 +710,7 @@
       <div id="alertsEmpty" class="alerts-muted hidden">No alerts have been set.</div>
     </div>
 
-    <a href="/" class="home-btn">Close</a>
+    <a href="/" class="home-btn" data-tooltip="Back to home page">Return</a>
 
     <div class="footer">
       © <span id="footerYear"></span> Shoe Beagle. All rights reserved.
@@ -679,8 +725,8 @@
       create: "/api/alerts/create",
       list: "/api/alerts/list",
       cancel: "/api/alerts/cancel",
-      update: "/api/alerts/update", // New endpoint for updating price
-      remove: "/api/alerts/remove"  // New endpoint for removing inactive alerts
+      update: "/api/alerts/update",
+      remove: "/api/alerts/remove"
     };
 
     // =======================
@@ -760,7 +806,29 @@
     let selectedAlertRow = null;
     let currentAlerts = [];
     let currentEmail = "";
-    let selectedGenders = new Set(["mens", "womens"]); // Both selected by default
+    let selectedGender = "both"; // Start with "both"
+
+    // =======================
+    // PRICE INPUT - NUMBERS ONLY
+    // =======================
+    alertPrice.addEventListener('input', (e) => {
+      // Remove any non-numeric characters
+      e.target.value = e.target.value.replace(/[^0-9]/g, '');
+    });
+
+    alertPrice.addEventListener('keypress', (e) => {
+      // Only allow numeric keys
+      if (e.key && !/[0-9]/.test(e.key)) {
+        e.preventDefault();
+      }
+    });
+
+    alertPrice.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+      const numericOnly = pastedText.replace(/[^0-9]/g, '');
+      document.execCommand('insertText', false, numericOnly);
+    });
 
     // =======================
     // GENDER CHIP HANDLING
@@ -769,17 +837,17 @@
       chip.addEventListener("click", () => {
         const gender = chip.dataset.gender;
         
-        if (selectedGenders.has(gender)) {
-          // Don't allow deselecting if it's the only one selected
-          if (selectedGenders.size === 1) {
-            return;
-          }
-          selectedGenders.delete(gender);
-          chip.classList.remove("active");
-        } else {
-          selectedGenders.add(gender);
-          chip.classList.add("active");
+        // Don't do anything if clicking the already selected chip
+        if (selectedGender === gender) {
+          return;
         }
+        
+        // Deselect all chips
+        document.querySelectorAll(".gender-chip").forEach(c => c.classList.remove("active"));
+        
+        // Select the clicked chip
+        chip.classList.add("active");
+        selectedGender = gender;
       });
     });
 
@@ -1155,7 +1223,8 @@
     document.querySelectorAll(".input-clear").forEach((clearBtn) => {
       clearBtn.addEventListener("click", (e) => {
         e.preventDefault();
-        const input = clearBtn.previousElementSibling;
+        const wrapper = clearBtn.closest('.input-wrapper, .price-input-wrapper');
+        const input = wrapper ? wrapper.querySelector('input') : clearBtn.previousElementSibling;
         if (input && input.tagName === "INPUT") {
           input.value = "";
           input.focus();
@@ -1186,12 +1255,21 @@
       wrapper.className = "price-input-wrapper-small";
 
       const input = document.createElement("input");
-      input.type = "number";
+      input.type = "text";
+      input.inputMode = "numeric";
       input.className = "edit-price-input";
       input.value = Math.round(Number(alert.targetPrice || 0));
-      input.min = "1";
-      input.step = "1";
       input.placeholder = "0";
+
+      // Numbers only for edit input
+      input.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+      });
+      input.addEventListener('keypress', (e) => {
+        if (e.key && !/[0-9]/.test(e.key)) {
+          e.preventDefault();
+        }
+      });
 
       wrapper.appendChild(input);
 
@@ -1215,10 +1293,10 @@
         }
       });
 
-      const cancelBtn = document.createElement("button");
-      cancelBtn.textContent = "Cancel";
-      cancelBtn.className = "secondary";
-      cancelBtn.addEventListener("click", (e) => {
+      const exitBtn = document.createElement("button");
+      exitBtn.textContent = "Exit";
+      exitBtn.className = "secondary";
+      exitBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         renderAlertsDashboard();
       });
@@ -1226,7 +1304,7 @@
       formDiv.appendChild(label);
       formDiv.appendChild(wrapper);
       formDiv.appendChild(saveBtn);
-      formDiv.appendChild(cancelBtn);
+      formDiv.appendChild(exitBtn);
       actionsDiv.appendChild(formDiv);
 
       input.focus();
@@ -1385,7 +1463,18 @@
             });
             actionsDiv.appendChild(editBtn);
 
-            // Cancel button
+            // Refresh button
+            const refreshBtn = document.createElement("button");
+            refreshBtn.textContent = "Refresh";
+            refreshBtn.className = "secondary";
+            refreshBtn.setAttribute("data-tooltip", "Refresh alerts list");
+            refreshBtn.addEventListener("click", async (ev) => {
+              ev.stopPropagation();
+              await refreshAlerts();
+            });
+            actionsDiv.appendChild(refreshBtn);
+
+            // Cancel button (last)
             const cancelBtn = document.createElement("button");
             cancelBtn.textContent = "Cancel";
             cancelBtn.className = "danger";
@@ -1404,17 +1493,6 @@
               });
             });
             actionsDiv.appendChild(cancelBtn);
-
-            // Refresh button
-            const refreshBtn = document.createElement("button");
-            refreshBtn.textContent = "Refresh";
-            refreshBtn.className = "secondary";
-            refreshBtn.setAttribute("data-tooltip", "Refresh alerts list");
-            refreshBtn.addEventListener("click", async (ev) => {
-              ev.stopPropagation();
-              await refreshAlerts();
-            });
-            actionsDiv.appendChild(refreshBtn);
 
           } else {
             // Remove button for inactive alerts
@@ -1533,10 +1611,6 @@
       }
       if (!targetPrice || targetPrice <= 0) {
         showStatus("Please enter a valid target price (whole dollars).", "error");
-        return;
-      }
-      if (selectedGenders.size === 0) {
-        showStatus("Please select at least one gender preference.", "error");
         return;
       }
 
